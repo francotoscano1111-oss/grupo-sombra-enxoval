@@ -21,6 +21,7 @@
 | 2026-04-18 | MODIFY| Sessione 9: SombraScanner v2 — zoom PDF fix, NF field, deduplication, custom fornecedores, wide layout, Empresa persistence |
 | 2026-04-18 | MODIFY| Sessione 10: Export Arquivo Contábil (HYPERLINK) e validazione umane loop-in. |
 | 2026-04-18 | ADD   | Sessione 11: Modulo Triagem Entradas; oscuramento modulo A Receber |
+| 2026-09-09 | ADD | Release v3.0: SOMBRA ENXOVAL PRO (Gestão & Auditoria de Enxoval), Manuale 6 Capitoli PDF, Deploy Vercel |
 
 ---
 
@@ -310,3 +311,15 @@ npm run dev
 > **Nota:** Se l'app mostra schermata bianca dopo update dipendenze, cancellare `node_modules/.vite` e riavviare con `npx vite --force`.
 
 > **Browser:** Usare Chromium (Chrome/Edge) per il modulo Documentos — File System Access API non supportata da Firefox.
+
+
+---
+
+## 10. Modulo Dedicato: SOMBRA ENXOVAL PRO (`Controle_Enxoval.html` / `index.html`)
+
+> **Documento Master:** Per la documentazione completa e approfondita di questo modulo fare riferimento a [`SOMBRA_ENXOVAL_BIBLE.md`](./SOMBRA_ENXOVAL_BIBLE.md).
+
+- **Scopo:** Gestione completa delle scorte di biancheria (*enxoval hôtelier*), monitoraggio Par Stock (Meta 3 Mudas), riconciliazione fisica tramite importazione Excel e reportistica PDF.
+- **Ambienti:** `Hotel & Resort` (4.493 pezzi, 29 locali) e `Floresta & SPA` (814 pezzi, 8 locali).
+- **Hosting di Produzione:** Vercel Edge Global Static — [`https://grupo-sombra-enxoval.vercel.app`](https://grupo-sombra-enxoval.vercel.app).
+- **Manuale Integrato:** Visualizzatore modale in 6 capitoli (PT-BR) con motore vettoriale di esportazione PDF A4.

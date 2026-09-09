@@ -4,6 +4,29 @@
 
 ---
 
+## [2026-09-09] — SOMBRA ENXOVAL PRO v3.0: Manuale Utente 6 Capitoli, Deploy Vercel & High-Contrast UI
+
+**Status AS IS:** L'applicazione di gestione e controllo biancheria (SOMBRA ENXOVAL PRO) è ora in produzione su Vercel (https://grupo-sombra-enxoval.vercel.app), completa di manuale utente interattivo a 6 capitoli con esportazione PDF A4, backup di sicurezza in uscita e design system high-contrast.
+
+### ✅ Fatto
+- **Deploy Globale su Vercel:** Configurato repository GitHub (`francotoscano1111-oss/grupo-sombra-enxoval`) e deploy automatico edge CDN su Vercel con zero-config static hosting (`index.html`).
+- **Manuale Utente 6 Capitoli (PT-BR):** Implementato manuale operativo completo per tutti i 6 moduli dell'applicazione (Matriz de Estoque, Movimentações, Unidades & Locais, Catálogo de Itens, Inventário & Contagem, Relatórios & Backup).
+- **Viewer Interattivo & Generatore PDF A4:** Creato visualizzatore modale a schede e funzione vettoriale `handleDownloadManualPDF()` per scaricare il manuale ufficiale con copertina istituzionale e layout a 4 pagine A4.
+- **Risoluzione Bug Contrast & React Error #130:** 
+  - Risolto conflitto CSS globale nel tema chiaro (`body.light`) che oscurava i testi bianchi nei bottoni viola/indaco e nell'intestazione del manuale.
+  - Aggiunte definizioni SVG mancanti (`Home`, `Tags`, `CheckSquare`) all'oggetto `Icons`, azzerando gli errori di rendering React.
+- **Pulsante Sair & Backup:** Inserito pulsante rapido di logout con generazione automatica del dump JSON di sicurezza e notifica di ripristino.
+- **Bibbia Tecnica e Documentazione:** Redatto il master document `SOMBRA_ENXOVAL_BIBLE.md` come punto fermo architetturale e guida per futuri sviluppi.
+
+### 🔧 Decisioni tecniche
+- Utilizzo di classi CSS dedicate (`.btn-manual-user`, `.modal-manual-hdr`) con sovrascritture protette per garantire contrasto e leggibilità del 100% indipendentemente dal tema chiaro/scuro selezionato.
+- Adozione del workflow di sincronizzazione automatica `Controle_Enxoval.html` ↔ `index.html` per assicurare perfetta parità tra esecuzione locale ed esecuzione cloud su Vercel.
+
+### ⚠️ Problemi aperti / TODO prossima sessione
+- Possibile introduzione di scanner QR Code per le singole porte dei chalés per velocizzare ulteriormente la contagem fisica con smartphone.
+
+---
+
 ## [2026-04-22] — Importazione NFs Emitidas: Filtri e Anti-Doppioni
 
 **Status AS IS:** Il modulo NfsEmitidasPage ora importa le Note Fiscali di Servizio (Excel) rigettando all'origine record non idonei. Motore anti-doppioni rafforzato basato sulla combinazione univoca Numero + Data.
