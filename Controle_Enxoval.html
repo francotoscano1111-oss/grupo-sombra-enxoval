@@ -668,6 +668,7 @@
 
     // SVG Icons
     const Icons = {
+      BookOpen: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
       LogOut: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
       Box: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
       RefreshCw: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
@@ -771,6 +772,7 @@
       const [editingMovimento, setEditingMovimento] = useState(null);
       const [viewingInventario, setViewingInventario] = useState(null);
       const [activeKpiModal, setActiveKpiModal] = useState(null);
+      const [showManualModal, setShowManualModal] = useState(false);
       const [importModalData, setImportModalData] = useState(null);
       const excelImportInputRef = useRef(null);
       const [movFiltroTipo, setMovFiltroTipo] = useState('ALL');
@@ -1610,6 +1612,246 @@
         showToast(`Inventário "${savedTitle}" importado e finalizado com sucesso!`);
       };
 
+      const handleDownloadManualPDF = () => {
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          let pageNum = 1;
+
+          const addHeaderFooter = (title = 'MANUAL DO USUÁRIO — SOMBRA ENXOVAL PRO') => {
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            doc.text('GRUPO SOMBRA • SISTEMA DE GESTÃO E CONTROLE DE ENXOVAL', 14, 10);
+            doc.text(title, 196, 10, { align: 'right' });
+            doc.setDrawColor(226, 232, 240);
+            doc.line(14, 12, 196, 12);
+            doc.line(14, 285, 196, 285);
+            doc.text(`Página ${pageNum}`, 196, 289, { align: 'right' });
+            doc.text('Uso Interno — Governança e Operações', 14, 289);
+            pageNum++;
+          };
+
+          // --- CAPA / COVER ---
+          doc.setFillColor(15, 23, 42); // Dark Slate
+          doc.rect(0, 0, 210, 297, 'F');
+
+          doc.setFillColor(16, 185, 129); // Emerald accent
+          doc.rect(0, 0, 8, 297, 'F');
+
+          doc.setFontSize(26);
+          doc.setTextColor(255, 255, 255);
+          doc.setFont(undefined, 'bold');
+          doc.text('GRUPO SOMBRA', 25, 45);
+
+          doc.setFontSize(18);
+          doc.setTextColor(52, 211, 153); // Light Emerald
+          doc.text('SOMBRA ENXOVAL PRO', 25, 55);
+
+          doc.setFontSize(14);
+          doc.setTextColor(203, 213, 225);
+          doc.setFont(undefined, 'normal');
+          doc.text('Manual Oficial do Usuário & Guia de Operações', 25, 65);
+
+          doc.setDrawColor(52, 211, 153);
+          doc.setLineWidth(1);
+          doc.line(25, 72, 185, 72);
+
+          doc.setFontSize(11);
+          doc.setTextColor(148, 163, 184);
+          doc.text('Sistema Integrado de Gestão, Movimentação e Auditoria de Enxoval', 25, 82);
+          doc.text('Módulos: Hotel & Resort | Floresta & SPA', 25, 88);
+
+          doc.setFillColor(30, 41, 59);
+          doc.roundedRect(25, 105, 160, 130, 4, 4, 'F');
+
+          doc.setFontSize(12);
+          doc.setTextColor(255, 255, 255);
+          doc.setFont(undefined, 'bold');
+          doc.text('ÍNDICE DO MANUAL (6 CAPÍTULOS):', 35, 120);
+
+          const chaptersCover = [
+            'Capítulo 1: Matriz de Estoque & Par Stock',
+            'Capítulo 2: Movimentações Rápidas',
+            'Capítulo 3: Unidades & Locais',
+            'Capítulo 4: Catálogo de Itens de Enxoval',
+            'Capítulo 5: Inventário & Contagem Física',
+            'Capítulo 6: Relatórios, Histórico & Backup'
+          ];
+
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(203, 213, 225);
+          chaptersCover.forEach((ch, idx) => {
+            doc.text(`• ${ch}`, 35, 135 + (idx * 15));
+          });
+
+          doc.setFontSize(9);
+          doc.setTextColor(100, 116, 139);
+          doc.text(`Versão 3.0 • Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 25, 265);
+          doc.text('Documentação Técnica e Operacional de Governança', 25, 271);
+
+          // --- PÁGINA 2: CAPÍTULOS 1 E 2 ---
+          doc.addPage();
+          addHeaderFooter('CAPÍTULOS 1 & 2');
+
+          doc.setFontSize(15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFont(undefined, 'bold');
+          doc.text('Capítulo 1: Matriz de Estoque & Par Stock', 14, 22);
+
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont(undefined, 'normal');
+          const cap1Text = [
+            'A Matriz de Estoque é o painel central operacional do sistema. Ela fornece a visão completa e consolidada de todo o enxoval em tempo real, separada por ambiente (Hotel & Resort / Floresta & SPA).',
+            '',
+            'Principais Funcionalidades da Matriz:',
+            '1. Alternância de Visualização: O usuário pode alternar entre "Tabela Raggruppata" (visão sintética com totais gerais) e "Vista Detalhada" (abertura por quarto, bangalô, vila e setor).',
+            '2. Filtros e Busca Rápida: Permite filtrar por categoria (Cama, Banho, Piscina, SPA) ou digitar parte do nome do item na barra de busca.',
+            '3. Edição Direta de Células: Ao clicar em "Editar Células", os valores de saldos e Meta 3 Mudas podem ser ajustados diretamente na grade.',
+            '4. Meta 3 Mudas & Indicador de Par Stock: O sistema calcula automaticamente o saldo ideal de 3 mudas por acomodação e destaca em verde "OK (+saldo)" ou em vermelho "Falta (déficit)".',
+            '5. Cards de Métricas Superiores: Indicam Total em Estoque, Total em Uso, Almoxarifado Central, Meta Consolidada, Descarte Total e Alertas de Falta. Ao clicar em qualquer card, abre-se a tabela detalhada com opção de exportar o PDF específico.'
+          ];
+          doc.text(cap1Text, 14, 28, { maxWidth: 182 });
+
+          doc.setDrawColor(203, 213, 225);
+          doc.line(14, 132, 196, 132);
+
+          doc.setFontSize(15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFont(undefined, 'bold');
+          doc.text('Capítulo 2: Movimentações Rápidas', 14, 142);
+
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont(undefined, 'normal');
+          const cap2Text = [
+            'O módulo de Movimentações Rápidas gerencia o fluxo contínuo de entrada, transferência e saída de peças de enxoval.',
+            '',
+            'Operações Disponíveis no Painel Esquerdo:',
+            '1. Nova Compra / Entrada: Registra a entrada de peças novas no Almoxarifado Central.',
+            '2. Abastecimento / Transferência: Transfere peças do Almoxarifado Central para Rouparia/Quartos (alimentando o Total em Uso).',
+            '3. Envio para Lavanderia: Registra saída de roupa suja para lavanderia externa/interna.',
+            '4. Retorno da Lavanderia: Registra retorno de peças limpas/ensacadas.',
+            '5. Descarte por Avaria / Desgaste: Dá baixa definitiva em peças rasgadas, manchadas ou inutilizadas.',
+            '6. Registro de Perda / Extravio: Registra extravios em hóspedes ou processos operacionais.',
+            '',
+            'Histórico de Movimentações (Painel Direito):',
+            '• Apresenta tabela cronológica compacta com ordenação dinâmica por Data (Recentes/Antigos).',
+            '• Filtros em uma única linha por Tipo de Operação e por Item específico.',
+            '• Botões para baixar a listagem filtrada em Excel (.xlsx) e PDF.',
+            '• Ícone de Edição (lápis) para ver detalhes completos e Ícone de Lixeira para excluir/estornar com confirmação.'
+          ];
+          doc.text(cap2Text, 14, 148, { maxWidth: 182 });
+
+          // --- PÁGINA 3: CAPÍTULOS 3 E 4 ---
+          doc.addPage();
+          addHeaderFooter('CAPÍTULOS 3 & 4');
+
+          doc.setFontSize(15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFont(undefined, 'bold');
+          doc.text('Capítulo 3: Unidades & Locais', 14, 22);
+
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont(undefined, 'normal');
+          const cap3Text = [
+            'O módulo de Unidades & Locais permite estruturar a planta física do hotel, resort e SPA, definindo onde as peças circulam e onde ficam estocadas.',
+            '',
+            'Conceitos e Funcionalidades:',
+            '1. Classificação de Locais: Os setores podem ser cadastrados como "Unidade / Acomodação" (quartos, bangalôs, vilas), "Ponto de Circulação" (rouparias, roupa suja, ensacadas, lavanderia) ou "Almoxarifado Central" (reserva).',
+            '2. Total em Uso vs Almoxarifado: Todas as unidades e pontos de circulação ativos compõem automaticamente a coluna "TOTAL EM USO". O Almoxarifado Central é mantido separado para controle de reserva estratégica.',
+            '3. Ativação e Inativação: Locais podem ser ativados ou inativados temporariamente (ex: reformas de blocos) sem perda do histórico.',
+            '4. Adicionar / Editar Locais: Permite criar novos pontos operacionais ou renomear setores existentes em tempo real.'
+          ];
+          doc.text(cap3Text, 14, 28, { maxWidth: 182 });
+
+          doc.setDrawColor(203, 213, 225);
+          doc.line(14, 132, 196, 132);
+
+          doc.setFontSize(15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFont(undefined, 'bold');
+          doc.text('Capítulo 4: Catálogo de Itens de Enxoval', 14, 142);
+
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont(undefined, 'normal');
+          const cap4Text = [
+            'O Catálogo de Itens reúne o cadastro mestre de todas as peças de enxoval gerenciadas pelo GRUPO SOMBRA.',
+            '',
+            'Recursos e Regras de Negócio:',
+            '1. Cadastro de Artigos: Permite cadastrar e editar itens (Nome, Categoria, Unidade de Medida, Meta 3 Mudas).',
+            '2. Definição da Meta 3 Mudas (Par Stock): Cada item possui sua meta estipulada (ex: 366 UN para lençol casal, 732 UN para toalha de banho). Essa meta é a base de cálculo para compras e reposições.',
+            '3. Categorização Estratégica: Organização por Cama, Banho, Piscina/Praia, Decoração, SPA e Restaurante.',
+            '4. Edição Ágil: Alterações no catálogo refletem imediatamente na Matriz de Estoque, fichas de contagem e auditorias.'
+          ];
+          doc.text(cap4Text, 14, 148, { maxWidth: 182 });
+
+          // --- PÁGINA 4: CAPÍTULOS 5 E 6 ---
+          doc.addPage();
+          addHeaderFooter('CAPÍTULOS 5 & 6');
+
+          doc.setFontSize(15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFont(undefined, 'bold');
+          doc.text('Capítulo 5: Inventário & Contagem Física', 14, 22);
+
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont(undefined, 'normal');
+          const cap5Text = [
+            'O módulo de Inventário & Contagem é a ferramenta oficial de auditoria periódica de enxoval.',
+            '',
+            'Passo a Passo da Contagem Física:',
+            '1. Data da Contagem Física: Campo obrigatório com calendário para registrar a data exata em que a auditoria foi realizada nos quartos (permitindo digitação retroativa).',
+            '2. Título e Responsável: Identificação do período (ex: Inventário Geral - Agosto 2026) e auditor da governança.',
+            '3. Digitação Inteligente: Aceita somas diretas em cada célula (ex: 10+15+6). O sistema calcula o Total Físico automaticamente.',
+            '4. Importação de Planilha Excel (.xlsx): O usuário pode clicar em "Importar Planilha Excel", carregar a planilha preenchida pelas camareiras, conferir a prévia na janela de confirmação e importar tudo com 1 clique.',
+            '5. Finalizar e Salvar Auditoria: Ao confirmar, o sistema arquiva o inventário no histórico permanente e atualiza os saldos de estoque ativo.'
+          ];
+          doc.text(cap5Text, 14, 28, { maxWidth: 182 });
+
+          doc.setDrawColor(203, 213, 225);
+          doc.line(14, 132, 196, 132);
+
+          doc.setFontSize(15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFont(undefined, 'bold');
+          doc.text('Capítulo 6: Relatórios, Histórico & Backup', 14, 142);
+
+          doc.setFontSize(9.5);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont(undefined, 'normal');
+          const cap6Text = [
+            'A aba de Relatórios & Histórico centraliza a inteligência de dados, arquivos históricos e segurança da informação.',
+            '',
+            'Funcionalidades dos Cards Superiores:',
+            '• Card 1 (Relatório de Posição Consolidada): Exporta a posição completa em Excel (.xlsx).',
+            '• Card 2 (Ficha de Contagem): Gera e imprime a folha A4 em branco com linhas para anotação a caneta nos quartos.',
+            '• Card 3 (Carregar Novo Inventário): Botão direto para importar planilhas Excel preenchidas.',
+            '',
+            'Histórico de Auditorias Finalizadas:',
+            '• Listagem dos inventários históricos separados por ambiente (Hotel & Resort e Floresta & SPA).',
+            '• Botão "Ver PDF": Abre o relatório diagramado oficial em nova aba.',
+            '• Botão "Detalhes": Abre a matriz completa na tela com opções de download em PDF e Excel.',
+            '• Botão "Excluir (Lixeira)": Remove auditorias incorretas mediante confirmação de segurança.',
+            '',
+            'Segurança, Backup e Botão Sair:',
+            '• Botão "Sair (Backup)" na barra superior: Gera o arquivo JSON completo de segurança e notifica o usuário antes do fechamento.'
+          ];
+          doc.text(cap6Text, 14, 148, { maxWidth: 182 });
+
+          const filename = `Manual_do_Usuario_Sombra_Enxoval_PRO_${new Date().toISOString().split('T')[0]}.pdf`;
+          doc.save(filename);
+          showToast(`Manual do Usuário em PDF gerado com sucesso: ${filename}`);
+        } catch (err) {
+          console.error(err);
+          alert('Erro ao gerar Manual em PDF: ' + err.message);
+        }
+      };
+
       const handleExportKpiPDF = (kpiType) => {
         try {
           const { jsPDF } = window.jspdf;
@@ -2149,6 +2391,16 @@
 
               {/* Quick Actions Header */}
               <div className="flex items-center gap-2">
+                {/* MANUAL DO USUÁRIO BUTTON */}
+                <button
+                  onClick={() => setShowManualModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-300 hover:text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="Abrir Manual Oficial do Usuário e Guia de Operações (PDF)"
+                >
+                  <Icons.BookOpen />
+                  <span>Manual do Usuário</span>
+                </button>
+
                 {/* Theme Switcher Button (Modo Claro / Modo Escuro) */}
                 <button
                   onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
@@ -3704,6 +3956,185 @@
               </div>
             );
           })()}
+
+          {/* MODAL: MANUAL DO USUÁRIO INTERATIVO (6 CAPÍTULOS) */}
+          {showManualModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+              <div className="bg-sombra-900 border border-sombra-700 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+                
+                {/* MODAL HEADER */}
+                <div className="p-5 border-b border-sombra-800 bg-sombra-950/90 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                      <Icons.BookOpen />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <span>Manual do Usuário — SOMBRA ENXOVAL PRO</span>
+                        <span className="px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded-full text-[10px] font-bold">
+                          6 Capítulos • Versão 3.0
+                        </span>
+                      </h3>
+                      <p className="text-xs text-sombra-400 mt-0.5">
+                        Guia Completo de Operações, Governança, Movimentações e Auditorias de Enxoval
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownloadManualPDF}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30"
+                      title="Baixar manual completo formatado em PDF A4"
+                    >
+                      <Icons.Printer />
+                      <span>Baixar Manual em PDF</span>
+                    </button>
+                    <button
+                      onClick={() => setShowManualModal(false)}
+                      className="p-2 text-sombra-400 hover:text-white hover:bg-sombra-800 rounded-xl transition text-sm ml-1"
+                      title="Fechar"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* MODAL BODY (6 CHAPTERS) */}
+                <div className="p-6 overflow-y-auto flex-1 space-y-6 text-xs text-slate-300 font-sans leading-relaxed">
+                  
+                  {/* CAPÍTULO 1 */}
+                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
+                    <div className="flex items-center gap-2 text-brand-400 font-bold text-sm">
+                      <Icons.Box />
+                      <h4>Capítulo 1: Matriz de Estoque & Par Stock</h4>
+                    </div>
+                    <p className="text-slate-300">
+                      A <strong>Matriz de Estoque</strong> é o centro operacional do sistema, apresentando a visão consolidada de todas as peças de enxoval em tempo real.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                      <li><strong>Alternância de Visão:</strong> Alterne entre <em>Tabela Raggruppata</em> (apenas totais gerais) e <em>Vista Detalhada</em> (abertura por quarto, bangalô, vila e setor).</li>
+                      <li><strong>Filtros e Busca:</strong> Digite o nome do item ou filtre por categoria (Cama, Banho, Piscina, SPA).</li>
+                      <li><strong>Edição Direta:</strong> Clique em <em>Editar Células</em> para ajustar quantidades pontuais ou a Meta de 3 Mudas diretamente na tabela.</li>
+                      <li><strong>Cálculo Automático de Par Stock:</strong> O sistema compara o Total Geral com a Meta de 3 Mudas e destaca em verde <em>OK (+sobra)</em> ou em vermelho <em>Falta (déficit)</em>.</li>
+                      <li><strong>Cards Superiores Interativos:</strong> Clique em qualquer um dos 6 cards no topo para abrir a tabela analítica e baixar o PDF específico.</li>
+                    </ul>
+                  </div>
+
+                  {/* CAPÍTULO 2 */}
+                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
+                    <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
+                      <Icons.ArrowRightLeft />
+                      <h4>Capítulo 2: Movimentações Rápidas</h4>
+                    </div>
+                    <p className="text-slate-300">
+                      O módulo de <strong>Movimentações Rápidas</strong> registra o fluxo diário de entrada, abastecimento, lavanderia, descarte e perdas.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                      <li><strong>1. Nova Compra / Entrada:</strong> Entrada de peças novas compradas diretamente no Almoxarifado Central.</li>
+                      <li><strong>2. Abastecimento / Transferência:</strong> Transferência de peças do Almoxarifado Central para a Rouparia e Quartos (incrementa o Total em Uso).</li>
+                      <li><strong>3. Envio para Lavanderia:</strong> Envio de roupa suja para o ciclo de lavagem.</li>
+                      <li><strong>4. Retorno da Lavanderia:</strong> Retorno das peças limpas para a Rouparia.</li>
+                      <li><strong>5. Descarte por Avaria / Desgaste:</strong> Baixa definitiva de peças rasgadas, furadas ou manchadas.</li>
+                      <li><strong>6. Registro de Perda / Extravio:</strong> Baixa por extravios em hóspedes ou processos operacionais.</li>
+                      <li><strong>Histórico & Filtros:</strong> Tabela com ordenação por Data (Mais Recentes / Mais Antigos), filtros por Tipo e Item em uma única linha, e botões de exportação em Excel e PDF.</li>
+                      <li><strong>Edição e Exclusão:</strong> Botão de lápis para ver/editar o ticket e botão de lixeira para estornar o saldo com confirmação.</li>
+                    </ul>
+                  </div>
+
+                  {/* CAPÍTULO 3 */}
+                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
+                    <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                      <Icons.Settings />
+                      <h4>Capítulo 3: Unidades & Locais</h4>
+                    </div>
+                    <p className="text-slate-300">
+                      Permite configurar a estrutura física do resort, hotel, vilas e setores operacionais.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                      <li><strong>Classificação:</strong> Os locais são classificados como <em>Unidade / Acomodação</em>, <em>Ponto de Circulação / Rouparia</em> ou <em>Almoxarifado Central</em>.</li>
+                      <li><strong>Composição do Total em Uso:</strong> Todos os quartos e pontos de circulação ativos somam automaticamente na coluna <em>Total em Uso</em>.</li>
+                      <li><strong>Almoxarifado Central:</strong> Mantido isolado para controle rigoroso da reserva estratégica.</li>
+                      <li><strong>Ativação / Inativação:</strong> Permite desativar locais em reforma sem perder os dados históricos.</li>
+                    </ul>
+                  </div>
+
+                  {/* CAPÍTULO 4 */}
+                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
+                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                      <Icons.FileText />
+                      <h4>Capítulo 4: Catálogo de Itens de Enxoval</h4>
+                    </div>
+                    <p className="text-slate-300">
+                      Cadastro mestre e gerenciamento de todos os tipos de peças de enxoval do <strong>GRUPO SOMBRA</strong>.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                      <li><strong>Cadastro & Edição:</strong> Permite incluir novos artigos, editar nomes e unidades de medida.</li>
+                      <li><strong>Meta 3 Mudas (Par Stock):</strong> Definição da meta de estoque de cada item para apoiar as decisões de compra.</li>
+                      <li><strong>Categorização:</strong> Organização estruturada em Cama, Banho, Piscina/Praia, SPA, Decoração e Restaurante.</li>
+                    </ul>
+                  </div>
+
+                  {/* CAPÍTULO 5 */}
+                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
+                    <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
+                      <Icons.ClipboardCheck />
+                      <h4>Capítulo 5: Inventário & Contagem Física</h4>
+                    </div>
+                    <p className="text-slate-300">
+                      Módulo oficial para auditorias periódicas e fechamento físico de estoque.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                      <li><strong>Data da Contagem Física:</strong> Campo de data obrigatório para registrar a data real da conferência nos quartos (mesmo que digitada em data posterior).</li>
+                      <li><strong>Digitação com Fórmulas:</strong> As células aceitam somas diretas (ex: <code>10+15+6</code>).</li>
+                      <li><strong>Importação via Excel (.xlsx):</strong> Botão para carregar a planilha preenchida pelas camareiras, conferir a prévia na janela de confirmação e importar de forma automática.</li>
+                      <li><strong>Finalização:</strong> Ao clicar em <em>Finalizar e Salvar Auditoria</em>, o inventário é arquivado no histórico e os saldos da Matriz de Estoque são atualizados.</li>
+                    </ul>
+                  </div>
+
+                  {/* CAPÍTULO 6 */}
+                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
+                    <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm">
+                      <Icons.History />
+                      <h4>Capítulo 6: Relatórios, Histórico & Backup</h4>
+                    </div>
+                    <p className="text-slate-300">
+                      Central de relatórios consolidados, histórico de auditorias e segurança dos dados.
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                      <li><strong>Cards de Ação Rápida:</strong> Baixar planilha completa em Excel (.xlsx), Imprimir Ficha de Contagem em Branco (PDF) e Carregar Novo Inventário via Excel.</li>
+                      <li><strong>Histórico de Auditorias:</strong> Acesso a todos os inventários anteriores por ambiente (Hotel & Resort / Floresta & SPA) com botões para <em>Ver PDF</em>, <em>Detalhes</em> na tela e <em>Excluir</em> com confirmação.</li>
+                      <li><strong>Exportações Avançadas:</strong> Menu superior para exportar a <em>Tabela Raggruppata</em> ou <em>Tabela Dettagliata</em> tanto em PDF quanto em Excel.</li>
+                      <li><strong>Segurança & Botão Sair:</strong> Botão vermelho <em>Sair (Backup)</em> no topo para gerar e salvar automaticamente o backup JSON completo com todos os dados.</li>
+                    </ul>
+                  </div>
+
+                </div>
+
+                {/* MODAL FOOTER */}
+                <div className="p-4 border-t border-sombra-800 bg-sombra-950/90 flex items-center justify-between">
+                  <span className="text-xs text-sombra-400">
+                    GRUPO SOMBRA • Manual do Usuário • Versão 3.0
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownloadManualPDF}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition"
+                    >
+                      Baixar Manual em PDF
+                    </button>
+                    <button
+                      onClick={() => setShowManualModal(false)}
+                      className="px-4 py-2 bg-sombra-800 hover:bg-sombra-700 text-slate-300 rounded-xl text-xs font-semibold transition"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
 
           {/* MODAL: DETALHAMENTO DE KPI CARDS & PDF EXPORT */}
           {activeKpiModal && (() => {
