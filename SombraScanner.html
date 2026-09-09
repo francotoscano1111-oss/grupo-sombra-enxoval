@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sombra Scanner - Portal de Ingestion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#111827',
+                        card: '#1f2937',
+                        accent: '#8b5cf6',
+                        accentHover: '#7c3aed',
+                        accentGoogle: '#10b981',
+                        accentGoogleHover: '#059669',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #111827; color: #f3f4f6; }
+        .dropzone { border: 2px dashed #4b5563; transition: all 0.2s; }
+        .dropzone.dragover { border-color: #8b5cf6; background-color: rgba(139, 92, 246, 0.1); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; width: 20px; height: 20px; }
+        input, select, textarea { background-color: #111827 !important; color: #f3f4f6 !important; }
+        option { background-color: #1f2937; color: #f3f4f6; }
+        #preview-wrapper {
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            cursor: zoom-in;
+            position: relative;
+        }
+        #preview-wrapper.zoomed { cursor: grab; }
+        #preview-wrapper.zoomed:active { cursor: grabbing; }
+        #preview-img {
+            transform-origin: center center;
+            transition: transform 0.15s ease;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            user-select: none;
+            display: block;
+        }
+        .zoom-btn {
+            background: rgba(55,65,81,0.9);
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .zoom-btn:hover { background: rgba(139,92,246,0.7); border-color: #8b5cf6; }
+        #zoom-toolbar {
+            display: none;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            background: rgba(17,24,39,0.85);
+            border-top: 1px solid #374151;
+        }
+        #zoom-level { font-size: 12px; color: #9ca3af; min-width: 40px; text-align: center; }
+    </style>
+</head>
+<body style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:12px;">
+
+    <div style="width:100%;max-width:1280px;display:flex;flex-direction:row;gap:16px;background:#1f2937;border-radius:14px;box-shadow:0 25px 50px rgba(0,0,0,.5);padding:16px;border:1px solid #374151;">
+        
+        <!-- COLONNA PREVIEW -->
+        <div style="width:55%;flex-shrink:0;display:flex;flex-direction:column;border:1px solid #374151;border-radius:10px;overflow:hidden;background:#111827;min-height:560px;">
+            <div class="p-3 bg-gray-800 border-b border-gray-700 text-sm font-semibold text-gray-300 text-center">
+                Visualização do Documento
+            </div>
+
+            <!-- Toolbar zoom — SOPRA la preview, sempre visibile -->
+            <div id="zoom-toolbar" style="display:none;gap:6px;align-items:center;justify-content:center;padding:5px 10px;background:rgba(17,24,39,0.9);border-bottom:1px solid #374151;">
+                <button class="zoom-btn" id="btn-zoom-out" title="Reduzir">➖</button>
+                <span id="zoom-level">100%</span>
+                <button class="zoom-btn" id="btn-zoom-in"  title="Ampliar">➕</button>
+                <button class="zoom-btn" id="btn-zoom-reset" title="Resetar">🔄</button>
+                <button class="zoom-btn" id="btn-fullscreen" title="Ver em tela cheia">⛶</button>
+            </div>
+
+            <!-- Area preview -->
+            <div id="preview-container" class="flex-1 flex items-center justify-center text-gray-500 text-sm p-3" style="min-height:420px;">
+                <span>Nenhum arquivo carregado</span>
+            </div>
+        </div>
+
+        <!-- COLONNA FORM -->
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+            <div style="text-align:center;margin-bottom:10px;">
+                <h1 style="font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:2px;">📁 Sombra Scanner</h1>
+                <p style="color:#94a3b8;font-size:12px;">Arraste uma foto/PDF, preencha os dados e salve para conciliação automática.</p>
+            </div>
+
+            <!-- DROP ZONE -->
+            <div id="dropzone" class="dropzone" style="height:60px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:10px;color:#94a3b8;gap:8px;">
+                <svg style="width:22px;height:22px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <span id="file-label" style="font-size:13px;font-weight:500;">Clique ou arraste um arquivo (PDF/Img)</span>
+                <input type="file" id="file-input" class="hidden" accept=".pdf,image/*">
+            </div>
+
+            <!-- FORM - sempre abilitato -->
+            <form id="metadata-form" style="display:flex;flex-direction:column;gap:8px;">
+
+                <!-- Pasta de Destino -->
+                <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:7px 10px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+                            <span style="font-size:15px;">📂</span>
+                            <div style="min-width:0;">
+                                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Pasta de Destino</div>
+                                <div id="folder-name" style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;" title="Nenhuma pasta selecionada">Nenhuma pasta selecionada</div>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-choose-folder" style="flex-shrink:0;background:#1e293b;border:1px solid #475569;color:#e2e8f0;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;" title="Escolher pasta (Chrome/Edge)">
+                            📁 Alterar
+                        </button>
+                    </div>
+                    <div id="folder-status" style="font-size:9px;color:#10b981;margin-top:2px;display:none;">✅ Pasta memorizada — os arquivos serão salvos automaticamente.</div>
+                </div>
+
+                <!-- Empresa (campo singolo, persistente) -->
+                <div>
+                    <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Empresa do Grupo</label>
+                    <select id="doc-empresa" required style="width:100%;border:1px solid #4b5563;border-radius:7px;padding:6px 10px;font-size:13px;background:#111827;color:#f3f4f6;outline:none;">
+                        <option value="">-- Selecione a Empresa --</option>
+                        <option value="Arco-Iris">Arco-Iris</option>
+                        <option value="SAF-Hospedagem">SAF Hospedagem</option>
+                        <option value="Goyanna">Goyanna</option>
+                        <option value="JM-SCP">JM SCP</option>
+                    </select>
+                </div>
+
+                <!-- Riga: Data + NF -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div>
+                        <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Data (Venc./Emissão)</label>
+                        <input type="date" id="doc-data" required style="width:100%;border:1px solid #4b5563;border-radius:7px;padding:6px 8px;font-size:13px;background:#111827;color:#f3f4f6;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Nº Nota Fiscal <span style="color:#64748b;font-weight:400;">(opt.)</span></label>
+                        <input type="text" id="doc-nf" placeholder="Ex. 000055188" style="width:100%;border:1px solid #4b5563;border-radius:7px;padding:6px 8px;font-size:13px;background:#111827;color:#f3f4f6;outline:none;font-family:monospace;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <!-- Riga: Valor -->
+                <div>
+                    <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Valor (R$)</label>
+                    <input type="number" step="0.01" id="doc-importo" placeholder="Ex. 150.50" required style="width:100%;border:1px solid #4b5563;border-radius:7px;padding:6px 10px;font-size:13px;background:#111827;color:#f3f4f6;outline:none;font-family:monospace;">
+                </div>
+
+                <!-- Fornecedor -->
+                <div>
+                    <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Fornecedor / Descrição</label>
+                    <input type="text" id="doc-fornitore" list="fornecedores-list" placeholder="Ex. Enel Energia" required style="width:100%;border:1px solid #4b5563;border-radius:7px;padding:6px 10px;font-size:13px;background:#111827;color:#f3f4f6;outline:none;">
+                    <datalist id="fornecedores-list"></datalist>
+                </div>
+
+                <!-- Bottons -->
+                <div style="display:flex;flex-direction:column;gap:7px;padding-top:4px;">
+                    <button type="button" id="btn-drive" title="Requer Chrome ou Edge" style="width:100%;background:#059669;color:#fff;font-weight:700;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:7px;">
+                        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                        </svg>
+                        Salvar no Google Drive
+                    </button>
+                    <button type="submit" style="width:100%;background:#7c3aed;color:#fff;font-weight:700;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:7px;">
+                        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Baixar Arquivo Formatado
+                    </button>
+                </div>
+            </form>
+
+            <div id="success-msg" class="hidden mt-4 p-3 bg-green-900 border border-green-500 rounded-lg text-green-300 text-sm text-center break-all"></div>
+            <div id="error-msg" class="hidden mt-4 p-3 bg-red-900 border border-red-500 rounded-lg text-red-300 text-sm text-center"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── Lista Fornecedores ──────────────────────────────────────────────────
+        const FORNECEDORES = ["A A TIBAU DO SUL","A B CONSULTING","A B DANTAS CORTEZ ME","A C NOVA DESCOBERTA","A C PITTA COMERCIO LTDA ME","A HORA CERTA RELOGIOS","A R LOCACAO E SERVICOS LTDA","A S MOURA HORTI FRUTAS","A. CESAR","A. N. FERNANDES CONSTRUCAO","A.C. COMERCIO DE PRODUTOS DE LIMPEZA","AA NATURAL COMERCIO","ABBA COSMETICOS","ABC ATACADAO BRAS CONSTR SA","ABM - GINECOLOGIA E OBSTETRICIA ESPECIAL","ABRINDO O CAMINHO LTDA","AC CENTRAL DE NATAL","ACQUA PRODUCTS","ACRILART LTDA","ACTOS MATERIAIS PA","ADEGA SAO CRISTOBAL","ADEMAR JOSE SCHULTHAIS","ADRIANE AMORIN CIANTELLI","ADRIANO HONORIO DE BASTOS - PEIXARIA","AE TOPOGRAFIA","AFAGO","AFRMM-ADICIONAL FRETE REN","AFVIDROS","AGAE COMERCIO E SERVICOS LTDA","AGIS EQUIPAMENTO E SERVICOS INFORMATICA LTDA","AGOSTINA MILAGROS","AGROFLORES NACIONAL EIRELI","AGUAS VAPORES C V F LTDA","AGULHA MAGICA","AICHA FARIA DE MELLO","AILSON DE HORTI FRUTAS","AJX PISCINAS","ALAN SESAR DA","ALARES INTERNET S.A.","ALBEMAR DE SOUZA MARINHO LTDA","ALDEMIR PEREIRA DE AGUIAR - GEOLOGO","ALECRIM PRESENTES","ALEXANDRE LACERDA RODRIGUES ME","ALEXANDRE SILVA BATISTA","ALEXANDRINO","ALIANE CLAUDIN","ALICE COSTA SENA","ALICE MARIA SILVA FERREIRA","ALINE DA SILVA LIMA","ALINE GLEICY C. DE FREITAS - JACKSON","ALISSON GOMES DA SILVA","ALL CAD LTDA","ALLAN RODRIGUES DE FREITAS PAIVA - SE7VEN ENGENHARIA LTDA","ALLANE CLAUDINO DE MEDEIROS","ALTENBURG NORDESTE LTDA","ALUMINIO 101","ALVOAR LACTEOS NORDESTE S/A","AMANDA DE SOLUZA","AMANDA VIVIANE CUNHA MENDES","AMBEV SA","AMERICANAS SA","AMIL ASSISTENCIA MEDICA INTERN","ANA BEATRIZ DA COSTA","ANA MARIA DE AZEVEDO","ANA MARIA LISBOA PINTO","ANA PAULA DA SILVA","ANA PAULA FIRMINO DE AMOR","ANA PAULA NASCIMENTO GALVAO","ANALIA SOLEDAD GONZALES","ANANAL LOCACOES","ANDREA CRISTINA","ANDREIA BONIFACIO XAVIER","ANDRESSON FEL","ANDREZZA E BEZ","ANITA ALICE DIONIZIO DE LI","ANTONIO COSTA JUNIOR","APETITTOS PRODUTOS CONGELADOS","APP SISTEMAS SA","AQUASSOLO PERFURACAO DE POCOS EIRELI","ARCO-IRIS ADMINISTRACAO","ARISTOTELES DE QUEIROZ CAMARA","ARMANDO ADONIAS D","ARMANDO SARAIVA FERREIRA","ARMAZEM DO CONDOMINIO","ARMAZEM PARA - ANTONIO BASILIO - IMPORTADORA COMERCIAL DE MADEIRA LTDA","ARNALDO VICTOR DA SILVA CRUZ","ART WINE DISTRIBUIDORA DE BEBIDAS","ARTKORTEN LASER DESIGN LTD","ASAAS GESTAO FINANCEIRA S.A.","ASKSUITE TECNOLOGIA LTDA","ASSAI ATACADISTA","ASSOCIACAO DAS HOTELARIAS DE TIBAU DO SUL","ATACADAO DO LOJISTA","ATACADAO SA","ATACADO DOS PRESENTES","ATACAPET","ATLANTICO PESCADOS LTDA","AUGUSTO CAPAS NA","AUGUSTO DA HORTI FRUTAS","AURI AUTO PE","AUTO POSTO ROTA DO SOL","AUTOMAQ","AVLA SEGUROS BRASIL S.A.","B E M DA COSTA TRANSPORTES","B L COMERCIO E DESCARTAVEIS","B V SOC CORR C","BABEL DISTRIBUIDORA DE COSMETICOS","BAIANA PESCADOS","BAIAO DE DOIS COMUNICACAO E MARKETING LTDA","BALLGRASS","BANCA DI SAN GIORGIO SECURITIZADORA","BANCO DO BRASIL","BB SEGURO EMPRESARIAL","BD SOLAR","BED SOLUCOES","BEE2PAY HOTEL SOLUTIONS S/A","BELL CAMAROES","BEMOVE BRASIL LTDA","BETANIA LACTEOS SA","BIANCA JULY GALVAO DA SILVA","BIOESSENCIA","BMV FIT IMPORTACOES LTDA","BODY MIND BEAUTIFUL INDUSTRIA COMERCIO DE COSMETICOS LTDA","BOMFRIGO INDUSTRIA LTDA","BOOKING.COM BRASIL SERVICOS","BRASIL DISTRIBUIDORA DE EMBALAGENS","BRASIL EMBALAGEM","BRASIL SPORT FITNESS","BRAVI C HIGIENE DESCART EIRELI","BRF S.A. Sadia EXP Fil Vendas","BRUNA RAFAELA JUS","BRUNA SAMPAIO SANTANA","BUTZKE IMPORTACAO E EXPORTACAO LTDA","C R DE S A BELEM","C. AVELINO DE OLIVEIRA","CABO SERVICOS DE TELECOMUNICACOES LTDA","CAERN","CAIADO","CAICO DISTRIBUDORA DE LATICINIOS E FRIOS","CAMAR RN MARICULTURA LTDA","CAMICADO SHOP MID","CAMILA CESAR TRISTAO","CAMILA MATTE DA FONSECA","CAMILLY VICTORIA GOMES","CAMPOS EQUIPAMENTOS E REFRIGERACAO LTDA","CANDELARIA COMERCIO VAREJISTA DE BEBIDAS","CANESSA E MONTANARES LTDA","CANOPUS COMERCIO E INDUSTRIA","CARAJAS MATERIAL DE CONSTRUCAO","CARDUME INDUSTRIA E COMERCIO DE PESCADO","CARLOS ALDEMIR DE LIMA ARAUJO","CARLOS ANTONIO FERNANDES DA SILVA","CARLOS ANTONIO SILVA DA COSTA","CARLOS GLEYDSON GOMES DOS","CARLOS MOVEIS COM MADEIRAS","CAROLINA CALACINA","CAROLINA RODRIGUES AZEVEDO","CARREFOUR NATAL","CARTORIO","CASA DA COPIA","CASA DE FARINHA PANIFICADORA LTDA","CASA DO ALUMINIO","CASA DO PEIXE LTDA","CASA DO ZIPER","CASA DOS ACOUGUEIROS","CASA DOS FAZENDEIROS","CASA NORTE LTDA ATACADAO","CASA QUIMICA PIPA","CASAS CARDOSO TEC","CASSIANE PAPENDA GUIMARAES","CAVALCANTE COMERCIO DE COSMETICOS","CBM REDESIM","CCP COMERCIO FLORES","CDA - CENTRAL DE DISTRIBUCAO AZEVEDO LTDA","CENTER SERVICE","CENTPAR","CENTRAL CONVENIENCIA","CENTRAL DE PARAFUSOS","CENTRAL HIDROLAB SERVICOS","CENTRO DE I E ESCOLA CIEE","CESAR LOPES DOS S","CETEMA - COSMETICOS","CEZAR VITOR DO NASCIMENTO","CHAINY CONFECCOES E COMERCIO LTDA","CHEF MEDITERRANEO IMP EXP EIRELLI EPP","CICERO FERNANDES CAETANO D","CINTHIA DE SOUZA SALES","CIRNE IRMAOS CIA LTDA","CLAUDIA DA SILVA WANDERLY","CLAUDIANA DA COSTA LOPES","CLAUDIO MIRAN","CLEYA LOPES SANTOS - NUTRICIONISTA","CNOVA COMERCIO ELETRONICO SA","COBOGO CENTER","COLCHOES ORTOBOM","COMCEL COMERCIAL DE MATERIAIS ELETRICOS LTDA","COMEBOM DISTRIBUDORA LTDA","COMENER DO RIO GRANORTE CO","COMERCIAL DANTAS","COMERCIAL DISTRIBUDORA NATAL LTDA (CODIF)","COMERCIAL ELOI CHAVES LTDA","COMERCIAL JAPURA","COMERCIAL JR","COMERCIAL PRAIAS BELAS LTDA","COMERCIAL VILAR","COMJOL - COMERCIAL JOSE LUCENA LTDA","COMPANHIA BRASILEIRA DE LACTICINOS CB","COMPANHIA ENERGETICA DO RIO GRANDE DO NORTE","COMPET COMERCIO SERV","COMTERN COOP MISTA DOS TEX","CONCEPT PRIME LTDA - EPP","CONVENIENCIA AGRESTE POTIGUAR LTDA","COOPERATIVA DE TRABALHO","COOPERATIVA DOS TRANSPORTES","COPAGAZ DISTRIBUDORA DE GAZ","COR E PISO","CORAL PISCINAS - RAFAEL BRANCO SASSO","CORTEZ ON LINE","COSERN","COSMETICOS REAL","CREA","CREF","CRISTIANE OLIVEIRA","CRISTIANNE LIM","CROQUI BIRO DE PL","D N DA SILVA","D SANTORELLI GRAFICA EDITORA","D VENDAS E SERVICOS LTDA","DAB DISTRIBUIDORA DE ALIMENTOS E BEBIDAS","DAM NATAL","DANIEL CAPAS NATAL","DANIEL LUCAS OLINTO MENDES SOC","DANIELA JORGELINA GOMEZ","DANIELE MARQUES DOS SANTOS","DANIELLY MOURA","DARF","DAVI DE MEDEIROS JUNIOR","DEBORAH LEITE LIMA","DEBORAH OTONI DE FIGUEIRED","DEIVSON CESAR SIL","DENTAL MEDICA","DEYVISON NERES DA SILVA - ME","DIEGO ADRIANO","DIEGO EVANGELISTA DO NASCIMENTO","DIEGO NOVELLO FERREIRA PIRES","DIOGENIO MELO DA SILVA","DIOVANE MANOEL FERREIRA","DISTRIBUDORA DE ALIMENTOS SERIDO LTDA","DISTRIBUIDORA CRI","DIVERSOS","DJ COMERCIO E DISTRIBUIDORA DE ALIMENTOS LTDA","DNA DISTRIBUIDORA NATALENSE DE ALIMENT","DOCELANDIA","DOKA CONSTRUCOES LTDA","DROGARIA BEZERRA","DROGARIA DUQUE DE CA","DROGARIAS GLOBO","DROGASIL","E G FARMACIA DE MANI","E L DE SANTANA","E PARKING","EBB - EMPRESA BRASILEIRA DE BEBIDAS","ECO FILTROS","ECONOMY SOFTWARE LTDA","EDER JOFRE B G","EDNALDO DE SOUZA PEREIRA","EDNALVA EMILIA DE AZEVEDO","EHM DINIZ - SACOLAO LAGOA NOVA","EINAR BARBOSA - ALAN LAB","ELAINE DA CONCEICAO AZEVEDO DO PATROCINIO","ELETRONICOS LTDA","ELETROSSOL","ELIANE DE OLIVEIRA MELO","ELITA NEILA GOMES","ELIZOMAR DE LIMA MARQUES","EMERSON CRUZ VIEIRA","EMIRIELLY MARINHO BARBOSA","EMPORIO NUTRI CARNE","EMPORIUM CANELA","EMPRESA JORNALISTICA TRIBU","EMPRESAR","EQFRIOS ALIMENTOS LTDA","ERICA MESCHINE COSTA","ERIKA LORRANY DE OLIVEIRA","ERINEIDE LOPES DA SILVA","ERISON XAVIER VINCENTE DA SILVA","ERONILDO LEANDRO BARBOSA MARINHO","ESSENCIAL GESTAO EMPRESARIAL","ESTRELA DO NORTE LTDA","EUGENIA BEATRIZ DELFITTO","EVANDIR VALENTIN DA SILVA","EVERALDO SOUZA DOS SANTOS","EXPEDIA DO BRASIL - AGENCIA DE VIAGENS","EXTRA NATAL PONTA NEGRA","F A DE ALMEIDA CALISSI","F E TCHE ALIMENTOS","F R T OPERADORA TUR LTDA","FA HORTI FRUTAS","FAAT CONFECCOES EIRELI","FABIANA A DO NASCIMENTO","FABIO CAVALHEIRO COSIS","FACIL COMUNICACAO LTDA","FAMA DISTRIBUICAO E LOGISTICA LTDA","FARMACIA DROGAVIS","FARMACIA E LABORATORIO ALIEN LTDA","FARMACIA PAGUE MENOS","FARMACIA PRECO POPUL","FARMAFORMULA NORDEST","FART IMPORTS","FAZENDA AGROGIR DIAMANTE L","FEDEX BRASIL LOGISTICA E TRANSPORTE LTDA","FERNANDA GUIMARAE","FERNANDES EMBALAGENS","FERNANDO AMORIM GUILHERME SILVA","FERNANDO ANTONIO DE SOUZA","FERNANDO AUGUSTO DE MATTOS","FERREIRA COSTA","FESTA E FESTA","FLAVIO EBELER MARTINS - PIPANTIBALL","FLAVIO EMANOEL ALVES DA SILVA","FLAVIO FAUSTINO DA SILVA CONSTRUCOES E REFORMAS","FLAVIO HENRIQUE SILVA DE ANDRADE","FLORANANDA IND COM C P N LTDA","FLORIANO FERNANDES PIMENTA","FOLHA DE PAGAMENTO","FORTEPLAST HOME","FRANCISCA PAULA DA LUZ","FRANCISCO AILSON DE MOURA","FRANCISCO EDIVALDO DE SOUZ","FRANCISCO ELIAS MARQUES","FRANCISCO GENESIO SILVA DA CRUZ","FRANCISCO R R JUCA","FRANCO TOSCANO","FREEZER CARNES E LATICINIOS LTDA","FRIGELAR COMERCIO E INDUSTRIA","FRIO NORDESTE","FRIOS ALIMENTOS LTDA","FRIOVIX COMERCIO DE REFRIGERACAO LTDA","FRUTAS CIA HORTIFRUTA EIRELI","G B COMERCIO","G MIRA LTDA","G T LOG GESTAO DE TRANSPORTE","GABRIEL VALEN","GABRIELA GIL DA ROSA","GABRIELA MOTA SANTOS","GADELHA E FRAGA COMERCIO LTDA","GASTON RUBANO KALEFF","GC VIDRO NATAL","GEANDRO LOPES DA SILVA","GEILTON GALVAO","GENERAL FOODS - SOCIEDADE DE ALIMENTACAO LTDA","GENILSON SILVA DO NASCIMENTO","GEOVANDO PATRICIO","GERMER PORCELANAS","GERTRUDES FERNANDES","GILBERTO CORREIA","GILMARA CHRISTINA DA SILVA VIANA","GLOBAL ROUPAS PROFISSIONAI","GLOBO","GOURMETUM","GOYANNA","GOYANNA - Salarios funcionarios condivisos","GRACIELE SANTANA DE LIMA DUARTE","GRASTAL - GRANJA SANTA TEREZINHA LTDA","GRUPO CASAS BAHIA S.A.","GVR HOME INDUSTRIA E COMERCIO DE ENXOV","H ALVES DO NASCIMENTO - CASA DAS BOMBAS MOTORES","HADASSAH COME","HARMONIA","HARUS INDUSTRIA E COMERCIO COSMETICO","HAVAN NATAL","HENRIQUE EDUARDO DE ALMEIDA","HERBUS IND","HERMESSON RICARDO","HERONIDES LAURENTINO","HIDROMINAS SANTA MARIA INDUSTRIA E COMERCIO LTDA","HOME CLEAN","HOME DECOR LTDA","HORA CERTA RELOGIOS DE PONTO","HORTA AGRESTE","HR SERVICOS ELETRICO","HUGO MENDES PEREIRA","I. A. V. COMERCIO E SERVICOS LTDA","IGOR JOSE FONS","IGOR R R FRANCA SOCIEDADE","IJF DOS SANTOS - PUBLICIDADE","IMG SOLUCOES ELETRICAS LTD","IMPOSTOS","IMPOSTOS- IR","INBS COMERCIO","INDAIA BRASIL AGUA MINERAIS","INOVE COMUNICACAO VISUAL","INSS ARRECADACAO","INSTITUTO FENACON","INTERBRASIL DISTRIBUCAO LTDA - COSTA IRMAOS","INTERLAGOS MOTORES LTDA","INTERLIGHT","INTERNET L.P. SA","IOF","IPIRANGA EMBALAGENS","ISAAC SERGIO DA SILVA","ISABEL S BACEL","ISHELA COMERCIO IMPORTACAO E EXPORTACAO","ISKISITA ATACADO","ITAMAR ALVES BARBOSA","IVANILDA BALDUINO SILVA","IVANLUX MATERIAIS ELETRICOS LTDA","IVONEIDE GOMES DA SILVA","IZABELE ARAUJO SILVA","IZAMAR DE OLIVEIRA","J B MUNDIAL BRISA COMERCIAL LTDA - EPP","J DE L DA SI","J E B DA SILVA","J ESTELITAS LOPES LTDA - POTIMAR","J M COSTA DA SILVA EIRELI EPP","J M FRIOS ATACADISTA","J MAR PESCADOS LTDA","J PEREIRA DE OLIVEIRA","J R DE MENEZE","J R V BARBOSA","J S DA COSTA ARTIGOS ELETRONICOS","J. J. N. RANGEL SILVA DISTRIBUIDORA","J.M. EMPREENDIMENTO IMOBILIARIO LTDA","J.S. DE SOUZA COMERCIAL SOCOMPAR","JACICLEIDE RODRIGUES SOARES","JACKSON MEDEIROS DANTAS","JACQUELINE DA SILVA","JAMAD MADEIRAS E FERRAGENS EIRELI","JANNAINA APARECID GOMES","JAQUELINE ROSA","JARLSON DOS SANTOS SILVA","JEFERSON DE MOURA GALVAO","JEFFERSON DA SILVA AUGUSTO","JEOVA SEBASTIAO DA COSTA","JEOVANI BENJAMIN DA COSTA","JHONNYS DA SILVA CAVALCANTI","JJ ASSESSORIA CONTABIL S/S LTDA","JJBA SEIVA SUSTENTAVEL COMERCIO DE ALIMENTOS LTDA","JM PESCADO","JOABE GAMA TAVARES","JOANA CECILIA ALVES LIMA","JOANDESON S DANTAS","JOAO BATISTA PATRICIO","JOAO FREIRE DA NO","JOAO HENRIQUE CARVALHO","JOAO MARIA BARROS GOMES","JOAO MARIA SOARES","JOAO VICTOR CARVA","JOARLISON JOSE DE","JOEBISON JOSE","JOELSON LEITE DA SILVA","JOHN HERBERT OLIVEIRA NECO DA COSTA","JONAS HENRIQUE PORFIRIO CAMPOS","JONATAS ALVES RIBEIRO","JORGE LUIZ DE","JORGE PEREZ OLIVA CUELLAR - CAP CERVEJA ARTESANAL DE PIPA","JORGEVALDO CARNEIRO DA SILVA","JOSE ANTONIO BATISTA","JOSE ANTONIO DE SOUSA","JOSE ANTONIO DE SOUZA","JOSE CARLOS SO","JOSE EDSON DE MEDEIROS","JOSE FRANCISCO CRESPO","JOSE GONZAGA DA SILVA","JOSE LEOPOLDO FIRMO MAURIZ JUNIOR","JOSE MARIA LIM","JOSE MIZAEL","JOSE OTAVIO LAURINDO DA SILVA","JOSE PAULO DE FREITAS BARBOSA","JOSE ROBERTO TRINDADE","JOSE WAGNER DA SILVA","JOSEANE DE OLIVEIRA DANTAS ME","JOSEILTON CIPRIANO","JOSENILDO DOS SANTOS NASCIMENTO","JOSIAS DA SILVA COSTA","JOSILENE RIBEIRO DE FRANCA","JOSIMAR SOARES COSTA","JOSIVALDO ALVES","JUCIMARA FIRMINO DA SILVA","JUDSON BATISTA DA COSTA","JUILIO CASSEMIRO DE ALMEIDA","JULIANA VALERIA DANTAS DA SILVA","JUSSARA PEREIRA DA SILVA ALVES - MARMORARIA BRANDAO","K M GESTAO EMPRESARIAL LTDA","KABUM COMERCIO ELETRONICO SA","KALINE EUFLAUSINO DA SILVA","KAMILA REGINA DE","KARITA DE OLIVEIRA BERNARDELLI","KARNE KEIJO LOGISTICA INTEGRADA LTDA","KATARINA KALIANE ROBERTA","KEILA RAQUEL COELHO ROCHA","KENNEDY FEITOSA GOMES","KI PRECO MATERIAL DE CONSTRUCAO LTDA ME","KIBON","KLARA ADRIANI","KOUZINA","KOYAMA COMERCIO IMPORTACAO E EXPORTACAO","L E M VAREJO","L G TECNOLOGIA LTDA","L MATERIAS ELETRICO","L S MOURA DISTRIBUIDORA EIRELI","LABOR AMBIENTA","LAMPADINHA - OLIVEIRA COMERCIO ATACADISTA LTDA","LANCONEX TECNOLOGIA","LARISSA ALEGRET","LARISSA FRANCA","LARY DOUGLAS DE AZEVEDO SILVA","LATICINIO SERTAO JUCURUTU EIRELI","LAVANDERIA FENIX","LAYNARA SILVA CHACON","LDB LOGISTICA E TRANSPORTES","LEFTEC SOLUCOES","LEITE BOM INDUSTRIAL LTDA","LEONARDO ARIEL SUAREZ","LEONARDO FAGUNDES CAVALCANTE","LEONILSON ELPIDIO BOAVISTA","LEROY MERLIN COMPANHIA BRASILEIRA DE BRICOLAGEM","LIBERTY SEGUROS SA","LIDIA GALVAO WILHELM","LINDOMAR COSTA DE BARROS","LIQUIGAS DISTRIBUIDORA SA","LIVIA KRETZU MAFRA","LIVRARIA CAMARA CASCUDO","LIZETE HOME DECOR","LOG GESTAO DE TRANSPORTES","LUAN COSTA BEZ","LUAN MIGUEL DOS SANTOS","LUANA KARLA GO","LUANNA GABRIELLE TAVARES","LUCAS SANTOS GODOI - GODOI NETWORKS","LUCIANA LUNGA DE","LUCIANO ALVES JUN","LUCIANO CARLOS DA SILVA","LUCIANO SEVERINO PEREIRA","LUCIENE SILVESTRE DE LIMA","LUCINEIA SA DE ARAUJO","LUDIMILA OLVEIRA DA SILVA","LUDISTRIBUDORA DE PRODUTOS","LUIS ANDRES JOFRE MONTANAR","LUIZ A PERNAMBU","LUIZ ANTONIO CALUTRINO","LUIZ BELARMINO DA COSTA NETO","LUIZ MIGUEL QUEIROZ","LUIZA GAMEIRO","LUMA DE OLIVEIRA COELHO","LUZ DARY BOLANOS INTENCIPA - MASSAGISTA","M B M DISTR PROD LIMPEZA LTDA","M BERNARDO FILHO COM DE ALUMINIO","M2 PLACAS E REVESTIMENTOS LTDA","MAC MADEIRA COMERCIO VAREJISTA DE MADEIRA EIRELI","MADEIRAMADEIRA C E SA","MADEPESCA LTDA - FRIOVIX","MADEREIRA PJA LTDA","MAGAZINE LUIZA SA","MAGAZINE SARMENTO","MAGNOLIA MELO DE SOUZA","MAKRO ATACADISTA SA","MAMELUKO","MANGAIERIO POTIGUAR","MANOEL FRANCISCO FREIRE","MANOEL THIAGO DOMINGOS DA SILVA LIMA","MAR VERMELHO","MARCELA FERRAZOLI CAMILO DE SIQUEIRA HERNANDES","MARCELO C SANT","MARCELO EDUARDO GALDINO DE SOUZA","MARCELO JOSE DA SILVA","MARCELO MOISES DA SILVA","MARCELO ONOFRE DANTAS","MARCIEL PATRICIO FREIRE","MARCILENE FELIX DA SILVA","MARCOS AUGUSTO DA SILVA","MARCUS VINICIUS DE ARAUJO INFORMATICA","MARIA CANINDE","MARIA DA CONCEICAO CASSIANO DE LIMA BARBOSA","MARIA DA CONCEICAO DA SILVA","MARIA DA VITORIA","MARIA DAS GRACAS TEIXEIRA DA SILVA","MARIA DE FATIMA ALVES DE SOUZA","MARIA DE FATIMA GOMES DE OLIVEIRA SOUSA","MARIA DE FATIMA MAXIMINO DE LIMA","MARIA DEL MAR GOMEZ GUTIERREZ","MARIA DINALVA DE OLIVEIRA","MARIA DOS PRAZERES","MARIA FATIMA BARROS GOMES - RETIRADA LIXO","MARIA PAULA ARAUJO SILVA","MARICELIA DE LIMA DOMINGOS VITAL","MARINA RORIZ CARVALHO PANTOJA","MARIPESCA","MARITIMOS PESCADOS LTDA","MARKETPLACE","MARTUNA COMERCIO DE PESCADOS LTDA","MATA NORTE ALIMENTOS LTDA","MATHEUS DOS SANTOS","MATHEUS SILVA BARBOZA","MATTE HORTI FRUTAS","MAURICIO BULDRINI","MAURICIO SILVA DO NASCIMENTO","MAXMEIO INFORMACAO TECNOLOGIA E COMUNICACAO EIRELI - ME","MAXXI NATAL","MEGA FARMA","MENTES QUE PENSAM","MERCADINHO PONTO","MERCADO DE ARTEFATOS DE BORRACHA LTDA","MERCADOPAGO.COM","MICHELA ROSANA LYRA DE OLIVEIRA","MICHELE MEDON","MICHELI LUIZA PERSON","MICHELLE MEDON ALMEIDA PRADO","MIDWEST","MINERACAO CUNHA COMERCIO LTDA","MINISTERIO DA FAZENDA","MIOLO WINE GROUP","MIRANDA COMPUTACAO E COMERCIO","MIXPESCADOS INDUSTRIA DE FRUTOS DO MAR","MK2 COMERCIO E SERVICO DE PRODUTOS COSMETICOS","ML MARKETPLACE","MOACIR JORGE DE BARROS SOBRINHO","MOEDA DE OURO","MONTAR INSTALACOES DE MARMORES","MOVEQUP","MULT EMBALAGENS","MULTI CLINICA","MULTIGIRO COMERCIO E DISTRIBUTION LTDA","MUNDO VERDE","MV COMERCIO DE PRODUTO PARA HOTELS E RESTAURANTES - MULTIBAR","N C OLIVEIRA TINTAS LTDA","NARCELIO FEITOSA E SILVA","NATAL FILTROS COMERCIO DE PURIFICADORES LTDA","NATAL SERVICE LTDA","NATALIA ANDREA LAGOMARSINO","NATANAEL DO NASCIMENTO DE LIMA","NEIDE CORREIA","NEIDE SANTOS AGULHA","NEIDINHA ATELIE","NERIVALDO TEIXEIRA DA COSTA","NESTLE BRASIL LTDA","NET4YOU INTERNET SOLUTION LTDA","NETFLIX","NGS LTDA","NICMA SOLAR","NILSON INACIO DA SILVA","NOGUEIRA SERVICOS MEDICOS","NORDESTAO","NORSA REFRIGERANTES S.A.","NRD ATACADO E DISTRIBUICAO LTDA","NUNES E ASSUNCAO COMERCIO DE PRODUTOS","NUTRI PREMIUM REFEICOES COLETIVAS","O BARATAO ALECRIM","O MUNDO DOS CHOCOLATES LTDA","O REI DOS COLCHOES","OFICINA DA LUZ COMERCIO E SERVICOS LTDA","OFICINA DAS FARDAS CONFECCOES LTDA","OI MOVEL","OLIMPICA ESPORTES","OLIVEIRA COMERCIO ATACADISTA DE MATERIAL","OMIEXPERIENCE LTDA","OMNIBEES SOLUCOES EM TECNOLOGIA","ONITY LTDA","OPEL","ORLANDO LAMOUNIER","OSVALDO LEANDRO BARBOSA","OSWALDO ANTUNES JUNIOR","OUTLET DAS FLORES","PADARIA E MERCADORIA","PADEIRAO","PAG MALUEQUIPAMENTO","PAGAR.ME PAGAMENTOS SA","PAI E FILHO ATACAREJO","PALADAR SERTANEJO","PALAORO EIRELI","PANOZON - via EBANX PAGAMENTOS LTDA","PAPA CAPIM","PARQUE DAS COLINAS","PATRICIA CORREIA DIAS","PAULA CRISTINA FREIRE","PAULA PRADO TANDY","PAULO FELIPE DA SILVA CHAVES","PAVEL RENT A CAR","PEDRO HENRIQUE BARROS GOMES","PEDRO SABINO DA SILVA","PEREIRA ACO","PEREIRA DA COSTA","PEREIRA E LIMA COM E SERVICOS DE EQUIP DE GINASTICA LTDA","PERSEVERANTE","PETALI AROME","PETZ NATAL","PICCOLO PICOLE E SORVETE","PIPA PISCINAS","PIPA VIDRACARIA - JOSE CLEGENILSON","PLURIMPORT ARTIGOS DE DECORACAO","POLIMPORT COMERCIO E EXPORTACAO LTDA","PONTA DE PEDRAS AQUICULTURA EIRELI EPP","PONTO DA QUIMICA","PONTO RN CONTROLE DE ACESSO EIRELI - ME","PREFEITURA MUNICIPAL DE TIBAU DO SUL","PRODUMAR - EXPORTADORA DE PRODUTO DO MAR","PROTEL - P M COMERCIO REPRESENTACOES E SERVICOS EIRELI","PROXXIMA TELECOMUNICACOES SA","QUALIAIR SERVICOS ESPECIALIZADOS","QUEIJARIA DONA GERTR","QUEIROZ OLIVEIRA","QUERCIA TAENE DE LIMA SOUZA","R N IRRIGACAO","R S RANGEL DE SA ME","RAFAEL GUEDES DE OLIVEIRA","RAIMUNDO NONATO B E SILVA","RAIN BIRD","RAISSA CRISTINA DO NASCIMENTO MIGUEL","RAPIDO FIGUEIREDO LOGISTICA E TRANSPORTES","RD DISTRIBUIDORA DE BEBIDAS","RD DISTRIBUIDORA DE COSMETICOS LTDA","REAL COMERCIAL","RED S.A.","REDEMAIS - VENEZA","REDES SANTA LUZIA","REI DA GELA","REI DAS VALVULAS MATERIAL DE CONSTRUCAO","REIS FRUIT COMERCIO VAREJISTA","RENATO DOS SANTOS","RENATO FONTENELE SERVICOS DE M","RENYSSON LEANDRO DA SILVA","RFB","RIACHUELO","RICARDO PIMENTEL","RIO NORDESTE INDUSTRIA DE COLCHOES EIRELI EPP","RN ARGAMASSAS EIRELI","RN BORRACHAS ARTEFATOS DE BORRACHA","RN TRIBUTACAO ICMS","ROBERTO CARLOS DE SOUZA PADILHA - MULT LIMP","ROBERTO E BRUOGNOLO","ROBERTO T SILVA AQUINO","ROCA ILUMINACAO","ROCA SANITARIOS BRASIL LTDA","RODOLFO SANTIAGO DA SILVA","RODRIGO BORGES SANTOS","RODRIGO GOMES DE SOUZA","ROMILDO XAVIER DA SILVA","ROMMANEL","ROSEANE SOUSA","ROSIANE TRAJANO DE ASSIS","ROSINEIDE BEZERRA DELVITO","RP - SONDAGENS E SERVICOS","RP SERVICOS LABORATORIAIS","RUTH CIBELLY NASCIMENTO","S M A NATAL SERVICOS E LOCACAO","SAF HOSPEDAGEM EIRELLI EPP","SAF HOSPEDAGEM LTDA","SAF RESTAURANTE","SALGARITO ALIMENTA","SAMUEL MELO OLIVEIRA","SANBRIS IND CO","SANTA LUZIA REDES E DECORA","SAO BRAZ SA INDUSTRIA E COMERCIO DE ALIMENTOS","SBF COMERCIO","SEJA FA EIRELI","SERRARIA BODOKENA","SERVICOS HORTI FRUTAS","SET - SISTEMAS E PRODUTOS TECNICOS LTD","SEU SABOR COM ALIMENTOS EIRELI","SEVERINA EUFLAUZINO DA SILVA","SEVERINA MEIRELES DA SILVA","SEVERINO ANTONIO DE LIMA","SEVERINO JOSE INA","SF INDUSTRIA E COMERCIO","SHOPING PLASTICOS LTDA","SHOPPING 10","SHOPPING MIDWAY MALL","SICOOB","SILK FESTA","SILMARA DA SILVA GONCALES","SILVIO J GUEDE","SIMONE FERNANDES DE MORAIS","SINDICATO INTERMUNICIPAL DOS TRABALHADORES","SJM DISTRIBUIDORA DE BEBIDAS LTDA","SOCIMOL INDUSTRIA DE COLCHOES e MOVEIS","SOLLO AMBIENTES LTDA","SOMBRA ARQUITETURA","SOP POTIGUAR","SOP-JAGUARARI","SOS FITNESS RN","STEFANY FERREIRA DA SILVA","STER BOM IND. E COM. LTDA","STICK BORDADOS","SUL AMERICA COMPANHIA NACIONAL DE SEGURO","SUMUP SOLUCOES","SUPER ADEGA","SUPERFACIL ATACADAO","SUPERMERCADO","SUPERMERCADO VENE","TADEU DOS REIS ALVES RODRIGUES","TAIS PRETTI DI GIORGI","TAPUIO AGROPECUARIA LTDA","TATIANA HELENA GOMES DA COSTA","TE LEVO TRANSPORTES LOGISTICA","TECMAR TRANSPORTES LTDA","TECNOGAS COMERCIO E INSTALACOES DE GAS EIRELI","TELETINTAS","TEM NA TRENA","THIAGO ALVES G","THOMPSON PEREIRA","TIAGO BRUNO DE CA","TIAGO DE MOURA","TIAGO NEPOMUCENO ARAUJO EL","TICKET SERVICOS SA","TIROL CHAVES","TMC DISTRIBU ATAC DE ALIM","TOK STOK","TRAMONTINA NORDESTA S/A","TRANSPORTE MARLIN","TRANSPORTE NACIONAL LTDA","TRES CORACOES ALIMENTOS SA","TRIPLICE SECURITIZADORA DE ATIVOS MERC","TZ COMERCIO VAREJISTA E ATACADAO","UNICO BAHIA LTDA","UNIFARMA SANTA","UNILEVER BRASIL GELADOS DO NORDESTE","UNIMETAIS","UNIVERSO LOCADORA","UNIVERSO REFRIGERACAO COMERCIO E SERVICOS","UTIL DISTRIBUDORA DE ALIMENTOS E BEBIDAS EIRELI","V. O. DA SILVA","VADO SAUDE AMBIENTAL","VALDECIRA FELIPE DA SILVA","VALFREDO E BARBOSA","VANESSA AUGUST","VARIOS","VARIOS CLIENTES","VARIOS FUNCIONARIOS","VEIDA CHIARA MOGNATTI LEITE - CONSULTORA DO RESTAURANTE","VENEZA HIDROMASSAGEM E EQUIPAMENTOS EIRELE-ME","VIA VAREJO SA","VICTOR ANTONIO NUMA","VICTOR VINICIUS B MARINHO","VIDEIRA VINHOS LTDA","VITORIA COSTA BEZERRA","VIVIANE MONTEIRO FRANSISCO","VM COMERCIO DE UTILIDADES E EQUIPAMENTO","VVC DISTRIBUDORA DE BEBIDAS LTDA","W M LOCACAO","WAGNER BORGES DO NASCIMENTO - MOTORISTA","WAL MART BRASIL LTDA","WALDIRIA RABELO DANTAS MIRANDA","WALKER HARUKE DE ARAUJO DANTAS","WANDECARLOS DE OLIVEIRA FAUSINO - MANUTENCAO AIR CONDICIONADO","WASHINGTON LUIZ DOS SANTOS","WELLINGTON DE LIMA","WERLI ANGELO DA SILVA","WGN SISTEMAS","WH FRIOS","WILLIAM TOSCANO DE MEDEIRO","WILLIAN FERREIRA DA COSTA","WM COMERCIO E DISTRIBUIDORA DE MATERIAIS DE HIGIENE E LIMPEZA LTDA","WMD SUPERMERCADOS DO BRASIL - SAM S NATAL","WT COMERCIO E REPRE","WT DISTRIBUDORA LTDA","WT DISTRIBUIDORA EIRELI","XP","YAPAY","ZELIEL SOARES BEZERRA","ZETTA PRODUTOS ARTES","ZEUS DO BRASIL LTDA","ZT COMERCIO VAREJISTA DE BEBIDAS LTDA"];
+
+        // ── Popola datalist (base + custom da localStorage) ─────────────────────
+        const dataList = document.getElementById('fornecedores-list');
+
+        // Set globale per ricerca rapida (case-insensitive)
+        var fornecedoresSet = new Set(FORNECEDORES.map(function(f) { return f.toUpperCase(); }));
+
+        // Fornecedores custom salvati dall'utente
+        var customFornecedores = JSON.parse(localStorage.getItem('sombra-scanner-fornecedores') || '[]');
+
+        function rebuildDatalist() {
+            dataList.innerHTML = '';
+            // Base list
+            FORNECEDORES.forEach(function(forn) {
+                if (forn) {
+                    var opt = document.createElement('option');
+                    opt.value = forn;
+                    dataList.appendChild(opt);
+                }
+            });
+            // Custom list (inseriti dall'utente, ordinati)
+            customFornecedores.slice().sort().forEach(function(forn) {
+                var opt = document.createElement('option');
+                opt.value = '⭐ ' + forn;   // prefisso per distinguerli visivamente
+                opt.setAttribute('data-custom', '1');
+                dataList.appendChild(opt);
+            });
+        }
+        rebuildDatalist();
+
+        // Tenta di aggiungere un fornitore custom (chiamato al salvataggio)
+        function tryAddCustomFornecedor(value) {
+            if (!value) return;
+            var upper = value.toUpperCase();
+            // Già nella lista base o già custom?
+            if (fornecedoresSet.has(upper)) return;
+            if (customFornecedores.some(function(f) { return f.toUpperCase() === upper; })) return;
+            // Nuovo → salva e aggiorna datalist
+            customFornecedores.push(value.trim());
+            localStorage.setItem('sombra-scanner-fornecedores', JSON.stringify(customFornecedores));
+            rebuildDatalist();
+        }
+
+        // ── Refs ────────────────────────────────────────────────────────────────
+        var dropzone         = document.getElementById('dropzone');
+        var fileInput        = document.getElementById('file-input');
+        var fileLabel        = document.getElementById('file-label');
+        var form             = document.getElementById('metadata-form');
+        var dataInput        = document.getElementById('doc-data');
+        var successMsg       = document.getElementById('success-msg');
+        var errorMsg         = document.getElementById('error-msg');
+        var btnDrive         = document.getElementById('btn-drive');
+        var btnChooseFolder  = document.getElementById('btn-choose-folder');
+        var folderNameEl     = document.getElementById('folder-name');
+        var folderStatusEl   = document.getElementById('folder-status');
+        var previewContainer = document.getElementById('preview-container');
+
+        var currentFile          = null;
+        var driveDirectoryHandle = null;
+
+        // Nascondi tutto il widget cartella se API non supportata
+        if (!window.showDirectoryPicker) {
+            document.getElementById('btn-choose-folder').closest('div[style]').style.display = 'none';
+            btnDrive.style.display = 'none';
+        }
+
+        // Data di default = oggi
+        dataInput.valueAsDate = new Date();
+
+        // ── IndexedDB per persistere la cartella ────────────────────────────────
+        var idb = null;
+        function openIDB() {
+            return new Promise(function(resolve, reject) {
+                var req = indexedDB.open('sombra-scanner', 1);
+                req.onupgradeneeded = function(e) {
+                    e.target.result.createObjectStore('config');
+                };
+                req.onsuccess = function(e) { resolve(e.target.result); };
+                req.onerror   = function()  { resolve(null); }; // non blocchiamo su errore IDB
+            });
+        }
+        function idbPut(key, value) {
+            if (!idb) return;
+            try { idb.transaction('config', 'readwrite').objectStore('config').put(value, key); } catch(e) {}
+        }
+        function idbGet(key) {
+            return new Promise(function(resolve) {
+                if (!idb) { resolve(null); return; }
+                try {
+                    var req = idb.transaction('config', 'readonly').objectStore('config').get(key);
+                    req.onsuccess = function() { resolve(req.result || null); };
+                    req.onerror   = function() { resolve(null); };
+                } catch(e) { resolve(null); }
+            });
+        }
+
+        function setFolderUI(name) {
+            folderNameEl.textContent = name || 'Nenhuma pasta selecionada';
+            folderNameEl.title       = name || 'Nenhuma pasta selecionada';
+            folderStatusEl.style.display = name ? 'block' : 'none';
+            // Aggiorna etichetta bottone Drive
+            btnDrive.childNodes[btnDrive.childNodes.length - 1].textContent =
+                name ? ' Salvar em "' + name + '"' : ' Salvar no Google Drive';
+        }
+
+        // Ripristino cartella da IDB all'avvio
+        openIDB().then(function(db) {
+            idb = db;
+            return idbGet('folderHandle');
+        }).then(async function(handle) {
+            if (!handle || !window.showDirectoryPicker) return;
+            try {
+                // Richiede il permesso in modo silenzioso (no gesto utente necessario in Chrome 122+)
+                var perm = await handle.queryPermission({ mode: 'readwrite' });
+                if (perm === 'granted') {
+                    driveDirectoryHandle = handle;
+                    setFolderUI(handle.name);
+                } else {
+                    // Se non hai il permesso, lo chiediamo al prossimo click
+                    folderNameEl.textContent = handle.name + ' (clique para reautorizar)';
+                    folderNameEl.style.color = '#f59e0b';
+                    // Salviamo il handle in attesa del gesto utente
+                    driveDirectoryHandle = handle;
+                }
+            } catch(e) {
+                // handle scaduto o incompatibile, ignoriamo
+            }
+        });
+
+        // ── Preview ─────────────────────────────────────────────────────────────
+        var currentScale  = 1;
+        var currentFileUrl = null;
+        var zoomToolbar   = document.getElementById('zoom-toolbar');
+        var zoomLevelEl   = document.getElementById('zoom-level');
+        var previewImg    = null;    // ref immagine corrente
+        var previewIframe = null;   // ref iframe PDF corrente
+
+        function updateZoomLabel() {
+            zoomLevelEl.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        function applyZoom(scale) {
+            currentScale = Math.min(Math.max(scale, 0.25), 8);
+
+            if (previewImg) {
+                // Immagini: CSS transform (immediato e fluido)
+                previewImg.style.transform = 'scale(' + currentScale + ')';
+                previewImg.parentElement.classList.toggle('zoomed', currentScale > 1);
+            }
+
+            if (previewIframe && currentFileUrl) {
+                // PDF: Chrome ignora i cambi di hash su iframe già caricato.
+                // Forza il ricaricamento passando per about:blank, poi ripristina con il nuovo zoom.
+                var zoomPct   = Math.round(currentScale * 100);
+                var targetSrc = currentFileUrl + '#toolbar=1&zoom=' + zoomPct;
+                previewIframe.src = 'about:blank';
+                setTimeout(function() { previewIframe.src = targetSrc; }, 30);
+            }
+
+            updateZoomLabel();
+        }
+
+        function showPreview(file) {
+            previewContainer.innerHTML = '';
+            currentScale  = 1;
+            previewImg    = null;
+            previewIframe = null;
+            if (currentFileUrl) URL.revokeObjectURL(currentFileUrl);
+            currentFileUrl = URL.createObjectURL(file);
+
+            if (file.type.startsWith('image/')) {
+                // Wrapper scrollabile
+                var wrapper = document.createElement('div');
+                wrapper.id  = 'preview-wrapper';
+                wrapper.style.cssText = 'width:100%;height:100%;min-height:380px;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+
+                var img = document.createElement('img');
+                img.id  = 'preview-img';
+                img.src = currentFileUrl;
+                img.style.cssText = 'transform-origin:center center;transition:transform 0.15s ease;max-width:100%;max-height:380px;object-fit:contain;border-radius:4px;user-select:none;display:block;';
+                previewImg = img;
+
+                // Click alterna zoom 1x ↔ 2.5x
+                img.addEventListener('click', function() {
+                    applyZoom(currentScale > 1 ? 1 : 2.5);
+                });
+
+                // Scroll wheel zoom
+                wrapper.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    var delta = e.deltaY < 0 ? 0.15 : -0.15;
+                    applyZoom(currentScale + delta);
+                }, { passive: false });
+
+                wrapper.appendChild(img);
+                previewContainer.appendChild(wrapper);
+                updateZoomLabel();
+
+            } else if (file.type === 'application/pdf') {
+                var iframe = document.createElement('iframe');
+                iframe.src = currentFileUrl + '#toolbar=1&zoom=100';
+                iframe.style.cssText = 'width:100%;height:430px;border:0;border-radius:6px;';
+                previewIframe = iframe;   // <-- salvo il riferimento per il zoom
+                previewContainer.appendChild(iframe);
+
+            } else {
+                previewContainer.innerHTML = '<span style="color:#f59e0b;">Pré-visualização não disponível para este formato.</span>';
+            }
+
+            zoomToolbar.style.display = 'flex';
+        }
+
+        // Bottoni toolbar zoom
+        document.getElementById('btn-zoom-in').addEventListener('click', function()    { applyZoom(currentScale + 0.25); });
+        document.getElementById('btn-zoom-out').addEventListener('click', function()   { applyZoom(currentScale - 0.25); });
+        document.getElementById('btn-zoom-reset').addEventListener('click', function() { applyZoom(1); });
+        document.getElementById('btn-fullscreen').addEventListener('click', function() {
+            if (currentFileUrl) window.open(currentFileUrl, '_blank');
+        });
+
+        // ── handleFile ──────────────────────────────────────────────────────────
+        function handleFile(file) {
+            if (!file) return;
+            currentFile = file;
+            fileLabel.textContent = '✅ ' + file.name;
+            fileLabel.style.color = '#a78bfa';
+            successMsg.classList.add('hidden');
+            errorMsg.classList.add('hidden');
+
+            // Reset campi ad ogni nuovo file — solo Empresa è persistente
+            dataInput.valueAsDate = new Date();
+            document.getElementById('doc-importo').value = '';
+            document.getElementById('doc-nf').value = '';
+            document.getElementById('doc-fornitore').value = '';
+
+            showPreview(file);
+        }
+
+        // ── Drag & Drop / Click ─────────────────────────────────────────────────
+        dropzone.addEventListener('click', function() { fileInput.click(); });
+        fileInput.addEventListener('change', function(e) { handleFile(e.target.files[0]); });
+
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', function() {
+            dropzone.classList.remove('dragover');
+        });
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // ── Genera il nome file ─────────────────────────────────────────────────
+        function cleanForn(raw) {
+            // Rimuove il prefisso '⭐ ' dai fornitori custom prima di usarlo nel filename
+            return (raw || '').replace(/^⭐\s*/, '').trim();
+        }
+        function getNewFileName() {
+            var d    = dataInput.value;
+            var a    = document.getElementById('doc-importo').value.replace(',', '.');
+            var nfRaw = document.getElementById('doc-nf').value.trim().replace(/[^a-zA-Z0-9]/g, '');
+            var nf   = nfRaw ? 'NF' + nfRaw : '';
+            var forn = cleanForn(document.getElementById('doc-fornitore').value).replace(/[^a-zA-Z0-9 -]/g, '').replace(/\s+/g, '-');
+            var emp  = document.getElementById('doc-empresa').value;
+            var ext  = currentFile ? currentFile.name.split('.').pop() : 'pdf';
+            var id   = Math.random().toString(36).substring(2, 6).toUpperCase();
+            var parts = ['SCAN', d, a];
+            if (nf) parts.push(nf);
+            parts.push(forn, emp, id);
+            return parts.join('_') + '.' + ext;
+        }
+
+        // Estrae la firma senza l'ID casuale
+        function getFileSignature() {
+            var d    = dataInput.value;
+            var a    = document.getElementById('doc-importo').value.replace(',', '.');
+            var nfRaw = document.getElementById('doc-nf').value.trim().replace(/[^a-zA-Z0-9]/g, '');
+            var nf   = nfRaw ? 'NF' + nfRaw : '';
+            var forn = cleanForn(document.getElementById('doc-fornitore').value).replace(/[^a-zA-Z0-9 -]/g, '').replace(/\s+/g, '-');
+            var emp  = document.getElementById('doc-empresa').value;
+            var parts = ['SCAN', d, a];
+            if (nf) parts.push(nf);
+            parts.push(forn, emp);
+            return parts.join('_');
+        }
+
+        // Cerca duplicati nella cartella GDrive (ritorna il nome del file trovato o null)
+        async function checkDuplicateInFolder(dirHandle, signature) {
+            try {
+                for await (var entry of dirHandle.entries()) {
+                    var name   = entry[0];
+                    var kind   = entry[1].kind;
+                    if (kind === 'file' && name.startsWith(signature)) {
+                        return name; // trovato duplicato
+                    }
+                }
+            } catch(e) { /* ignora errori di permesso */ }
+            return null;
+        }
+
+        function showSuccess(msg) {
+            successMsg.textContent = msg;
+            successMsg.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+        }
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+            successMsg.classList.add('hidden');
+        }
+
+        // ── Scelta cartella (pulsante Alterar) ─────────────────────────────────
+        btnChooseFolder.addEventListener('click', async function() {
+            if (!window.showDirectoryPicker) {
+                showError('⚠️ Seu navegador não suporta seleção de pasta. Use Chrome ou Edge.');
+                return;
+            }
+            try {
+                var handle = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+                driveDirectoryHandle = handle;
+                idbPut('folderHandle', handle);
+                setFolderUI(handle.name);
+                folderNameEl.style.color = '#94a3b8';
+                showSuccess('📂 Pasta "' + handle.name + '" selecionada e memorizada!');
+            } catch(err) {
+                if (err.name !== 'AbortError') showError('❌ Erro ao selecionar pasta: ' + err.message);
+            }
+        });
+
+        // ── Salva in Cartella memorizzata ───────────────────────────────────────
+        btnDrive.addEventListener('click', async function() {
+            if (!currentFile) { showError('⚠️ Carregue um arquivo primeiro.'); return; }
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            // Se non abbiamo ancora una cartella, apriamo il picker
+            if (!driveDirectoryHandle) {
+                try {
+                    driveDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+                    idbPut('folderHandle', driveDirectoryHandle);
+                    setFolderUI(driveDirectoryHandle.name);
+                } catch(err) {
+                    if (err.name !== 'AbortError') showError('❌ Nenhuma pasta selecionada. Escolha uma pasta primeiro.');
+                    return;
+                }
+            }
+
+            // Richiede permesso se necessario (es. dopo reload)
+            try {
+                var perm = await driveDirectoryHandle.queryPermission({ mode: 'readwrite' });
+                if (perm !== 'granted') {
+                    perm = await driveDirectoryHandle.requestPermission({ mode: 'readwrite' });
+                }
+                if (perm !== 'granted') {
+                    showError('❌ Permissão negada para a pasta. Escolha outra.');
+                    return;
+                }
+            } catch(e) {
+                // API não supporta queryPermission in alcuni browser — proviamo comunque
+            }
+
+            // ── Controlo duplicati ───────────────────────────────────────────────
+            var sig = getFileSignature();
+            var existing = await checkDuplicateInFolder(driveDirectoryHandle, sig);
+            if (existing) {
+                var ok = window.confirm(
+                    '⚠️ DUPLICADO DETECTADO\n\n' +
+                    'Já existe um arquivo com os mesmos dados na pasta:\n"' + existing + '"\n\n' +
+                    'Deseja salvar mesmo assim?'
+                );
+                if (!ok) {
+                    showError('🚫 Salvamento cancelado. Arquivo duplicado: ' + existing);
+                    return;
+                }
+            }
+
+            try {
+                var newName  = getNewFileName();
+                var fHandle  = await driveDirectoryHandle.getFileHandle(newName, { create: true });
+                var writable = await fHandle.createWritable();
+                await writable.write(currentFile);
+                await writable.close();
+                // Memorizza il fornitore se nuovo
+                tryAddCustomFornecedor(document.getElementById('doc-fornitore').value.trim());
+                showSuccess('✅ Salvo em "' + driveDirectoryHandle.name + '" como: ' + newName);
+            } catch (err) {
+                showError('❌ Erro ao salvar: ' + err.message);
+            }
+        });
+
+        // ── Baixar Arquivo ──────────────────────────────────────────────────────
+        // Per il download classico uso sessionStorage per tracciare le firme salvate
+        var downloadedSigs = new Set(
+            JSON.parse(sessionStorage.getItem('sombra-scanner-sigs') || '[]')
+        );
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentFile) { showError('⚠️ Carregue um arquivo primeiro.'); return; }
+
+            // Controlo duplicati (per download, tracciamo in sessionStorage)
+            var sig = getFileSignature();
+            if (downloadedSigs.has(sig)) {
+                var ok = window.confirm(
+                    '⚠️ DUPLICADO DETECTADO\n\n' +
+                    'Já foi baixado um arquivo com os mesmos dados nesta sessão:\n"' + sig + '"\n\n' +
+                    'Deseja baixar mesmo assim?'
+                );
+                if (!ok) {
+                    showError('🚫 Download cancelado. Arquivo duplicado detectado.');
+                    return;
+                }
+            }
+
+            var newName = getNewFileName();
+            var url     = URL.createObjectURL(currentFile);
+            var a       = document.createElement('a');
+            a.href      = url;
+            a.download  = newName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+
+            // Memorizza fornitore se nuovo + firma per deduplication
+            tryAddCustomFornecedor(cleanForn(document.getElementById('doc-fornitore').value));
+            downloadedSigs.add(sig);
+            sessionStorage.setItem('sombra-scanner-sigs', JSON.stringify(Array.from(downloadedSigs)));
+
+            showSuccess('⬇️ Baixado como: ' + newName + ' — Mova-o para a pasta do Google Drive!');
+        });
+    </script>
+</body>
+</html>

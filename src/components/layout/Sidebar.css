@@ -1,0 +1,331 @@
+/* ═══════════════════════════════════════════════════
+   Sidebar.css — Premium sidebar with grouped nav
+   ═══════════════════════════════════════════════════ */
+
+/* ── Base shell ── */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* ── Logo ── */
+.sidebar-logo {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-hover) 100%);
+}
+
+.sidebar-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-blue) 100%);
+  color: #fff;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(93, 124, 242, 0.35);
+  letter-spacing: -0.5px;
+}
+
+.sidebar-logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: 0.6px;
+}
+
+.sidebar-logo-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  letter-spacing: 0.3px;
+}
+
+/* ── Empresa selector ── */
+.sidebar-empresa-section {
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  padding: var(--space-2) var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.sidebar-empresa-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  text-align: left;
+  margin-bottom: 2px;
+}
+
+.sidebar-empresa-btn:hover { background: var(--color-bg-hover); }
+
+.sidebar-empresa-btn.active {
+  background: var(--color-accent-dim);
+}
+
+.empresa-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
+}
+
+.empresa-name {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-empresa-btn.active .empresa-name {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* ── Nav container ── */
+.sidebar-nav {
+  padding: var(--space-3) var(--space-3);
+  flex: 1;
+}
+
+/* ══════════════════════════════
+   GROUPED SECTIONS
+   ══════════════════════════════ */
+.sidebar-group {
+  margin-bottom: 6px;
+}
+
+/* Group header button — the macro "RECEITAS" / "DESPESAS" */
+.sidebar-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  position: relative;
+  transition: background 0.18s ease;
+  margin-bottom: 2px;
+}
+
+.sidebar-group-header::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--group-color, var(--color-accent));
+  opacity: 0.85;
+}
+
+.sidebar-group-header:hover {
+  background: var(--color-bg-hover);
+}
+
+.sidebar-group-icon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar-group-label {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--group-color, var(--color-text-secondary));
+  text-align: left;
+}
+
+.sidebar-group-chevron {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  line-height: 1;
+}
+
+.sidebar-group-chevron.open {
+  transform: rotate(90deg);
+  color: var(--group-color, var(--color-accent));
+}
+
+/* Animated container */
+.sidebar-group-content {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity   0.22s ease;
+  opacity: 0;
+}
+
+.sidebar-group-content.open {
+  max-height: 320px;
+  opacity: 1;
+}
+
+/* Inner wrapper with the vertical connector line */
+.sidebar-group-inner {
+  padding: 2px 0 6px 14px;
+  position: relative;
+}
+
+.sidebar-group-inner::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  top: 0; bottom: 10px;
+  width: 1px;
+  background: var(--color-border);
+  border-radius: 1px;
+}
+
+/* Child link inside a group */
+.sidebar-group-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  margin-bottom: 1px;
+  position: relative;
+}
+
+.sidebar-group-link:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar-group-link.active {
+  background: color-mix(in srgb, var(--link-color, var(--color-accent)) 12%, transparent);
+  color: var(--link-color, var(--color-accent));
+  font-weight: 600;
+}
+
+/* ── Standalone divider ── */
+.sidebar-standalone-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 8px 4px 10px;
+  opacity: 0.6;
+}
+
+/* ── Standalone nav links ── */
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 2px;
+}
+
+.sidebar-nav-link:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar-nav-link.active {
+  background: var(--color-accent-dim);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.nav-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Bottom actions ── */
+.sidebar-bottom {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  margin-top: auto;
+}
+
+.sidebar-hub-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+
+.sidebar-hub-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}

@@ -1,0 +1,176 @@
+/* HubPage.css */
+.hub-page {
+  padding: var(--space-8);
+  max-width: 1200px;
+}
+
+.hub-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  gap: var(--space-4);
+}
+
+.hub-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hub-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-5);
+}
+
+/* Empresa Card */
+.empresa-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.empresa-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.empresa-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-bottom: 2px solid;
+  position: relative;
+}
+
+.empresa-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.empresa-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.empresa-card-name {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.empresa-card-edit {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+.empresa-card:hover .empresa-card-edit {
+  opacity: 1;
+}
+
+/* 2×2 Module grid */
+.empresa-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--color-border);
+}
+
+.empresa-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4);
+  cursor: pointer;
+  transition: background 0.15s ease, border-left-color 0.15s ease;
+  border: none;
+  border-left: 3px solid transparent;
+  width: 100%;
+  text-align: left;
+}
+
+/* Color variants per module */
+.empresa-action-btn.module-receitas  { background: var(--color-bg-card); }
+.empresa-action-btn.module-receitas:hover  { background: var(--color-green-dim); border-left-color: var(--color-green); }
+
+.empresa-action-btn.module-despesas  { background: var(--color-bg-secondary); }
+.empresa-action-btn.module-despesas:hover  { background: var(--color-red-dim); border-left-color: var(--color-red); }
+
+.empresa-action-btn.module-estratti  { background: var(--color-bg-card); }
+.empresa-action-btn.module-estratti:hover  { background: var(--color-accent-dim); border-left-color: var(--color-accent); }
+
+.empresa-action-btn.module-documentos { background: var(--color-bg-secondary); }
+.empresa-action-btn.module-documentos:hover { background: rgba(251,191,36,0.08); border-left-color: var(--color-yellow); }
+
+.empresa-action-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.empresa-action-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.empresa-action-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.empresa-action-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.empresa-action-arrow {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+  transition: transform var(--transition-fast);
+}
+.empresa-action-btn:hover .empresa-action-arrow {
+  transform: translateX(4px);
+  color: var(--color-text-primary);
+}
+
+.empresa-card-delete {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  border-top: 1px solid var(--color-border);
+  transition: all var(--transition-fast);
+}
+.empresa-card-delete:hover {
+  color: var(--color-red);
+  background: var(--color-red-dim);
+}

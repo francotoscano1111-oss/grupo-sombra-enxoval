@@ -1,0 +1,77 @@
+---
+description: Come aggiornare il TECHNICAL_DOC.md (AS IS dell'app) del progetto GRUPO SOMBRA Finance Hub
+---
+
+# Workflow: Aggiornamento Technical Doc (AS IS)
+
+Esegui ogni volta che aggiungi un nuovo modulo, componente rilevante, o cambi l'architettura del sistema.
+
+## Quando aggiornare
+
+- Aggiunta di una nuova empresa/società al sistema
+- Aggiunta o modifica di un modulo (Receitas, Despesas, Document Mgmt, Automation)
+- Cambiamento dello stack tecnologico o delle dipendenze
+- Modifica alla struttura del database (IndexedDB namespaces)
+- Aggiunta di nuovi workflow o pattern
+
+## Steps
+
+1. **Apri `TECHNICAL_DOC.md`** nella root del progetto (`c:\Users\ft\Desktop\WorkSpace_AntiGravity\GRUPO_SOMBRA\TECHNICAL_DOC.md`)
+
+2. **Identifica la sezione da aggiornare** (vedere struttura sotto)
+
+3. **Aggiorna la sezione** con le nuove informazioni, mantenendo il formato esistente
+
+4. **Aggiorna la sezione `## Changelog Architettura`** in cima al documento con una riga:
+```
+| YYYY-MM-DD | [Tipo: ADD/MODIFY/REMOVE] | [Descrizione breve della modifica] |
+```
+
+5. **Salva il file**
+
+## Struttura di TECHNICAL_DOC.md
+
+Il documento deve sempre avere le seguenti sezioni:
+
+```markdown
+# GRUPO SOMBRA Finance Hub — Technical Documentation (AS IS)
+
+> Ultimo aggiornamento: [YYYY-MM-DD]
+> Versione app: [X.Y.Z]
+
+## Changelog Architettura
+| Data | Tipo | Descrizione |
+|------|------|-------------|
+| ...  | ...  | ...         |
+
+## 1. Overview & Obiettivi
+
+## 2. Stack Tecnologico
+
+## 3. Empresas Configurate
+
+## 4. Architettura File (albero semplificato)
+
+## 5. Moduli Funzionali
+### 5.1 Hub — Selettore Empresa
+### 5.2 Receitas (Contas a Receber)
+### 5.3 Despesas (Contas a Pagar)
+### 5.4 Document Management
+### 5.5 Automation Layer
+
+## 6. Persistenza & Database
+### 6.1 Schema IndexedDB per Empresa
+### 6.2 Strategia di Backup
+
+## 7. Pattern & Decisioni Architetturali
+
+## 8. Dipendenze (package.json summary)
+
+## 9. Come avviare l'app localmente
+```
+
+## Note
+
+- Questo documento descrive sempre lo stato CORRENTE dell'app (AS IS)
+- Non rimuovere sezioni, anche se vuote: metti `_Non ancora implementato_`
+- Usa tabelle markdown per elencare dati strutturati (empresas, namespace DB, dipendenze)

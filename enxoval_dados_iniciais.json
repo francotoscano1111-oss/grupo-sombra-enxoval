@@ -1,0 +1,872 @@
+[
+  {
+    "id": "item_h_4",
+    "nome": "FRONHA P",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 366,
+    "saldos": {
+      "resort": 42,
+      "hotel": 52,
+      "villas": 24,
+      "rouparia": 49,
+      "suja": 45,
+      "chegouEnsacada": 16,
+      "roupariaRecepcao": 0,
+      "lavanderia": 33,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 231,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 77
+    }
+  },
+  {
+    "id": "item_h_5",
+    "nome": "FRONHA M",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 366,
+    "saldos": {
+      "resort": 42,
+      "hotel": 52,
+      "villas": 24,
+      "rouparia": 43,
+      "suja": 38,
+      "chegouEnsacada": 18,
+      "roupariaRecepcao": 7,
+      "lavanderia": 28,
+      "almoxarifado": 31,
+      "descarte": 7,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_6",
+    "nome": "LENÇOL CASAL",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 366,
+    "saldos": {
+      "resort": 42,
+      "hotel": 52,
+      "villas": 24,
+      "rouparia": 124,
+      "suja": 46,
+      "chegouEnsacada": 21,
+      "roupariaRecepcao": 7,
+      "lavanderia": 30,
+      "almoxarifado": 49,
+      "descarte": 1,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 175,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 65
+    }
+  },
+  {
+    "id": "item_h_7",
+    "nome": "LENÇO SOLT.",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 12,
+      "suja": 2,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 18,
+      "lavanderia": 2,
+      "almoxarifado": 10,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 73,
+      "yeu": 13,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 6
+    }
+  },
+  {
+    "id": "item_h_8",
+    "nome": "LENÇOL BERÇO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 3,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 1,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 1
+    }
+  },
+  {
+    "id": "item_h_9",
+    "nome": "TOALHA ROSTO",
+    "categoria": "Banho",
+    "unidadeMedida": "UN",
+    "metaMudas": 366,
+    "saldos": {
+      "resort": 42,
+      "hotel": 52,
+      "villas": 24,
+      "rouparia": 66,
+      "suja": 59,
+      "chegouEnsacada": 29,
+      "roupariaRecepcao": 16,
+      "lavanderia": 34,
+      "almoxarifado": 20,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 309,
+      "yeu": 25,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 54
+    }
+  },
+  {
+    "id": "item_h_10",
+    "nome": "TOALHA BANHO",
+    "categoria": "Banho",
+    "unidadeMedida": "UN",
+    "metaMudas": 732,
+    "saldos": {
+      "resort": 84,
+      "hotel": 104,
+      "villas": 24,
+      "rouparia": 98,
+      "suja": 98,
+      "chegouEnsacada": 56,
+      "roupariaRecepcao": 33,
+      "lavanderia": 56,
+      "almoxarifado": 70,
+      "descarte": 17,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 409,
+      "yeu": 24,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 70
+    }
+  },
+  {
+    "id": "item_h_11",
+    "nome": "TOALHA PISO",
+    "categoria": "Banho",
+    "unidadeMedida": "UN",
+    "metaMudas": 366,
+    "saldos": {
+      "resort": 21,
+      "hotel": 52,
+      "villas": 12,
+      "rouparia": 56,
+      "suja": 53,
+      "chegouEnsacada": 40,
+      "roupariaRecepcao": 5,
+      "lavanderia": 30,
+      "almoxarifado": 54,
+      "descarte": 3,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 211,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 35
+    }
+  },
+  {
+    "id": "item_h_12",
+    "nome": "TOALHA PISC. LISA",
+    "categoria": "Piscina / Praia",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 1,
+      "suja": 9,
+      "chegouEnsacada": 1,
+      "roupariaRecepcao": 17,
+      "lavanderia": 6,
+      "almoxarifado": 0,
+      "descarte": 6,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 19,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 11
+    }
+  },
+  {
+    "id": "item_h_13",
+    "nome": "TOALHA MAQUIAGEM",
+    "categoria": "Banho",
+    "unidadeMedida": "UN",
+    "metaMudas": 366,
+    "saldos": {
+      "resort": 42,
+      "hotel": 0,
+      "villas": 24,
+      "rouparia": 118,
+      "suja": 34,
+      "chegouEnsacada": 18,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 224,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_14",
+    "nome": "TOALHA PISCINA LISTRADA",
+    "categoria": "Piscina / Praia",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 24,
+      "rouparia": 51,
+      "suja": 54,
+      "chegouEnsacada": 35,
+      "roupariaRecepcao": 36,
+      "lavanderia": 41,
+      "almoxarifado": 128,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 134,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 33
+    }
+  },
+  {
+    "id": "item_h_15",
+    "nome": "ROUPÃO",
+    "categoria": "Banho",
+    "unidadeMedida": "UN",
+    "metaMudas": 244,
+    "saldos": {
+      "resort": 0,
+      "hotel": 52,
+      "villas": 24,
+      "rouparia": 13,
+      "suja": 11,
+      "chegouEnsacada": 6,
+      "roupariaRecepcao": 7,
+      "lavanderia": 9,
+      "almoxarifado": 17,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 69,
+      "yeu": 10,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 10
+    }
+  },
+  {
+    "id": "item_h_16",
+    "nome": "PROTETOR TRAVESSEIRO P",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 244,
+    "saldos": {
+      "resort": 42,
+      "hotel": 56,
+      "villas": 24,
+      "rouparia": 84,
+      "suja": 16,
+      "chegouEnsacada": 4,
+      "roupariaRecepcao": 5,
+      "lavanderia": 16,
+      "almoxarifado": 49,
+      "descarte": 3,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 230,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 9
+    }
+  },
+  {
+    "id": "item_h_17",
+    "nome": "PROTETOR TRAVESSEIRO M",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 244,
+    "saldos": {
+      "resort": 42,
+      "hotel": 56,
+      "villas": 24,
+      "rouparia": 65,
+      "suja": 15,
+      "chegouEnsacada": 6,
+      "roupariaRecepcao": 2,
+      "lavanderia": 15,
+      "almoxarifado": 31,
+      "descarte": 1,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_18",
+    "nome": "PROTETOR COLCHÃO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 244,
+    "saldos": {
+      "resort": 21,
+      "hotel": 26,
+      "villas": 12,
+      "rouparia": 20,
+      "suja": 9,
+      "chegouEnsacada": 2,
+      "roupariaRecepcao": 9,
+      "lavanderia": 8,
+      "almoxarifado": 30,
+      "descarte": 1,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 50,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_19",
+    "nome": "EDREDOM CASAL",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 80,
+    "saldos": {
+      "resort": 0,
+      "hotel": 8,
+      "villas": 12,
+      "rouparia": 12,
+      "suja": 2,
+      "chegouEnsacada": 5,
+      "roupariaRecepcao": 1,
+      "lavanderia": 2,
+      "almoxarifado": 3,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_20",
+    "nome": "EDREDOM SOLTEIRO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 8,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_21",
+    "nome": "EDREDOM BERÇO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 5,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_22",
+    "nome": "COLCHA PIQUET",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 244,
+    "saldos": {
+      "resort": 21,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 38,
+      "suja": 18,
+      "chegouEnsacada": 6,
+      "roupariaRecepcao": 1,
+      "lavanderia": 9,
+      "almoxarifado": 10,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 81,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 12
+    }
+  },
+  {
+    "id": "item_h_23",
+    "nome": "COLCHA SOLTEIRO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 1,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 1,
+      "almoxarifado": 18,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 39,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_24",
+    "nome": "REDE",
+    "categoria": "Decoração / Varanda",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 0,
+      "suja": 2,
+      "chegouEnsacada": 1,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 30,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 5
+    }
+  },
+  {
+    "id": "item_h_25",
+    "nome": "TRAVESSEIRO P",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 42,
+      "hotel": 56,
+      "villas": 24,
+      "rouparia": 22,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 4,
+      "lavanderia": 0,
+      "almoxarifado": 20,
+      "descarte": 4,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_26",
+    "nome": "TRAVESSEIRO M",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 42,
+      "hotel": 56,
+      "villas": 24,
+      "rouparia": 24,
+      "suja": 3,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 4,
+      "lavanderia": 0,
+      "almoxarifado": 24,
+      "descarte": 4,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_27",
+    "nome": "PEZEIRA",
+    "categoria": "Decoração / Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 26,
+      "villas": 12,
+      "rouparia": 0,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 10,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_h_28",
+    "nome": "ALMOFADA P",
+    "categoria": "Decoração / Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 56,
+      "villas": 24,
+      "rouparia": 0,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_s_15",
+    "nome": "PROTETOR SOLTEIRO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 4,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_s_18",
+    "nome": "COLCHA BERÇO",
+    "categoria": "Cama",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 5,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  },
+  {
+    "id": "item_s_23",
+    "nome": "GUARDANAPOS",
+    "categoria": "Restaurante / SPA",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 126
+    }
+  },
+  {
+    "id": "item_s_24",
+    "nome": "PANOS DE PRATO",
+    "categoria": "Restaurante / SPA",
+    "unidadeMedida": "UN",
+    "metaMudas": 0,
+    "saldos": {
+      "resort": 0,
+      "hotel": 0,
+      "villas": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "chegouEnsacada": 0,
+      "roupariaRecepcao": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "perda": 0
+    },
+    "spa_saldos": {
+      "spa": 0,
+      "yeu": 0,
+      "rouparia": 0,
+      "suja": 0,
+      "lavanderia": 0,
+      "almoxarifado": 0,
+      "descarte": 0,
+      "pendencia": 0
+    }
+  }
+]

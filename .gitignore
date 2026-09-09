@@ -1,0 +1,7 @@
+node_modules/
+dist/
+_backups/
+Uploads/
+*.mjs
+*.cjs
+tmp_*

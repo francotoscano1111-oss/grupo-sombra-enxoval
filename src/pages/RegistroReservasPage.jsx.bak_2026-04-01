@@ -1,0 +1,930 @@
+/**
+ * RegistroReservasPage.jsx — Reservas & Consumos (HITS)
+ *
+ * Tab 1 — Reservas:        existing Registro Reservas functionality (all empresas)
+ * Tab 2 — Resumo de Conta: HITS File 1 import (sistemaFrontend === 'hits' only)
+ * Tab 3 — Consumos:        HITS File 2 import (sistemaFrontend === 'hits' only)
+ */
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import { exportToExcel, exportToPdf } from '../utils/exportUtils';
+import { useEmpresa } from '../context/EmpresaContext';
+import { useRegistroReservas } from '../hooks/useRegistroReservas';
+import { useHitsResumo }       from '../hooks/useHitsResumo';
+import { useHitsConsumos }     from '../hooks/useHitsConsumos';
+import { useToast }            from '../context/ToastContext';
+import ReservaModal            from '../components/reservas/ReservaModal';
+import ImportReservasModal     from '../components/reservas/ImportReservasModal';
+import { usePagination }       from '../hooks/usePagination';
+import PaginationControls      from '../components/common/PaginationControls';
+import HitsAnalysisPanel       from '../components/hits/HitsAnalysisPanel';
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function fmtDate(d) {
+  if (!d) return '—';
+  // Handle DD/MM/YYYY already formatted
+  if (typeof d === 'string' && d.includes('/')) return d.split(' ')[0];
+  try { return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR'); } catch { return d; }
+}
+
+function fmtCurrency(v) {
+  return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+/** Compact formatter for KPI cards — avoids overflow/ellipsis on large values */
+function fmtKPI(v) {
+  const n = Number(v || 0);
+  if (n >= 1_000_000) {
+    return `R$ ${(n / 1_000_000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`;
+  }
+  if (n >= 1_000) {
+    return `R$ ${(n / 1_000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`;
+  }
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function fmtNum(v) {
+  return Number(v || 0).toLocaleString('pt-BR');
+}
+
+// ── KPI Card ──────────────────────────────────────────────────────────────────
+
+function KPICard({ label, value, sub, icon, color, onClick, active }) {
+  return (
+    <div
+      className="kpi-card"
+      style={{
+        borderTop: `3px solid ${color}`,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.15s',
+        outline: active ? `2px solid ${color}` : 'none',
+        outlineOffset: 2,
+      }}
+      onClick={onClick}
+      onMouseEnter={e => { if (onClick) e.currentTarget.style.transform = 'scale(1.02)'; }}
+      onMouseLeave={e => { if (onClick) e.currentTarget.style.transform = 'scale(1)'; }}
+    >
+      <div className="kpi-header">
+        <span className="kpi-label">{label}</span>
+        <span style={{ fontSize: 22 }}>{icon}</span>
+      </div>
+      <div className="kpi-value" style={{ color }}>{value}</div>
+      {sub && <div className="kpi-sub">{sub}</div>}
+    </div>
+  );
+}
+
+// ── Import Result Banner ───────────────────────────────────────────────────────
+
+function ImportBanner({ result, onClose }) {
+  if (!result) return null;
+  return (
+    <div style={{
+      background: result.imported > 0 ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.1)',
+      border: `1px solid ${result.imported > 0 ? 'var(--color-green)' : 'var(--color-yellow)'}`,
+      borderRadius: 8, padding: '10px 16px', marginBottom: 12,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13,
+    }} className="fade-in">
+      <span>
+        ✅ <strong>{result.imported}</strong> registros importados
+        {result.skipped > 0 && <> · <strong>{result.skipped}</strong> duplicatas ignoradas</>}
+      </span>
+      <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+    </div>
+  );
+}
+
+// ── Tab Nav ───────────────────────────────────────────────────────────────────
+
+function TabNav({ tabs, active, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '2px solid var(--color-border)', paddingBottom: 0 }}>
+      {tabs.map(t => (
+        <button
+          key={t.id}
+          onClick={() => onChange(t.id)}
+          style={{
+            padding: '8px 18px', fontSize: 13, fontWeight: 600,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: active === t.id ? 'var(--color-accent)' : 'var(--color-text-muted)',
+            borderBottom: active === t.id ? '2px solid var(--color-accent)' : '2px solid transparent',
+            marginBottom: -2, transition: 'color 0.15s, border-color 0.15s',
+          }}
+        >
+          {t.icon} {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── HITS Excel Import Helper ──────────────────────────────────────────────────
+
+function useHitsExcelImport({ onImport, label }) {
+  const fileRef = useRef(null);
+  const [importing, setImporting] = useState(false);
+  const toast = useToast();
+
+  const trigger = () => fileRef.current?.click();
+
+  const handleFile = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImporting(true);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+      const result = await onImport(rows);
+      return result;
+    } catch (err) {
+      toast.error(`Erro ao ler arquivo: ${err.message}`);
+      return null;
+    } finally {
+      setImporting(false);
+    }
+  }, [onImport, toast]);
+
+  const Input = (
+    <input
+      ref={fileRef}
+      type="file"
+      accept=".xlsx,.xls"
+      style={{ display: 'none' }}
+      onChange={handleFile}
+    />
+  );
+
+  return { trigger, importing, Input };
+}
+
+// ── Tab: Resumo de Conta (File 1) ─────────────────────────────────────────────
+
+function ResumoTab({ empresaId }) {
+  const toast = useToast();
+  const { resumos, loading, importResumos, clearResumos } = useHitsResumo(empresaId);
+  const [search, setSearch]       = useState('');
+  const [filterApt, setFilterApt] = useState('');
+  const [importResult, setImportResult] = useState(null);
+
+  const aptoOpts = useMemo(() => [...new Set(resumos.map(r => r.apartamento).filter(Boolean))].sort(), [resumos]);
+
+  const rows = useMemo(() => {
+    let list = [...resumos];
+    if (filterApt) list = list.filter(r => r.apartamento === filterApt);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(r =>
+        (r.global        || '').toLowerCase().includes(q) ||
+        (r.nomeHospede   || '').toLowerCase().includes(q) ||
+        (r.empresaAgencia|| '').toLowerCase().includes(q) ||
+        (r.voucher       || '').toString().includes(q)
+      );
+    }
+    return list;
+  }, [resumos, search, filterApt]);
+
+  const kpis = useMemo(() => ({
+    total:      resumos.length,
+    filtered:   rows.length,
+    vlTotal:    rows.reduce((s, r) => s + (r.vlTotal  || 0), 0),
+    vlConsumos: rows.reduce((s, r) => s + (r.vlConsumos || 0), 0),
+  }), [resumos.length, rows]);
+
+  const { currentRows, currentPage, totalPages, totalItems, goToPage, nextPage, prevPage } = usePagination(rows, 50);
+
+  const handleImport = useCallback(async (excelRows) => {
+    const result = await importResumos(excelRows);
+    setImportResult(result);
+    if (result.imported > 0) toast.success(`${result.imported} contas importadas!`);
+    else toast.info(`Nenhuma nova conta — ${result.skipped} duplicatas ignoradas.`);
+    return result;
+  }, [importResumos, toast]);
+
+  const handleClear = async () => {
+    if (!window.confirm('🚨 Apagar TODOS os dados de Resumo de Conta desta empresa?')) return;
+    await clearResumos();
+    setImportResult(null);
+    toast.info('Base de dados Resumo de Conta esvaziada.');
+  };
+
+  const handleExportExcel = () => {
+    const data = rows.map(r => ({
+      'Global':           r.global,
+      'Hóspede/Empresa':  r.nomeHospede,
+      'Apartamento':      r.apartamento,
+      'Categoria Apto':   r.categoriaApto,
+      'Tarifário':        r.tarifario,
+      'Check-in':         r.checkin,
+      'Check-out':        r.checkout,
+      'Adt':              r.adt,
+      'Criança':          r.crianca,
+      'Total Diárias':    r.totalDiarias,
+      'Vl. Diárias':      r.vlDiarias,
+      'Vl. Consumos':     r.vlConsumos,
+      'Vl. Eventos':      r.vlEventos,
+      'Vl. Taxas':        r.vlTaxas,
+      'Total':            r.vlTotal,
+      'Crédito':          r.credito,
+      'Diária Média':     r.diariasMedia,
+      'Empresa/Agência':  r.empresaAgencia,
+      'Voucher':          r.voucher,
+      'Canal Origem':     r.canalOrigem,
+      'Aberto por':       r.abertoPor,
+      'Fechado por':      r.fechadoPor,
+    }));
+    exportToExcel(data, 'hits_resumo_conta', 'Resumo_Conta_HITS');
+    toast.success('Excel exportado!');
+  };
+
+  const { trigger, importing, Input } = useHitsExcelImport({ onImport: handleImport, label: 'Resumo' });
+
+  if (loading) return <div className="contas-loading"><div className="spinner" /></div>;
+
+  return (
+    <div>
+      {Input}
+      <ImportBanner result={importResult} onClose={() => setImportResult(null)} />
+
+      {/* KPIs */}
+      <div className="contas-kpis" style={{ marginBottom: 16 }}>
+        <KPICard label="Total Contas"   value={kpis.total}               icon="🏨" color="var(--color-accent)"  sub="na base" />
+        <KPICard label="Filtrados"      value={kpis.filtered}            icon="🔍" color="var(--color-blue)"    sub="resultado atual" />
+        <KPICard label="Total Receita"  value={fmtKPI(kpis.vlTotal)}    icon="💰" color="var(--color-green)"   sub="valor total (filtro)" />
+        <KPICard label="Consumos"       value={fmtKPI(kpis.vlConsumos)} icon="🍽️" color="var(--color-purple)"  sub="vl. consumos (filtro)" />
+      </div>
+
+      {/* Toolbar */}
+      <div className="contas-toolbar card" style={{ marginBottom: 12 }}>
+        <div className="contas-toolbar-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: '1 1 auto', alignItems: 'center' }}>
+            <input className="form-input" style={{ flex: 1, minWidth: 160, maxWidth: 300 }}
+              placeholder="🔍 Global, hóspede, empresa, voucher..."
+              value={search} onChange={e => setSearch(e.target.value)} />
+            <select className="form-input" style={{ width: 130 }} value={filterApt} onChange={e => setFilterApt(e.target.value)}>
+              <option value="">Todos aptos</option>
+              {aptoOpts.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{rows.length} resultado{rows.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <button className="btn btn-ghost btn-sm" onClick={handleExportExcel}>📊 Excel</button>
+            <div style={{ width: 1, height: 24, background: 'var(--color-border)' }} />
+            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-red)' }} onClick={handleClear}>🗑 Limpar Base</button>
+            <button className="btn btn-secondary btn-sm" onClick={trigger} disabled={importing}>
+              {importing ? '⏳ Importando...' : '📥 Importar Excel'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="card" style={{ overflow: 'auto' }}>
+        {rows.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🏨</div>
+            <div className="empty-state-text">
+              {resumos.length === 0 ? 'Nenhum Resumo de Conta importado' : 'Nenhum resultado nos filtros atuais'}
+            </div>
+            {resumos.length === 0 && (
+              <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={trigger}>📥 Importar Excel</button>
+            )}
+          </div>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Global</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Apto</th>
+                <th>Hóspede / Empresa</th>
+                <th>Empresa/Agência</th>
+                <th style={{ textAlign: 'center' }}>RN</th>
+                <th style={{ textAlign: 'right' }}>Diárias</th>
+                <th style={{ textAlign: 'right' }}>Consumos</th>
+                <th style={{ textAlign: 'right' }}>Total</th>
+                <th>Canal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentRows.map(r => (
+                <tr key={r.id}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-accent)' }}>{r.global}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.checkin}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.checkout}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.apartamento || '—'}</td>
+                  <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.nomeHospede}>
+                    {r.nomeHospede || '—'}
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{r.empresaAgencia || '—'}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.totalDiarias}</td>
+                  <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{fmtCurrency(r.vlDiarias)}</td>
+                  <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--color-purple)' }}>{fmtCurrency(r.vlConsumos)}</td>
+                  <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-green)' }}>{fmtCurrency(r.vlTotal)}</td>
+                  <td style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{r.canalOrigem || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <PaginationControls currentPage={currentPage} totalPages={totalPages} totalItems={totalItems}
+          nextPage={nextPage} prevPage={prevPage} goToPage={goToPage} />
+      </div>
+    </div>
+  );
+}
+
+// ── Tab: Consumos Lançados (File 2) ───────────────────────────────────────────
+
+function ConsumosTab({ empresaId }) {
+  const toast = useToast();
+  const { consumos, loading, importConsumos, clearConsumos } = useHitsConsumos(empresaId);
+  const [search, setSearch]           = useState('');
+  const [filterConta, setFilterConta] = useState('');
+  const [filterDepto, setFilterDepto] = useState('');
+  const [importResult, setImportResult] = useState(null);
+
+  const contaOpts = useMemo(() => [...new Set(consumos.map(c => c.conta).filter(Boolean))].sort(), [consumos]);
+  const deptoOpts = useMemo(() => [...new Set(consumos.map(c => c.departamento).filter(Boolean))].sort(), [consumos]);
+
+  const rows = useMemo(() => {
+    let list = [...consumos];
+    if (filterConta) list = list.filter(c => c.conta === filterConta);
+    if (filterDepto) list = list.filter(c => c.departamento === filterDepto);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(c =>
+        (c.conta     || '').toLowerCase().includes(q) ||
+        (c.produto   || '').toLowerCase().includes(q) ||
+        (c.hospede   || '').toLowerCase().includes(q) ||
+        (c.comanda   || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [consumos, search, filterConta, filterDepto]);
+
+  const kpis = useMemo(() => ({
+    total:    consumos.length,
+    filtered: rows.length,
+    vlTotal:  rows.reduce((s, c) => s + (c.total || 0), 0),
+    contas:   new Set(rows.map(c => c.conta)).size,
+  }), [consumos.length, rows]);
+
+  const { currentRows, currentPage, totalPages, totalItems, goToPage, nextPage, prevPage } = usePagination(rows, 100);
+
+  const handleImport = useCallback(async (excelRows) => {
+    const result = await importConsumos(excelRows);
+    setImportResult(result);
+    if (result.imported > 0) toast.success(`${result.imported} consumos importados!`);
+    else toast.info(`Nenhum novo consumo — ${result.skipped} duplicatas ignoradas.`);
+    return result;
+  }, [importConsumos, toast]);
+
+  const handleClear = async () => {
+    if (!window.confirm('🚨 Apagar TODOS os dados de Consumos desta empresa?')) return;
+    await clearConsumos();
+    setImportResult(null);
+    toast.info('Base de dados Consumos esvaziada.');
+  };
+
+  const handleExportExcel = () => {
+    const data = rows.map(c => ({
+      'Conta':            c.conta,
+      'Comanda':          c.comanda,
+      'Produto':          c.produto,
+      'Data':             c.data,
+      'Data de Operação': c.dataOperacao,
+      'Operação':         c.operacao,
+      'Categoria':        c.categoria,
+      'Departamento':     c.departamento,
+      'Família':          c.familia,
+      'Quantidade':       c.quantidade,
+      'Valor Unit.':      c.valor,
+      'Total':            c.total,
+      'Apartamento':      c.apartamento,
+      'Ponto de Venda':   c.pontoVenda,
+      'Subconta':         c.subconta,
+      'Hóspede':          c.hospede,
+      'Empresa':          c.empresa,
+      'Usuário':          c.usuario,
+      'Hóspede Origem':   c.hospedeOrigem,
+    }));
+    exportToExcel(data, 'hits_consumos', 'Consumos_HITS');
+    toast.success('Excel exportado!');
+  };
+
+  const { trigger, importing, Input } = useHitsExcelImport({ onImport: handleImport, label: 'Consumos' });
+
+  if (loading) return <div className="contas-loading"><div className="spinner" /></div>;
+
+  return (
+    <div>
+      {Input}
+      <ImportBanner result={importResult} onClose={() => setImportResult(null)} />
+
+      {/* KPIs */}
+      <div className="contas-kpis" style={{ marginBottom: 16 }}>
+        <KPICard label="Total Consumos" value={fmtNum(kpis.total)}      icon="🍽️" color="var(--color-purple)" sub="na base" />
+        <KPICard label="Filtrados"      value={fmtNum(kpis.filtered)}   icon="🔍" color="var(--color-blue)"   sub="resultado atual" />
+        <KPICard label="Contas Únicas"  value={kpis.contas}             icon="🏨" color="var(--color-accent)" sub="no filtro" />
+        <KPICard label="Total"          value={fmtKPI(kpis.vlTotal)}   icon="💰" color="var(--color-green)"  sub="valor consumos (filtro)" />
+      </div>
+
+      {/* Analysis Buttons — Consumos A&B | Serviços SPA | Taxa Preservação */}
+      <HitsAnalysisPanel empresaId={empresaId} consumos={consumos} />
+
+      {/* Toolbar */}
+      <div className="contas-toolbar card" style={{ marginBottom: 12 }}>
+        <div className="contas-toolbar-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: '1 1 auto', alignItems: 'center' }}>
+            <input className="form-input" style={{ flex: 1, minWidth: 160, maxWidth: 300 }}
+              placeholder="🔍 Conta, produto, hóspede, comanda..."
+              value={search} onChange={e => setSearch(e.target.value)} />
+            <select className="form-input" style={{ width: 160 }} value={filterConta} onChange={e => setFilterConta(e.target.value)}>
+              <option value="">Todas as contas</option>
+              {contaOpts.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select className="form-input" style={{ width: 150 }} value={filterDepto} onChange={e => setFilterDepto(e.target.value)}>
+              <option value="">Todos depto.</option>
+              {deptoOpts.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{rows.length} resultado{rows.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <button className="btn btn-ghost btn-sm" onClick={handleExportExcel}>📊 Excel</button>
+            <div style={{ width: 1, height: 24, background: 'var(--color-border)' }} />
+            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-red)' }} onClick={handleClear}>🗑 Limpar Base</button>
+            <button className="btn btn-secondary btn-sm" onClick={trigger} disabled={importing}>
+              {importing ? '⏳ Importando...' : '📥 Importar Excel'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="card" style={{ overflow: 'auto' }}>
+        {rows.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🍽️</div>
+            <div className="empty-state-text">
+              {consumos.length === 0 ? 'Nenhum Consumo importado' : 'Nenhum resultado nos filtros atuais'}
+            </div>
+            {consumos.length === 0 && (
+              <button className="btn btn-secondary" style={{ marginTop: 12 }} onClick={trigger}>📥 Importar Excel</button>
+            )}
+          </div>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Conta</th>
+                <th>Data de Operação</th>
+                <th>Comanda</th>
+                <th>Produto</th>
+                <th>Departamento</th>
+                <th>Categoria</th>
+                <th style={{ textAlign: 'center' }}>Qtd</th>
+                <th style={{ textAlign: 'right' }}>Valor Unit.</th>
+                <th style={{ textAlign: 'right' }}>Total</th>
+                <th>Hóspede</th>
+                <th>Ponto de Venda</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentRows.map(c => (
+                <tr key={c.id}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-accent)' }}>{c.conta}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{c.dataOperacao || c.data || '—'}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{c.comanda}</td>
+                  <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.produto}>
+                    {c.produto}
+                  </td>
+                  <td style={{ fontSize: 12 }}>{c.departamento || '—'}</td>
+                  <td>
+                    {c.categoria && <span className="badge badge-accent" style={{ fontSize: 10 }}>{c.categoria}</span>}
+                  </td>
+                  <td style={{ textAlign: 'center', fontWeight: 700 }}>{c.quantidade}</td>
+                  <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{fmtCurrency(c.valor)}</td>
+                  <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-green)' }}>{fmtCurrency(c.total)}</td>
+                  <td style={{ fontSize: 12, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.hospede}>{c.hospede || '—'}</td>
+                  <td style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{c.pontoVenda || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <PaginationControls currentPage={currentPage} totalPages={totalPages} totalItems={totalItems}
+          nextPage={nextPage} prevPage={prevPage} goToPage={goToPage} />
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
+export default function RegistroReservasPage() {
+  const { empresaId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { empresas, activeEmpresa } = useEmpresa();
+  const empresaCtx = empresas.find(e => e.id === empresaId) || activeEmpresa;
+
+  const isHits    = empresaCtx?.sistemaFrontend === 'hits';
+  const isConcept = empresaCtx && (
+    String(empresaCtx.name || '').toUpperCase().includes('SAF ') ||
+    String(empresaCtx.name || '').toUpperCase().includes('JM SCP')
+  );
+
+  const pageLabel = isHits
+    ? 'Reservas & Consumos (HITS)'
+    : isConcept
+      ? 'Reservas (Concept)'
+      : 'Reservas (HITs)';
+
+  const { reservas, loading, saveReserva, deleteReserva, clearReservas, importReservas, checkDuplicates } = useRegistroReservas(empresaId);
+
+  const [activeTab,  setActiveTab]  = useState(isHits ? 'resumo' : 'reservas');
+  const [editing,    setEditing]    = useState(null);
+  const [showModal,  setShowModal]  = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showAudit,  setShowAudit]  = useState(false);
+
+  // ── Filters ────────────────────────────────────────────────────────────────
+  const [search,       setSearch]       = useState('');
+  const [checkinDe,    setCheckinDe]    = useState('');
+  const [checkinAte,   setCheckinAte]   = useState('');
+  const [checkoutDe,   setCheckoutDe]   = useState('');
+  const [checkoutAte,  setCheckoutAte]  = useState('');
+  const [filtroEmpresa,    setFiltroEmpresa]    = useState('');
+  const [filtroCategoria,  setFiltroCategoria]  = useState('');
+  const [filtroStatus,     setFiltroStatus]     = useState('');
+  const [filtroCanceladas, setFiltroCanceladas] = useState(false);
+
+  const resetFilters = () => {
+    setSearch(''); setCheckinDe(''); setCheckinAte('');
+    setCheckoutDe(''); setCheckoutAte('');
+    setFiltroEmpresa(''); setFiltroCategoria('');
+    setFiltroStatus(''); setFiltroCanceladas(false);
+  };
+
+  const hasFilters = search || checkinDe || checkinAte || checkoutDe || checkoutAte ||
+    filtroEmpresa || filtroCategoria || filtroStatus || filtroCanceladas;
+
+  const empresasOpts   = useMemo(() => [...new Set(reservas.map(r => r.empresa).filter(Boolean))].sort(), [reservas]);
+  const categoriasOpts = useMemo(() => [...new Set(reservas.map(r => r.categoria).filter(Boolean))].sort(), [reservas]);
+
+  const rows = useMemo(() => {
+    let list = [...reservas];
+    if (filtroCanceladas)  list = list.filter(r => r.status === 'Cancelada');
+    else if (filtroStatus) list = list.filter(r => r.status === filtroStatus);
+    if (filtroEmpresa)     list = list.filter(r => r.empresa   === filtroEmpresa);
+    if (filtroCategoria)   list = list.filter(r => r.categoria === filtroCategoria);
+    if (checkinDe)         list = list.filter(r => r.checkin  >= checkinDe);
+    if (checkinAte)        list = list.filter(r => r.checkin  <= checkinAte);
+    if (checkoutDe)        list = list.filter(r => r.checkout >= checkoutDe);
+    if (checkoutAte)       list = list.filter(r => r.checkout <= checkoutAte);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(r =>
+        (r.hospede || '').toLowerCase().includes(q) ||
+        (r.voucher || '').toLowerCase().includes(q) ||
+        (r.empresa || '').toLowerCase().includes(q) ||
+        fmtDate(r.checkin).includes(q) ||
+        fmtDate(r.checkout).includes(q)
+      );
+    }
+    return list;
+  }, [reservas, search, checkinDe, checkinAte, checkoutDe, checkoutAte,
+      filtroEmpresa, filtroCategoria, filtroStatus, filtroCanceladas]);
+
+  const duplicatesMap = useMemo(() => {
+    if (!showAudit) return new Map();
+    const grps = new Map();
+    reservas.forEach(r => {
+      const v = r.voucher?.trim();
+      if (!v) return;
+      if (!grps.has(v)) grps.set(v, []);
+      grps.get(v).push(r);
+    });
+    for (const [k, arr] of grps.entries()) {
+      if (arr.length <= 1) grps.delete(k);
+    }
+    return grps;
+  }, [reservas, showAudit]);
+
+  const kpis = useMemo(() => ({
+    count:      rows.length,
+    totalRN:    rows.reduce((s, r) => s + (r.rn           || 0), 0),
+    totalValor: rows.reduce((s, r) => s + (r.valorReserva || 0), 0),
+    canceladas: rows.filter(r => r.status === 'Cancelada').length,
+    avgRN:      rows.length ? (rows.reduce((s, r) => s + (r.rn || 0), 0) / rows.length).toFixed(1) : 0,
+  }), [rows]);
+
+  const { currentRows, currentPage, totalPages, totalItems, goToPage, nextPage, prevPage } = usePagination(rows, 50);
+
+  const handleSave = async (data) => {
+    await saveReserva(data);
+    toast.success(data.id ? 'Reserva atualizada!' : 'Reserva adicionada!');
+    setShowModal(false); setEditing(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Deletar esta reserva?')) return;
+    await deleteReserva(id);
+    toast.info('Reserva removida.');
+  };
+
+  const handleImport = async (rows) => {
+    const count = await importReservas(rows);
+    toast.success(`${count} reservas importadas!`);
+    return count;
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm('🚨 ATENÇÃO: Apagar COMPLETAMENTE todas as reservas desta empresa?')) return;
+    await clearReservas();
+    toast.info('Todas as reservas foram deletadas.');
+  };
+
+  const handleExportExcel = useCallback(() => {
+    const data = rows.map(r => ({
+      'Voucher':       r.voucher || '',
+      'Inclusão':      r.inclusao || '',
+      'Check-in':      fmtDate(r.checkin),
+      'Check-out':     fmtDate(r.checkout),
+      'RN':            r.rn,
+      'Pax':           r.pax,
+      'Hóspede':       r.hospede || '',
+      'Empresa/OTA':   r.empresa || '',
+      'Apto.':         r.apto || '',
+      'Categoria':     r.categoria || '',
+      'Tarifa (R$)':   r.tarifa,
+      'Crédito (R$)':  r.credito,
+      'Valor Diárias (R$)': r.diarias,
+      'Valor Reserva (R$)': r.valorReserva,
+      'Status':        r.status,
+    }));
+    exportToExcel(data, 'registro_reservas', pageLabel.replace(/\s+/g, '_'));
+    toast.success('Excel exportado!');
+  }, [rows, toast, pageLabel]);
+
+  const handleExportPdf = useCallback(() => {
+    const cols = [
+      { label: 'Voucher',   getValue: r => r.voucher || '—' },
+      { label: 'Check-in',  getValue: r => fmtDate(r.checkin) },
+      { label: 'Check-out', getValue: r => fmtDate(r.checkout) },
+      { label: 'RN',        getValue: r => r.rn },
+      { label: 'Hóspede',   getValue: r => r.hospede || '—' },
+      { label: 'Empresa',   getValue: r => r.empresa || '—' },
+      { label: 'Apto',      getValue: r => r.apto || '—' },
+      { label: 'Valor',     getValue: r => fmtCurrency(r.valorReserva) },
+      { label: 'Status',    getValue: r => r.status },
+    ];
+    exportToPdf(pageLabel, cols, rows);
+  }, [rows, pageLabel]);
+
+  // Tab definitions
+  const tabs = isHits
+    ? [
+        { id: 'resumo',   icon: '🏨', label: 'Resumo de Conta' },
+        { id: 'consumos', icon: '🍽️', label: 'Consumos Lançados' },
+      ]
+    : [
+        { id: 'reservas', icon: '📋', label: 'Reservas' },
+      ];
+
+  if (loading && activeTab === 'reservas') return <div className="contas-loading"><div className="spinner" /></div>;
+
+  return (
+    <div className="contas-page">
+      {/* Back button + title */}
+      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => navigate(-1)} className="btn btn-secondary"
+          style={{ padding: '6px 12px', fontSize: 13, display: 'flex', gap: 6, alignItems: 'center', border: '1px solid var(--color-border)', width: 'fit-content' }}>
+          ← Voltar
+        </button>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+          🏨 {pageLabel}
+        </h2>
+      </div>
+
+      {/* Tab navigation (only shown if HITS empresa has multiple tabs) */}
+      {tabs.length > 1 && (
+        <TabNav tabs={tabs} active={activeTab} onChange={setActiveTab} />
+      )}
+
+      {/* ── Tab: Reservas ────────────────────────────────────────────────── */}
+      {activeTab === 'reservas' && (
+        <>
+          {/* KPIs */}
+          <div className="contas-kpis">
+            <KPICard label={pageLabel} value={kpis.count}             icon="🏨" color="var(--color-accent)"
+              sub={`RN médio: ${kpis.avgRN}`} onClick={hasFilters ? resetFilters : undefined} />
+            <KPICard label="Room Nights"   value={kpis.totalRN + ' RN'} icon="🛏️" color="var(--color-blue)"   sub="total noites" />
+            <KPICard label="Receita Total" value={fmtKPI(kpis.totalValor)} icon="💰" color="var(--color-green)"  sub="valor reservas" />
+            <KPICard label="Canceladas"    value={kpis.canceladas}       icon="❌" color="var(--color-red)"
+              sub="na seleção" active={filtroCanceladas}
+              onClick={() => { setFiltroCanceladas(f => !f); setFiltroStatus(''); }} />
+          </div>
+
+          {/* Toolbar */}
+          <div className="contas-toolbar card">
+            <div className="contas-toolbar-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, flex: '1 1 auto' }}>
+                <input className="form-input" style={{ flex: 1, minWidth: 140, maxWidth: 280 }}
+                  placeholder="🔍 Voucher, hóspede, empresa..."
+                  value={search} onChange={e => setSearch(e.target.value)} />
+                <select className="form-input" style={{ width: 145, flexShrink: 0 }} value={filtroEmpresa} onChange={e => setFiltroEmpresa(e.target.value)}>
+                  <option value="">Todas empresas</option>
+                  {empresasOpts.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+                <select className="form-input" style={{ width: 115, flexShrink: 0 }} value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)}>
+                  <option value="">Todas cat.</option>
+                  {categoriasOpts.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select className="form-input" style={{ width: 130, flexShrink: 0 }} value={filtroStatus}
+                  onChange={e => { setFiltroStatus(e.target.value); setFiltroCanceladas(false); }}>
+                  <option value="">Todos status</option>
+                  {['Realizada', 'Cancelada', 'No-Show', 'Pendente'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <span style={{ fontSize: 12, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+                  {rows.length} resultado{rows.length !== 1 ? 's' : ''}
+                </span>
+                {hasFilters && (
+                  <button className="btn btn-ghost btn-sm" onClick={resetFilters} style={{ color: 'var(--color-yellow)', flexShrink: 0 }}>✕ Limpar</button>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <button className="btn btn-ghost btn-sm" onClick={handleExportExcel}>📊 Excel</button>
+                <button className="btn btn-ghost btn-sm" onClick={handleExportPdf}>🖨️ PDF</button>
+                <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px' }} />
+                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-red)' }} onClick={handleClearAll}>🗑 Svuota Tudo</button>
+                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-yellow)', border: '1px solid rgba(251,191,36,0.5)' }} onClick={() => setShowAudit(true)}>🕵️ Audit Clones</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>📥 Importar</button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setEditing(null); setShowModal(true); }}>+ HIT Manual</button>
+              </div>
+            </div>
+            <div className="contas-toolbar-row" style={{ marginTop: 8, flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>Check-in de:</label>
+              <input type="date" className="form-input" style={{ width: 145 }} value={checkinDe}   onChange={e => setCheckinDe(e.target.value)} />
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>até:</label>
+              <input type="date" className="form-input" style={{ width: 145 }} value={checkinAte}  onChange={e => setCheckinAte(e.target.value)} />
+              <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px' }} />
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>Check-out de:</label>
+              <input type="date" className="form-input" style={{ width: 145 }} value={checkoutDe}  onChange={e => setCheckoutDe(e.target.value)} />
+              <label style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>até:</label>
+              <input type="date" className="form-input" style={{ width: 145 }} value={checkoutAte} onChange={e => setCheckoutAte(e.target.value)} />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="card" style={{ overflow: 'auto' }}>
+            {rows.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">🏨</div>
+                <div className="empty-state-text">
+                  {reservas.length === 0 ? 'Nenhuma reserva cadastrada' : 'Nenhuma reserva nos filtros atuais'}
+                </div>
+                {reservas.length === 0 && (
+                  <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                    <button className="btn btn-secondary" onClick={() => setShowImport(true)}>📥 Importar Excel</button>
+                    <button className="btn btn-primary" onClick={() => { setEditing(null); setShowModal(true); }}>+ HIT Manual</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Voucher</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th style={{ textAlign: 'center' }}>RN</th>
+                    <th>Pax</th>
+                    <th>Hóspede</th>
+                    <th>Empresa</th>
+                    <th>Apto</th>
+                    <th>Cat.</th>
+                    <th style={{ textAlign: 'right' }}>Valor Reserva</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentRows.map(r => (
+                    <tr key={r.id} style={{ opacity: r.status === 'Cancelada' ? 0.5 : 1 }}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.voucher}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{fmtDate(r.checkin)}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{fmtDate(r.checkout)}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.rn}</td>
+                      <td style={{ fontSize: 12 }}>{r.pax || '—'}</td>
+                      <td style={{ maxWidth: 180 }}>
+                        <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.hospede}>{r.hospede || '—'}</span>
+                      </td>
+                      <td style={{ fontSize: 12 }}>{r.empresa || '—'}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.apto || '—'}</td>
+                      <td><span className="badge badge-accent" style={{ fontSize: 10 }}>{r.categoria}</span></td>
+                      <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-green)' }}>
+                        {fmtCurrency(r.valorReserva)}
+                      </td>
+                      <td>
+                        <span className={`badge ${r.status === 'Cancelada' ? 'badge-red' : r.status === 'Realizada' ? 'badge-green' : 'badge-yellow'}`}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => { setEditing(r); setShowModal(true); }}>✏️</button>
+                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-red)' }} onClick={() => handleDelete(r.id)}>×</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <PaginationControls currentPage={currentPage} totalPages={totalPages} totalItems={totalItems}
+              nextPage={nextPage} prevPage={prevPage} goToPage={goToPage} />
+          </div>
+        </>
+      )}
+
+      {/* ── Tab: Resumo de Conta ─────────────────────────────────────────── */}
+      {activeTab === 'resumo' && isHits && (
+        <ResumoTab empresaId={empresaId} />
+      )}
+
+      {/* ── Tab: Consumos Lançados ───────────────────────────────────────── */}
+      {activeTab === 'consumos' && isHits && (
+        <ConsumosTab empresaId={empresaId} />
+      )}
+
+      {/* Modals */}
+      {showModal && (
+        <ReservaModal reserva={editing} onSave={handleSave} onClose={() => { setShowModal(false); setEditing(null); }} />
+      )}
+      {showImport && (
+        <ImportReservasModal checkDuplicates={checkDuplicates} onImport={handleImport}
+          onClose={(count) => { setShowImport(false); if (count > 0) toast.success(`${count} reservas importadas!`); }} />
+      )}
+
+      {/* Audit Modal */}
+      {showAudit && (
+        <div className="modal-overlay" onClick={() => setShowAudit(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ width: 800, maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 className="modal-title" style={{ margin: 0 }}>🕵️ Auditoria de Duplicatas</h2>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowAudit(false)}>✕</button>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 20 }}>
+              Vouchers com mais de um registro no banco de dados.
+            </p>
+            {duplicatesMap.size === 0 ? (
+              <div className="empty-state card fade-in" style={{ padding: 40, background: 'var(--color-bg-secondary)' }}>
+                <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
+                <strong>Base de dados limpa!</strong>
+                <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>Nenhuma duplicata encontrada.</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+                {Array.from(duplicatesMap.entries()).map(([voucher, list]) => (
+                  <div key={voucher} style={{ background: 'var(--color-bg-primary)', padding: 12, borderRadius: 8, border: '1px solid rgba(251,191,36,0.4)' }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: 'var(--color-yellow)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>Voucher: {voucher}</span>
+                      <span style={{ fontSize: 11, fontWeight: 'normal', color: 'var(--color-text-primary)', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>
+                        {list.length} registros
+                      </span>
+                    </h4>
+                    <table className="data-table" style={{ fontSize: 12, width: '100%', margin: 0 }}>
+                      <thead><tr style={{ background: 'var(--color-bg-hover)' }}>
+                        <th>Data IN/OUT</th><th>Hóspede</th><th style={{ textAlign: 'right' }}>Valor HITs</th><th style={{ width: 80, textAlign: 'center' }}>Ação</th>
+                      </tr></thead>
+                      <tbody>
+                        {list.map(r => (
+                          <tr key={r.id}>
+                            <td style={{ fontFamily: 'var(--font-mono)' }}>{fmtDate(r.checkin)} - {fmtDate(r.checkout)}</td>
+                            <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.hospede}>{r.hospede || '—'}</td>
+                            <td style={{ color: 'var(--color-green)', fontWeight: 600, fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{fmtCurrency(r.valorReserva)}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-red)', padding: '4px 8px', fontSize: 12, background: 'rgba(239,68,68,0.1)' }}
+                                onClick={() => handleDelete(r.id)}>🗑 Excluir</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

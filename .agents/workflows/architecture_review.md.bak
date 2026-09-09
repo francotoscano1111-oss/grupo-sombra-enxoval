@@ -1,0 +1,112 @@
+---
+description: Revisione architettura prima di modifiche — GRUPO SOMBRA Finance Hub
+---
+
+# Workflow: Architecture Review Before Changes
+
+Questo workflow va seguito **OBBLIGATORIAMENTE** prima di ogni modifica al progetto GRUPO SOMBRA Finance Hub, in particolare per cambiamenti che riguardano:
+- Database (IndexedDB / db.js)
+- Nuovi moduli o store
+- Schema dei dati
+- Hooks e persistenza
+
+---
+
+## Step 1 — Leggere il documento di architettura
+
+Leggere il file `ARCHITECTURE.md` nella root del progetto:
+
+```
+c:\Users\ft\Desktop\WorkSpace_AntiGravity\GRUPO_SOMBRA\ARCHITECTURE.md
+```
+
+**Cosa verificare:**
+- Sezione 2: Naming dei DB e nome degli object store (`'kv'` vs `'data'`)
+- Sezione 5: Schema del dato che si vuole modificare
+- Sezione 9: Checklist obbligatoria (rispondere a tutte le domande)
+- Sezione 10: Problemi noti — verificare se il bug è già documentato
+
+---
+
+## Step 2 — Identificare l'impatto sui DB
+
+Prima di scrivere codice, rispondere:
+
+1. **Quale DB è coinvolto?**  
+   Formato: `sombra_{empresaId}_{module}` o `sombra_global`
+
+2. **Il store name è corretto?**  
+   - `sombra_global` → store `'kv'`  
+   - Tutti gli altri → store `'data'`
+
+3. **Il schema è retrocompatibile?**  
+   Dati già esistenti nel browser dell'utente devono continuare a funzionare.
+
+4. **Serve migrazione?**  
+   Se si cambia store name o struttura → bumpar versione DB e aggiornare `openDB()`.
+
+---
+
+## Step 3 — Verificare hook e try/catch
+
+Ogni operazione DB deve avere pattern difensivo:
+
+```javascript
+// ✅ PATTERN CORRETTO per ogni hook
+const refresh = useCallback(async () => {
+  if (!db) { setLoading(false); return; }
+  setLoading(true);
+  try {
+    const ents = await dbEntries(db);
+    // ... processamento
+    setState(result);
+  } catch (err) {
+    console.warn('[useXxx] refresh error:', err);
+    setState([]);
+  } finally {
+    setLoading(false);  // sempre chiamato!
+  }
+}, [db]);
+
+// ✅ PATTERN CORRETTO per modal handlers
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSaving(true);
+  try {
+    await onSave(form);
+  } catch (err) {
+    alert('Erro: ' + err.message);
+  } finally {
+    setSaving(false);  // sempre chiamato!
+  }
+};
+```
+
+---
+
+## Step 4 — Verificare filtri e persistenza
+
+Se si aggiungono filtri a una pagina:
+
+| Tipo filtro | Persiste? | Hook |
+|---|---|---|
+| Status, banco, tipo, search | ✅ Sì | `useFilterPrefs` |
+| `dataInicio`, `dataFim` | ❌ No (session-only) | `useFilterPrefs` — sempre reset al carico |
+| Colonne visibili | ✅ Sì | `ColumnSelector` / localStorage |
+
+---
+
+## Step 5 — Aggiornare ARCHITECTURE.md dopo la modifica
+
+Dopo aver completato una modifica significativa:
+
+1. Aggiornare la sezione **5 (Schemas)** se il dato è cambiato
+2. Aggiornare la sezione **6 (localStorage)** se si aggiunge una nuova key
+3. Aggiornare la sezione **10 (Problemi Noti)** se si risolve o scopre un bug
+4. Aggiornare la data in fondo al documento
+
+---
+
+## Step 6 — Aggiornare DEVLOG.md
+
+Eseguire il workflow `/devlog` per documentare le modifiche nel log di sviluppo.

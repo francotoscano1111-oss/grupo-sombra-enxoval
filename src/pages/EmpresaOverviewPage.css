@@ -1,0 +1,152 @@
+/* EmpresaOverviewPage.css */
+
+.overview-page {
+  padding: var(--space-8);
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ── Header ── */
+.overview-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.overview-empresa-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
+}
+
+.overview-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.overview-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* ── Flexible grid ── */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5);
+}
+
+/* ── Module card ── */
+.overview-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.overview-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  border-color: var(--card-color);
+  background: var(--card-dim);
+}
+
+/* Top colored accent bar */
+.overview-card-bar {
+  height: 4px;
+  background: var(--card-color);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Icon + title row */
+.overview-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) 0;
+}
+
+.overview-card-icon {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
+.overview-card-label {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--card-color);
+}
+
+.overview-card-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 3px;
+}
+
+.overview-card-arrow {
+  margin-left: auto;
+  font-size: 20px;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.overview-card:hover .overview-card-arrow {
+  transform: translateX(6px);
+  color: var(--card-color);
+}
+
+/* Sub-items list */
+.overview-card-items {
+  list-style: none;
+  padding: 0 var(--space-5) var(--space-5);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overview-card-items li {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+}
+
+.overview-card:hover .overview-card-items li {
+  background: rgba(255,255,255,0.05);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .overview-grid { grid-template-columns: 1fr; }
+}

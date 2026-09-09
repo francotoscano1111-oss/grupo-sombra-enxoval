@@ -1,0 +1,34 @@
+---
+name: backup
+description: Descrizione: Crea un archivio di sicurezza rapido del codice sorgente, escludendo cartelle pesanti (`node_modules`, `.git`, `dist`).
+---
+
+# Workflow: Backup del Progetto
+Descrizione: Crea un archivio di sicurezza rapido del codice sorgente, escludendo cartelle pesanti (`node_modules`, `.git`, `dist`).
+
+// turbo
+
+## Esecuzione Backup
+
+Esegui il seguente comando PowerShell per generare il pacchetto `.zip`:
+
+```powershell
+$dateStr = (Get-Date).ToString("yyyy_MM_dd_HHmm")
+$SourceDir = "c:\Users\ft\Desktop\WorkSpace_AntiGravity\GRUPO_SOMBRA"
+$TempDir = "C:\tmp\TempBackup_GS_$dateStr"
+$ZipDest = "C:\tmp\GRUPO_SOMBRA_Backup_$dateStr.zip"
+
+Write-Host "1. Creazione area temporanea..."
+New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
+
+Write-Host "2. Copia dei file sorgenti (omettendo node_modules, .git, dist)..."
+robocopy $SourceDir $TempDir /MIR /XD node_modules dist .git .agents /XF *.zip /NFL /NDL /NJH /NJS /nc /ns /np
+
+Write-Host "3. Creazione archivio ZIP..."
+Compress-Archive -Path "$TempDir\*" -DestinationPath $ZipDest -Force
+
+Write-Host "4. Rimozione file temporanei..."
+Remove-Item -Recurse -Force $TempDir
+
+Write-Host "✅ BACKUP COMPLETATO: $ZipDest"
+```
