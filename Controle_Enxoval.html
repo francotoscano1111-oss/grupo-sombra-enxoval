@@ -2890,12 +2890,6 @@
                           <th rowSpan="2" className="py-3 px-3 text-center bg-cyan-950/40 text-cyan-300 font-black min-w-[100px] border-r border-sombra-800">
                             Almoxarifado Central
                           </th>
-                          <th rowSpan="2" className="py-3 px-2 text-center text-rose-300 min-w-[80px] border-r border-sombra-800">
-                            Descarte
-                          </th>
-                          <th rowSpan="2" className="py-3 px-2 text-center text-amber-300 min-w-[80px] border-r border-sombra-800">
-                            Perdas
-                          </th>
                           <th rowSpan="2" className="py-3 px-3 text-center bg-emerald-950/50 text-emerald-300 font-black min-w-[110px] border-r border-sombra-800">
                             Total Geral
                           </th>
@@ -2904,6 +2898,12 @@
                           </th>
                           <th rowSpan="2" className="py-3 px-2 text-center min-w-[90px] border-r border-sombra-800">
                             Déficit / Sobra
+                          </th>
+                          <th rowSpan="2" className="py-3 px-2 text-center text-rose-300 min-w-[95px] border-r border-sombra-800">
+                            Total Descartes
+                          </th>
+                          <th rowSpan="2" className="py-3 px-2 text-center text-amber-300 min-w-[90px] border-r border-sombra-800">
+                            Total Perdas
                           </th>
                           <th rowSpan="2" className="py-3 px-2 text-center min-w-[70px]">
                             Ações
@@ -3007,40 +3007,6 @@
                                 )}
                               </td>
 
-                              {/* Descarte */}
-                              <td className="py-2.5 px-2 text-center text-rose-400 font-semibold border-r border-sombra-800/40">
-                                {isDirectEditMode ? (
-                                  <input
-                                    type="text"
-                                    value={unsavedEdits[`${item.id}_descarte`] !== undefined ? unsavedEdits[`${item.id}_descarte`] : (saldos.descarte || 0)}
-                                    onChange={(e) => handleCellChange(item.id, 'descarte', e.target.value)}
-                                    onBlur={() => handleCellBlur(item.id, 'descarte')}
-                                    className="w-12 text-center py-1 bg-sombra-950 border border-rose-500/50 rounded font-mono text-xs text-rose-400 focus:outline-none"
-                                  />
-                                ) : (
-                                  <span className={saldos.descarte > 0 ? "text-rose-400 font-bold" : "text-sombra-500"}>
-                                    {saldos.descarte || 0}
-                                  </span>
-                                )}
-                              </td>
-
-                              {/* Perdas */}
-                              <td className="py-2.5 px-2 text-center text-amber-400 font-semibold border-r border-sombra-800/40">
-                                {isDirectEditMode ? (
-                                  <input
-                                    type="text"
-                                    value={unsavedEdits[`${item.id}_perda`] !== undefined ? unsavedEdits[`${item.id}_perda`] : (saldos.perda || 0)}
-                                    onChange={(e) => handleCellChange(item.id, 'perda', e.target.value)}
-                                    onBlur={() => handleCellBlur(item.id, 'perda')}
-                                    className="w-12 text-center py-1 bg-sombra-950 border border-amber-500/50 rounded font-mono text-xs text-amber-400 focus:outline-none"
-                                  />
-                                ) : (
-                                  <span className={saldos.perda > 0 ? "text-amber-400 font-bold" : "text-sombra-500"}>
-                                    {saldos.perda || 0}
-                                  </span>
-                                )}
-                              </td>
-
                               {/* Total Geral */}
                               <td className="py-2.5 px-3 text-center bg-emerald-950/30 text-brand-300 font-black text-sm border-r border-sombra-800">
                                 {totalGeral}
@@ -3077,6 +3043,40 @@
                                   )
                                 ) : (
                                   <span className="text-sombra-600 text-[11px]">-</span>
+                                )}
+                              </td>
+
+                              {/* Total Descartes */}
+                              <td className="py-2.5 px-2 text-center text-rose-400 font-semibold border-r border-sombra-800/40">
+                                {isDirectEditMode ? (
+                                  <input
+                                    type="text"
+                                    value={unsavedEdits[`${item.id}_descarte`] !== undefined ? unsavedEdits[`${item.id}_descarte`] : (saldos.descarte || 0)}
+                                    onChange={(e) => handleCellChange(item.id, 'descarte', e.target.value)}
+                                    onBlur={() => handleCellBlur(item.id, 'descarte')}
+                                    className="w-12 text-center py-1 bg-sombra-950 border border-rose-500/50 rounded font-mono text-xs text-rose-400 focus:outline-none"
+                                  />
+                                ) : (
+                                  <span className={saldos.descarte > 0 ? "text-rose-400 font-bold" : "text-sombra-500"}>
+                                    {saldos.descarte || 0}
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Total Perdas */}
+                              <td className="py-2.5 px-2 text-center text-amber-400 font-semibold border-r border-sombra-800/40">
+                                {isDirectEditMode ? (
+                                  <input
+                                    type="text"
+                                    value={unsavedEdits[`${item.id}_perda`] !== undefined ? unsavedEdits[`${item.id}_perda`] : (saldos.perda || 0)}
+                                    onChange={(e) => handleCellChange(item.id, 'perda', e.target.value)}
+                                    onBlur={() => handleCellBlur(item.id, 'perda')}
+                                    className="w-12 text-center py-1 bg-sombra-950 border border-amber-500/50 rounded font-mono text-xs text-amber-400 focus:outline-none"
+                                  />
+                                ) : (
+                                  <span className={saldos.perda > 0 ? "text-amber-400 font-bold" : "text-sombra-500"}>
+                                    {saldos.perda || 0}
+                                  </span>
                                 )}
                               </td>
 
