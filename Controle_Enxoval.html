@@ -607,6 +607,76 @@
       font-weight: 700 !important;
     }
 
+  
+    /* HIGH-CONTRAST VISIBILITY FOR MANUAL, TOP ICONS & MODAL */
+    .btn-manual-user {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid #c4b5fd !important;
+      box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.35) !important;
+    }
+    .btn-manual-user:hover {
+      background: linear-gradient(135deg, #6d28d9 0%, #4338ca 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 6px 12px -1px rgba(124, 58, 237, 0.5) !important;
+    }
+    .btn-manual-user *,
+    body.light .btn-manual-user,
+    body.light .btn-manual-user * {
+      color: #ffffff !important;
+      stroke: #ffffff !important;
+    }
+
+    .modal-manual-hdr {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+      border-bottom: 2px solid #4338ca !important;
+    }
+    .modal-manual-hdr .manual-title,
+    .modal-manual-hdr .manual-title * {
+      color: #ffffff !important;
+    }
+    .modal-manual-hdr .manual-sub {
+      color: #cbd5e1 !important;
+    }
+    .modal-manual-hdr .manual-badge {
+      background: #312e81 !important;
+      color: #c7d2fe !important;
+      border: 1px solid #6366f1 !important;
+    }
+    .btn-manual-pdf-dl,
+    .btn-manual-pdf-dl *,
+    body.light .btn-manual-pdf-dl,
+    body.light .btn-manual-pdf-dl * {
+      background: #4f46e5 !important;
+      color: #ffffff !important;
+    }
+    .btn-manual-pdf-dl:hover,
+    body.light .btn-manual-pdf-dl:hover {
+      background: #4338ca !important;
+    }
+
+    /* Top bar icons contrast */
+    body.light .btn-action-icon {
+      background-color: #f1f5f9 !important;
+      color: #1e293b !important;
+      border: 1px solid #cbd5e1 !important;
+    }
+    body.light .btn-action-icon:hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      border-color: #94a3b8 !important;
+    }
+    body.light .btn-action-danger {
+      background-color: #ffe4e6 !important;
+      color: #be123c !important;
+      border: 1px solid #fca5a5 !important;
+    }
+    body.light .btn-action-danger:hover {
+      background-color: #fecdd3 !important;
+      color: #9f1239 !important;
+      border-color: #f87171 !important;
+    }
+
   </style>
 </head>
 <body class="bg-sombra-950 text-slate-100 min-h-screen antialiased selection:bg-brand-500/30 selection:text-brand-300">
@@ -2394,11 +2464,11 @@
                 {/* MANUAL DO USUÁRIO BUTTON */}
                 <button
                   onClick={() => setShowManualModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold rounded-lg text-xs shadow-md transition-all duration-150 border border-purple-400/40"
+                  className="btn-manual-user flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer"
                   title="Abrir Manual Oficial do Usuário e Guia de Operações (PDF)"
                 >
-                  <span className="text-white flex items-center justify-center"><Icons.BookOpen /></span>
-                  <span className="tracking-wide">Manual do Usuário</span>
+                  <span className="flex items-center justify-center text-white"><Icons.BookOpen /></span>
+                  <span className="font-bold tracking-tight text-white">Manual do Usuário</span>
                 </button>
 
                 {/* Theme Switcher Button (Modo Claro / Modo Escuro) */}
@@ -3960,22 +4030,22 @@
           {/* MODAL: MANUAL DO USUÁRIO INTERATIVO (6 CAPÍTULOS) */}
           {showManualModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-              <div className="bg-sombra-900 border border-sombra-700 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+              <div className="bg-white dark:bg-sombra-900 border border-slate-300 dark:border-sombra-700 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
                 
                 {/* MODAL HEADER */}
-                <div className="p-5 border-b border-sombra-800 bg-sombra-950/90 flex flex-wrap items-center justify-between gap-3">
+                <div className="modal-manual-hdr p-5 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                    <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md flex items-center justify-center">
                       <Icons.BookOpen />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <h3 className="manual-title text-base font-extrabold text-white flex items-center gap-2">
                         <span>Manual do Usuário — SOMBRA ENXOVAL PRO</span>
-                        <span className="px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded-full text-[10px] font-bold">
+                        <span className="manual-badge px-2.5 py-0.5 rounded-full text-[11px] font-bold">
                           6 Capítulos • Versão 3.0
                         </span>
                       </h3>
-                      <p className="text-xs text-sombra-400 mt-0.5">
+                      <p className="manual-sub text-xs mt-0.5 font-medium">
                         Guia Completo de Operações, Governança, Movimentações e Auditorias de Enxoval
                       </p>
                     </div>
@@ -3984,7 +4054,7 @@
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleDownloadManualPDF}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30"
+                      className="btn-manual-pdf-dl flex items-center gap-1.5 px-4 py-2 text-white font-bold rounded-xl text-xs transition shadow-lg border border-indigo-400/40 cursor-pointer"
                       title="Baixar manual completo formatado em PDF A4"
                     >
                       <Icons.Printer />
@@ -3992,7 +4062,7 @@
                     </button>
                     <button
                       onClick={() => setShowManualModal(false)}
-                      className="p-2 text-sombra-400 hover:text-white hover:bg-sombra-800 rounded-xl transition text-sm ml-1"
+                      className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition text-base ml-1 cursor-pointer"
                       title="Fechar"
                     >
                       ✕
@@ -4001,18 +4071,20 @@
                 </div>
 
                 {/* MODAL BODY (6 CHAPTERS) */}
-                <div className="p-6 overflow-y-auto flex-1 space-y-6 text-xs text-slate-300 font-sans leading-relaxed">
+                <div className="p-6 overflow-y-auto flex-1 space-y-6 text-xs text-slate-700 dark:text-slate-200 font-sans leading-relaxed bg-slate-50 dark:bg-sombra-900">
                   
                   {/* CAPÍTULO 1 */}
-                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
-                    <div className="flex items-center gap-2 text-brand-400 font-bold text-sm">
-                      <Icons.Box />
+                  <div className="bg-white dark:bg-sombra-800 p-5 rounded-2xl border border-slate-200 dark:border-sombra-700 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
+                      <div className="p-1.5 bg-emerald-100 dark:bg-emerald-950/60 rounded-lg text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                        <Icons.Box />
+                      </div>
                       <h4>Capítulo 1: Matriz de Estoque & Par Stock</h4>
                     </div>
-                    <p className="text-slate-300">
+                    <p className="text-slate-600 dark:text-slate-300">
                       A <strong>Matriz de Estoque</strong> é o centro operacional do sistema, apresentando a visão consolidada de todas as peças de enxoval em tempo real.
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                    <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300 ml-2">
                       <li><strong>Alternância de Visão:</strong> Alterne entre <em>Tabela Raggruppata</em> (apenas totais gerais) e <em>Vista Detalhada</em> (abertura por quarto, bangalô, vila e setor).</li>
                       <li><strong>Filtros e Busca:</strong> Digite o nome do item ou filtre por categoria (Cama, Banho, Piscina, SPA).</li>
                       <li><strong>Edição Direta:</strong> Clique em <em>Editar Células</em> para ajustar quantidades pontuais ou a Meta de 3 Mudas diretamente na tabela.</li>
@@ -4022,15 +4094,17 @@
                   </div>
 
                   {/* CAPÍTULO 2 */}
-                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
-                    <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
-                      <Icons.ArrowRightLeft />
+                  <div className="bg-white dark:bg-sombra-800 p-5 rounded-2xl border border-slate-200 dark:border-sombra-700 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold text-sm">
+                      <div className="p-1.5 bg-blue-100 dark:bg-blue-950/60 rounded-lg text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-800">
+                        <Icons.ArrowRightLeft />
+                      </div>
                       <h4>Capítulo 2: Movimentações Rápidas</h4>
                     </div>
-                    <p className="text-slate-300">
+                    <p className="text-slate-600 dark:text-slate-300">
                       O módulo de <strong>Movimentações Rápidas</strong> registra o fluxo diário de entrada, abastecimento, lavanderia, descarte e perdas.
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                    <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300 ml-2">
                       <li><strong>1. Nova Compra / Entrada:</strong> Entrada de peças novas compradas diretamente no Almoxarifado Central.</li>
                       <li><strong>2. Abastecimento / Transferência:</strong> Transferência de peças do Almoxarifado Central para a Rouparia e Quartos (incrementa o Total em Uso).</li>
                       <li><strong>3. Envio para Lavanderia:</strong> Envio de roupa suja para o ciclo de lavagem.</li>
@@ -4043,89 +4117,99 @@
                   </div>
 
                   {/* CAPÍTULO 3 */}
-                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
-                    <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                      <Icons.Settings />
+                  <div className="bg-white dark:bg-sombra-800 p-5 rounded-2xl border border-slate-200 dark:border-sombra-700 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                      <div className="p-1.5 bg-amber-100 dark:bg-amber-950/60 rounded-lg text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
+                        <Icons.Home />
+                      </div>
                       <h4>Capítulo 3: Unidades & Locais</h4>
                     </div>
-                    <p className="text-slate-300">
+                    <p className="text-slate-600 dark:text-slate-300">
                       Permite configurar a estrutura física do resort, hotel, vilas e setores operacionais.
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
+                    <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300 ml-2">
                       <li><strong>Classificação:</strong> Os locais são classificados como <em>Unidade / Acomodação</em>, <em>Ponto de Circulação / Rouparia</em> ou <em>Almoxarifado Central</em>.</li>
-                      <li><strong>Composição do Total em Uso:</strong> Todos os quartos e pontos de circulação ativos somam automaticamente na coluna <em>Total em Uso</em>.</li>
-                      <li><strong>Almoxarifado Central:</strong> Mantido isolado para controle rigoroso da reserva estratégica.</li>
-                      <li><strong>Ativação / Inativação:</strong> Permite desativar locais em reforma sem perder os dados históricos.</li>
+                      <li><strong>Composição do Total em Uso:</strong> Todos os quartos e pontos de circulação ativos somam automaticamente na coluna Total em Uso.</li>
+                      <li><strong>Adicionar e Editar Locais:</strong> Formulário ágil para incluir novas acomodações ou renomear setores com atualização instantânea na matriz.</li>
                     </ul>
                   </div>
 
                   {/* CAPÍTULO 4 */}
-                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
-                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                      <Icons.FileText />
+                  <div className="bg-white dark:bg-sombra-800 p-5 rounded-2xl border border-slate-200 dark:border-sombra-700 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-bold text-sm">
+                      <div className="p-1.5 bg-purple-100 dark:bg-purple-950/60 rounded-lg text-purple-700 dark:text-purple-400 border border-purple-300 dark:border-purple-800">
+                        <Icons.Tags />
+                      </div>
                       <h4>Capítulo 4: Catálogo de Itens de Enxoval</h4>
                     </div>
-                    <p className="text-slate-300">
-                      Cadastro mestre e gerenciamento de todos os tipos de peças de enxoval do <strong>GRUPO SOMBRA</strong>.
+                    <p className="text-slate-600 dark:text-slate-300">
+                      Cadastro mestre de todos os itens de rouparia e tecidos da operação hoteleira.
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
-                      <li><strong>Cadastro & Edição:</strong> Permite incluir novos artigos, editar nomes e unidades de medida.</li>
-                      <li><strong>Meta 3 Mudas (Par Stock):</strong> Definição da meta de estoque de cada item para apoiar as decisões de compra.</li>
-                      <li><strong>Categorização:</strong> Organização estruturada em Cama, Banho, Piscina/Praia, SPA, Decoração e Restaurante.</li>
+                    <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300 ml-2">
+                      <li><strong>Categorias Padronizadas:</strong> Cama (lençóis, fronhas, edredons), Banho (toalhas de banho, rosto, piso), Piscina/Praia e SPA.</li>
+                      <li><strong>Configuração de Par Stock Padrão:</strong> Definição da quantidade de mudas ideais recomendadas para cada item.</li>
+                      <li><strong>Custo Unitário:</strong> Parâmetro de valor para relatórios de investimento e reposição de estoque.</li>
+                      <li><strong>Edição Ágil:</strong> Alterações no catálogo refletem imediatamente na Matriz de Estoque, fichas de contagem e auditorias.</li>
                     </ul>
                   </div>
 
                   {/* CAPÍTULO 5 */}
-                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
-                    <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
-                      <Icons.ClipboardCheck />
+                  <div className="bg-white dark:bg-sombra-800 p-5 rounded-2xl border border-slate-200 dark:border-sombra-700 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm">
+                      <div className="p-1.5 bg-indigo-100 dark:bg-indigo-950/60 rounded-lg text-indigo-700 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-800">
+                        <Icons.CheckSquare />
+                      </div>
                       <h4>Capítulo 5: Inventário & Contagem Física</h4>
                     </div>
-                    <p className="text-slate-300">
-                      Módulo oficial para auditorias periódicas e fechamento físico de estoque.
+                    <p className="text-slate-600 dark:text-slate-300">
+                      O módulo de Inventário & Contagem é a ferramenta oficial de auditoria periódica de enxoval.
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
-                      <li><strong>Data da Contagem Física:</strong> Campo de data obrigatório para registrar a data real da conferência nos quartos (mesmo que digitada em data posterior).</li>
-                      <li><strong>Digitação com Fórmulas:</strong> As células aceitam somas diretas (ex: <code>10+15+6</code>).</li>
-                      <li><strong>Importação via Excel (.xlsx):</strong> Botão para carregar a planilha preenchida pelas camareiras, conferir a prévia na janela de confirmação e importar de forma automática.</li>
-                      <li><strong>Finalização:</strong> Ao clicar em <em>Finalizar e Salvar Auditoria</em>, o inventário é arquivado no histórico e os saldos da Matriz de Estoque são atualizados.</li>
+                    <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300 ml-2">
+                      <li><strong>1. Data da Contagem Física:</strong> Campo obrigatório com calendário para registrar a data exata da contagem nos quartos.</li>
+                      <li><strong>2. Título e Responsável:</strong> Identificação do período (ex: Inventário Geral - Agosto 2026) e auditor da governança.</li>
+                      <li><strong>3. Digitação Inteligente:</strong> Aceita somas diretas em cada célula (ex: <code>10+15+6</code>). O sistema calcula o Total Físico automaticamente.</li>
+                      <li><strong>4. Importação de Planilha Excel (.xlsx):</strong> Botão direto para importar a planilha preenchida pelas camareiras com prévia de conferência.</li>
+                      <li><strong>5. Finalizar e Salvar Auditoria:</strong> Ao confirmar, o sistema arquiva o inventário no histórico permanente e atualiza os saldos de estoque ativo.</li>
                     </ul>
                   </div>
 
                   {/* CAPÍTULO 6 */}
-                  <div className="bg-sombra-850 p-5 rounded-2xl border border-sombra-700 space-y-3">
-                    <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm">
-                      <Icons.History />
+                  <div className="bg-white dark:bg-sombra-800 p-5 rounded-2xl border border-slate-200 dark:border-sombra-700 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 text-cyan-700 dark:text-cyan-400 font-bold text-sm">
+                      <div className="p-1.5 bg-cyan-100 dark:bg-cyan-950/60 rounded-lg text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800">
+                        <Icons.FileText />
+                      </div>
                       <h4>Capítulo 6: Relatórios, Histórico & Backup</h4>
                     </div>
-                    <p className="text-slate-300">
-                      Central de relatórios consolidados, histórico de auditorias e segurança dos dados.
+                    <p className="text-slate-600 dark:text-slate-300">
+                      Centraliza a inteligência de dados, relatórios gerenciais, arquivos históricos e segurança da informação.
                     </p>
-                    <ul className="list-disc list-inside space-y-1 text-slate-300 ml-2">
-                      <li><strong>Cards de Ação Rápida:</strong> Baixar planilha completa em Excel (.xlsx), Imprimir Ficha de Contagem em Branco (PDF) e Carregar Novo Inventário via Excel.</li>
-                      <li><strong>Histórico de Auditorias:</strong> Acesso a todos os inventários anteriores por ambiente (Hotel & Resort / Floresta & SPA) com botões para <em>Ver PDF</em>, <em>Detalhes</em> na tela e <em>Excluir</em> com confirmação.</li>
-                      <li><strong>Exportações Avançadas:</strong> Menu superior para exportar a <em>Tabela Raggruppata</em> ou <em>Tabela Dettagliata</em> tanto em PDF quanto em Excel.</li>
-                      <li><strong>Segurança & Botão Sair:</strong> Botão vermelho <em>Sair (Backup)</em> no topo para gerar e salvar automaticamente o backup JSON completo com todos os dados.</li>
+                    <ul className="list-disc list-inside space-y-1.5 text-slate-600 dark:text-slate-300 ml-2">
+                      <li><strong>Relatório de Posição Consolidada:</strong> Exporta a posição completa em Excel (.xlsx).</li>
+                      <li><strong>Ficha de Contagem:</strong> Gera e imprime a folha A4 em branco com linhas para anotação a caneta nos quartos.</li>
+                      <li><strong>Histórico de Auditorias Finalizadas:</strong> Listagem com botões <em>Ver PDF</em> (abre em nova aba), <em>Detalhes</em> (matriz completa na tela) e <em>Excluir</em> (lixeira).</li>
+                      <li><strong>Segurança e Saída com Backup:</strong> O botão <em>Sair (Backup)</em> no topo gera o arquivo JSON completo de segurança antes do encerramento.</li>
                     </ul>
                   </div>
 
                 </div>
 
                 {/* MODAL FOOTER */}
-                <div className="p-4 border-t border-sombra-800 bg-sombra-950/90 flex items-center justify-between">
-                  <span className="text-xs text-sombra-400">
-                    GRUPO SOMBRA • Manual do Usuário • Versão 3.0
+                <div className="p-4 border-t border-slate-200 dark:border-sombra-800 bg-slate-100 dark:bg-sombra-950 flex items-center justify-between">
+                  <span className="text-xs text-slate-500 dark:text-sombra-400 font-medium">
+                    GRUPO SOMBRA • Manual do Usuário • Versão 3.0 (PT-BR)
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleDownloadManualPDF}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition"
+                      className="btn-manual-pdf-dl flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md cursor-pointer"
                     >
-                      Baixar Manual em PDF
+                      <Icons.Printer />
+                      <span>Baixar Manual em PDF</span>
                     </button>
                     <button
                       onClick={() => setShowManualModal(false)}
-                      className="px-4 py-2 bg-sombra-800 hover:bg-sombra-700 text-slate-300 rounded-xl text-xs font-semibold transition"
+                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
                     >
                       Fechar
                     </button>
