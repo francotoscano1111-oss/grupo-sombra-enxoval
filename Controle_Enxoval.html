@@ -571,6 +571,42 @@
       color: #0f172a !important;
     }
 
+  
+    /* BLUE & CYAN KPI CARDS HIGH CONTRAST (Light & Dark) */
+    body.light .kpi-card-blue {
+      background: #eff6ff !important;
+      border: 1.5px solid #93c5fd !important;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.08) !important;
+    }
+    body.light .kpi-card-blue .kpi-title {
+      color: #1e40af !important;
+      font-weight: 800 !important;
+    }
+    body.light .kpi-card-blue .kpi-val {
+      color: #1d4ed8 !important;
+    }
+    body.light .kpi-card-blue .kpi-sub {
+      color: #2563eb !important;
+      font-weight: 700 !important;
+    }
+
+    body.light .kpi-card-cyan {
+      background: #ecfeff !important;
+      border: 1.5px solid #a5f3fc !important;
+      box-shadow: 0 4px 6px -1px rgba(8, 145, 178, 0.08) !important;
+    }
+    body.light .kpi-card-cyan .kpi-title {
+      color: #0e7490 !important;
+      font-weight: 800 !important;
+    }
+    body.light .kpi-card-cyan .kpi-val {
+      color: #0891b2 !important;
+    }
+    body.light .kpi-card-cyan .kpi-sub {
+      color: #0284c7 !important;
+      font-weight: 700 !important;
+    }
+
   </style>
 </head>
 <body class="bg-sombra-950 text-slate-100 min-h-screen antialiased selection:bg-brand-500/30 selection:text-brand-300">
@@ -632,6 +668,7 @@
 
     // SVG Icons
     const Icons = {
+      LogOut: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
       Box: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
       RefreshCw: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>,
       Truck: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>,
@@ -1976,6 +2013,33 @@
         }
       };
 
+      const handleExitAndBackup = () => {
+        const fullBackup = {
+          sistema: 'SOMBRA ENXOVAL PRO',
+          versao: '3.0',
+          dataExportacao: new Date().toISOString(),
+          ambienteAtual: ambiente,
+          items,
+          locations,
+          movimentos,
+          inventarios
+        };
+        const dateFormatted = new Date().toISOString().slice(0, 10);
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(fullBackup, null, 2));
+        const dlAnchor = document.createElement('a');
+        const filename = `SOMBRA_ENXOVAL_BACKUP_SEGURANCA_${dateFormatted}.json`;
+        dlAnchor.setAttribute('href', dataStr);
+        dlAnchor.setAttribute('download', filename);
+        document.body.appendChild(dlAnchor);
+        dlAnchor.click();
+        dlAnchor.remove();
+
+        showToast('Backup completo de segurança salvo com sucesso!');
+        setTimeout(() => {
+          alert(`✅ BACKUP DE SEGURANÇA SALVO COM SUCESSO!\n\nArquivo gerado: ${filename}\n\nSeus dados estão 100% salvos e seguros no seu computador.`);
+        }, 300);
+      };
+
       const handleDownloadBackup = () => {
         const fullBackup = {
           versao: '2.0',
@@ -2199,12 +2263,22 @@
                   <input type="file" accept=".json" onChange={handleRestoreBackup} className="hidden" />
                 </label>
 
-                <button
+<button
                   onClick={handleResetToExcelData}
                   title="Recarregar Dados da Planilha Original"
                   className="p-2 bg-sombra-800 hover:bg-rose-950 border border-sombra-700 hover:border-rose-800 text-rose-400 rounded-lg text-xs transition"
                 >
                   <Icons.RefreshCw />
+                </button>
+
+                {/* EXIT & SAFETY BACKUP BUTTON */}
+                <button
+                  onClick={handleExitAndBackup}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs transition shadow-md shadow-rose-600/30"
+                  title="Fazer Backup de Segurança Completo e Sair"
+                >
+                  <Icons.LogOut />
+                  <span>Sair (Backup)</span>
                 </button>
               </div>
 
@@ -2265,29 +2339,29 @@
               {/* CARD 2: TOTAL EM USO */}
               <div 
                 onClick={() => setActiveKpiModal('total_em_uso')}
-                className="bg-sombra-900 hover:bg-blue-950/40 border border-blue-800/40 hover:border-blue-500 p-4 rounded-2xl bg-blue-950/10 cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-xl group relative overflow-hidden"
+                className="kpi-card-blue bg-sombra-900 hover:bg-blue-950/40 border border-blue-800/40 hover:border-blue-500 p-4 rounded-2xl bg-blue-950/10 cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-xl group relative overflow-hidden"
                 title="Clique para ver o detalhamento do Total em Uso por quarto/setor e baixar PDF"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-blue-300 uppercase tracking-wider group-hover:text-blue-200 transition">Total em Uso</span>
-                  <span className="text-[10px] text-blue-300 opacity-0 group-hover:opacity-100 transition">🔍 Detalhes</span>
+                  <span className="kpi-title text-[11px] font-bold text-blue-300 uppercase tracking-wider group-hover:text-blue-200 transition">Total em Uso</span>
+                  <span className="text-[10px] text-blue-400 opacity-0 group-hover:opacity-100 transition font-bold">🔍 Detalhes</span>
                 </div>
-                <div className="mt-1 text-2xl font-black text-blue-400 font-mono">{stats.totalEmUso.toLocaleString()}</div>
-                <span className="text-[10px] text-blue-300/60">todos exceto Almox. (p/ PDF)</span>
+                <div className="kpi-val mt-1 text-2xl font-black text-blue-400 font-mono">{stats.totalEmUso.toLocaleString()}</div>
+                <span className="kpi-sub text-[10px] text-blue-300/80 font-medium">todos exceto Almox. (p/ PDF)</span>
               </div>
 
               {/* CARD 3: ALMOXARIFADO */}
               <div 
                 onClick={() => setActiveKpiModal('almoxarifado')}
-                className="bg-sombra-900 hover:bg-cyan-950/40 border border-cyan-800/40 hover:border-cyan-500 p-4 rounded-2xl bg-cyan-950/10 cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-xl group relative overflow-hidden"
+                className="kpi-card-cyan bg-sombra-900 hover:bg-cyan-950/40 border border-cyan-800/40 hover:border-cyan-500 p-4 rounded-2xl bg-cyan-950/10 cursor-pointer transition transform hover:-translate-y-0.5 hover:shadow-xl group relative overflow-hidden"
                 title="Clique para ver os itens em Almoxarifado Central e baixar PDF"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-wider group-hover:text-cyan-200 transition">Almoxarifado</span>
-                  <span className="text-[10px] text-cyan-300 opacity-0 group-hover:opacity-100 transition">🔍 Detalhes</span>
+                  <span className="kpi-title text-[11px] font-bold text-cyan-300 uppercase tracking-wider group-hover:text-cyan-200 transition">Almoxarifado</span>
+                  <span className="text-[10px] text-cyan-400 opacity-0 group-hover:opacity-100 transition font-bold">🔍 Detalhes</span>
                 </div>
-                <div className="mt-1 text-2xl font-black text-cyan-400 font-mono">{stats.totalAlmoxarifado.toLocaleString()}</div>
-                <span className="text-[10px] text-cyan-300/60">reserva / novos (p/ PDF)</span>
+                <div className="kpi-val mt-1 text-2xl font-black text-cyan-400 font-mono">{stats.totalAlmoxarifado.toLocaleString()}</div>
+                <span className="kpi-sub text-[10px] text-cyan-300/80 font-medium">reserva / novos (p/ PDF)</span>
               </div>
 
               {/* CARD 4: META PAR STOCK */}
