@@ -1060,6 +1060,77 @@
         showToast(`Sessão alterada: ${targetUser.nome} (${targetUser.cargo})`);
       };
 
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('Todos');
+      const [toastMessage, setToastMessage] = useState(null);
+      
+      const [showMovimentoModal, setShowMovimentoModal] = useState(false);
+      const [movimentoTipo, setMovimentoTipo] = useState('COMPRA');
+      const [selectedItemForMov, setSelectedItemForMov] = useState('');
+      const [editingMovimento, setEditingMovimento] = useState(null);
+      const [viewingInventario, setViewingInventario] = useState(null);
+      const [activeKpiModal, setActiveKpiModal] = useState(null);
+      const [showManualModal, setShowManualModal] = useState(false);
+      const [importModalData, setImportModalData] = useState(null);
+      const excelImportInputRef = useRef(null);
+      const [movFiltroTipo, setMovFiltroTipo] = useState('ALL');
+      const [movFiltroItem, setMovFiltroItem] = useState('ALL');
+      const [movSortOrder, setMovSortOrder] = useState('desc');
+      
+      const [showItemModal, setShowItemModal] = useState(false);
+      const [editingItem, setEditingItem] = useState(null);
+
+      const [showLocationModal, setShowLocationModal] = useState(false);
+      const [editingLocation, setEditingLocation] = useState(null);
+
+      const [isDirectEditMode, setIsDirectEditMode] = useState(false);
+      const [unsavedEdits, setUnsavedEdits] = useState({});
+
+      const showToast = useCallback((msg, type = 'success') => {
+        setToastMessage({ msg, type });
+        setTimeout(() => setToastMessage(null), 3500);
+      }, []);
+
+      useEffect(() => {
+        localStorage.setItem(DB_KEY_ITEMS, JSON.stringify(items));
+        localStorage.setItem('sombra_enxoval_ambiente', ambiente);
+      }, [items, ambiente]);
+
+      useEffect(() => {
+        localStorage.setItem(DB_KEY_LOCATIONS, JSON.stringify(locations));
+      }, [locations]);
+
+      useEffect(() => {
+        localStorage.setItem(DB_KEY_MOVIMENTOS, JSON.stringify(movimentos));
+      }, [movimentos]);
+
+      useEffect(() => {
+        localStorage.setItem(DB_KEY_INVENTARIOS, JSON.stringify(inventarios));
+      }, [inventarios]);
+
+      useEffect(() => {
+        localStorage.setItem('sombra_enxoval_view_mode', viewModeEmUso);
+      }, [viewModeEmUso]);
+
+      const currentItems = useMemo(() => {
+        return items[ambiente] || [];
+      }, [items, ambiente]);
+
+      // All locations active
+      const allActiveLocations = useMemo(() => {
+        return (locations[ambiente] || []).filter(l => l.ativo !== false);
+      }, [locations, ambiente]);
+
+      // Em Uso Locations (Unidades + Circulação - everything except Almoxarifado Central)
+      const emUsoLocations = useMemo(() => {
+        return allActiveLocations.filter(loc => loc.tipo !== 'almoxarifado');
+      }, [allActiveLocations]);
+
+      // Almoxarifado Location
+      const almoxarifadoLocation = useMemo(() => {
+        return allActiveLocations.find(loc => loc.tipo === 'almoxarifado') || { id: 'almoxarifado', nome: 'Almoxarifado Central' };
+      }, [allActiveLocations]);
+
       // Categories list for dropdown
       const categories = useMemo(() => {
         const set = new Set();
