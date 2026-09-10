@@ -738,6 +738,7 @@
 
     // SVG Icons
     const Icons = {
+      Lock: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
       Home: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
       Tags: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
       CheckSquare: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
@@ -966,6 +967,93 @@
           itensAbaixoMeta
         };
       }, [currentItems, emUsoLocations]);
+
+            // REGRA DE PROTEÇÃO DE UNIDADES E LOCAIS ESTRUTURAIS
+      const isProtectedLocation = (locId, currentAmbiente) => {
+        if (currentAmbiente === 'hotel') {
+          // Hotel & Resort: Resort, Hotel, Villas, Rouparia Principal, Almoxarifado Central
+          return ['resort', 'hotel', 'villas', 'rouparia', 'almoxarifado'].includes(locId);
+        }
+        if (currentAmbiente === 'spa') {
+          // Floresta & SPA: Hotel Floresta (spa), Yeu SPA (yeu), Rouparia Principal (rouparia), Almoxarifado Central (almoxarifado)
+          return ['spa', 'yeu', 'rouparia', 'almoxarifado'].includes(locId);
+        }
+        return false;
+      };
+
+      // REGRA DE DESTINO PARA REATRIBUIÇÃO AUTOMÁTICA DE SALDO AO EXCLUIR LOCAL
+      const getReallocationTarget = (locToDelete, currentAmbiente) => {
+        if (currentAmbiente === 'hotel') {
+          if (locToDelete.tipo === 'unidade') {
+            return { id: 'hotel', nome: 'Hotel' };
+          }
+          // Para 'circulacao' ou outros locais
+          return { id: 'rouparia', nome: 'Rouparia Principal' };
+        } else {
+          // Floresta & SPA
+          if (locToDelete.tipo === 'unidade') {
+            return { id: 'spa', nome: 'Hotel Floresta' };
+          }
+          // Para 'circulacao' ou outros locais
+          return { id: 'rouparia', nome: 'Rouparia Principal' };
+        }
+      };
+
+      // HANDLER: EXCLUSÃO SEGURA DE LOCAL COM TRANSFERÊNCIA AUTOMÁTICA DE PEÇAS
+      const handleDeleteLocation = (locToDelete) => {
+        if (isProtectedLocation(locToDelete.id, ambiente)) {
+          alert(`O local "${locToDelete.nome}" é uma unidade estrutural obrigatória do sistema e não pode ser excluído.`);
+          return;
+        }
+
+        const target = getReallocationTarget(locToDelete, ambiente);
+        const currentItemList = items[ambiente] || [];
+
+        // Calcular total de peças a serem realocadas
+        let totalTransferido = 0;
+        currentItemList.forEach(item => {
+          const val = item.saldos?.[locToDelete.id] || 0;
+          if (val > 0) totalTransferido += val;
+        });
+
+        const confirmMsg = totalTransferido > 0
+          ? `Tem certeza que deseja excluir o local "${locToDelete.nome}"?\n\n` +
+            `📦 REATRIBUIÇÃO AUTOMÁTICA DE SALDO:\n` +
+            `Existem ${totalTransferido} peças de enxoval alocadas neste local.\n` +
+            `Todos os saldos serão transferidos automaticamente para "${target.nome}" para garantir a integridade total dos dados e do histórico.\n\n` +
+            `Deseja confirmar a exclusão e transferência?`
+          : `Tem certeza que deseja excluir o local "${locToDelete.nome}"?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        // 1. Atualizar saldos dos itens (realoque para o destino)
+        const updatedItemsList = currentItemList.map(item => {
+          const saldos = { ...(item.saldos || {}) };
+          const val = saldos[locToDelete.id] || 0;
+          if (val > 0) {
+            saldos[target.id] = (saldos[target.id] || 0) + val;
+          }
+          delete saldos[locToDelete.id];
+          return { ...item, saldos };
+        });
+
+        const newItemsState = { ...items, [ambiente]: updatedItemsList };
+        setItems(newItemsState);
+        localStorage.setItem(DB_KEY_ITEMS, JSON.stringify(newItemsState));
+
+        // 2. Remover local da lista de locais
+        const currentLocList = locations[ambiente] || [];
+        const updatedLocList = currentLocList.filter(l => l.id !== locToDelete.id);
+        const newLocationsState = { ...locations, [ambiente]: updatedLocList };
+        setLocations(newLocationsState);
+        localStorage.setItem(DB_KEY_LOCATIONS, JSON.stringify(newLocationsState));
+
+        if (totalTransferido > 0) {
+          showToast(`Local "${locToDelete.nome}" excluído. ${totalTransferido} peças transferidas para "${target.nome}".`);
+        } else {
+          showToast(`Local "${locToDelete.nome}" removido com sucesso.`);
+        }
+      };
 
       const handleCellChange = (itemId, locationId, value) => {
         setUnsavedEdits(prev => ({
@@ -3468,53 +3556,73 @@
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {allActiveLocations.map((loc) => (
-                    <div key={loc.id} className="bg-sombra-950 border border-sombra-800 p-4 rounded-xl flex items-center justify-between group hover:border-sombra-700 transition">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm">{loc.nome}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            loc.tipo === 'unidade'
-                              ? 'bg-blue-950 text-blue-300 border border-blue-800'
-                              : loc.tipo === 'almoxarifado'
-                              ? 'bg-cyan-950 text-cyan-300 border border-cyan-800'
-                              : 'bg-amber-950 text-amber-300 border border-amber-800'
-                          }`}>
-                            {loc.tipo === 'unidade' ? 'Acomodação (Em Uso)' : loc.tipo === 'almoxarifado' ? 'Almoxarifado Central' : 'Circulação (Em Uso)'}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-sombra-500 font-mono">ID da Coluna: {loc.id}</div>
-                      </div>
+                  {allActiveLocations.map((loc) => {
+                    const isProtected = isProtectedLocation(loc.id, ambiente);
+                    const targetInfo = !isProtected ? getReallocationTarget(loc, ambiente) : null;
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingLocation(loc);
-                            setShowLocationModal(true);
-                          }}
-                          className="p-1.5 text-sombra-400 hover:text-white hover:bg-sombra-800 rounded-lg transition"
-                          title="Editar Local"
-                        >
-                          <Icons.Edit />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Tem certeza que deseja excluir o local "${loc.nome}"?`)) {
-                              setLocations(prev => {
-                                const list = (prev[ambiente] || []).filter(l => l.id !== loc.id);
-                                return { ...prev, [ambiente]: list };
-                              });
-                              showToast(`Local ${loc.nome} removido.`);
-                            }
-                          }}
-                          className="p-1.5 text-sombra-400 hover:text-rose-400 hover:bg-sombra-800 rounded-lg transition"
-                          title="Excluir Local"
-                        >
-                          <Icons.Trash />
-                        </button>
+                    return (
+                      <div key={loc.id} className="bg-sombra-950 border border-sombra-800 p-4 rounded-xl flex items-center justify-between group hover:border-sombra-700 transition">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white text-sm">{loc.nome}</span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              loc.tipo === 'unidade'
+                                ? 'bg-blue-950 text-blue-300 border border-blue-800'
+                                : loc.tipo === 'almoxarifado'
+                                ? 'bg-cyan-950 text-cyan-300 border border-cyan-800'
+                                : 'bg-amber-950 text-amber-300 border border-amber-800'
+                            }`}>
+                              {loc.tipo === 'unidade' ? 'Acomodação (Em Uso)' : loc.tipo === 'almoxarifado' ? 'Almoxarifado Central' : 'Circulação (Em Uso)'}
+                            </span>
+                            {isProtected && (
+                              <span className="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800/80 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                <Icons.Lock />
+                                <span>Protegido</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-sombra-500 font-mono">
+                            ID da Coluna: {loc.id}
+                            {!isProtected && targetInfo && (
+                              <span className="ml-2 text-sombra-400">
+                                (Destino ao excluir: <strong className="text-slate-300">{targetInfo.nome}</strong>)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingLocation(loc);
+                              setShowLocationModal(true);
+                            }}
+                            className="p-1.5 text-sombra-400 hover:text-white hover:bg-sombra-800 rounded-lg transition cursor-pointer"
+                            title="Editar Nome / Configurações do Local"
+                          >
+                            <Icons.Edit />
+                          </button>
+                          
+                          {isProtected ? (
+                            <span
+                              className="p-1.5 text-sombra-600 cursor-not-allowed opacity-40 rounded-lg flex items-center justify-center"
+                              title="Local estrutural obrigatório do sistema (não pode ser excluído)"
+                            >
+                              <Icons.Lock />
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleDeleteLocation(loc)}
+                              className="p-1.5 text-sombra-400 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition cursor-pointer"
+                              title={`Excluir Local (peças serão transferidas para ${targetInfo?.nome})`}
+                            >
+                              <Icons.Trash />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
