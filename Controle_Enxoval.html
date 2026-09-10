@@ -1058,7 +1058,7 @@
           }
         }
         showToast(`Sessão alterada: ${targetUser.nome} (${targetUser.cargo})`);
-      };, [allActiveLocations]);
+      };
 
       // Categories list for dropdown
       const categories = useMemo(() => {
@@ -2652,6 +2652,15 @@
           showToast('Dados e históricos restaurados com base na planilha Excel original.');
         }
       };
+
+      if (!isAuthenticated) {
+        return (
+          <LoginScreen
+            users={users}
+            onLogin={handleLogin}
+          />
+        );
+      }
 
       return (
         <div className="min-h-screen flex flex-col bg-sombra-950 text-slate-100">

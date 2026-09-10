@@ -14,6 +14,7 @@
 - **Gestione Credenziali Admin (`UserManagementModal`):** L'amministratore può creare nuovi utenti definendo `Username` e `Password`, modificare le credenziali degli utenti esistenti o generare password casuali.
 - **Cambio Password Autonomo Utenti (`ChangePasswordModal`):** Modale accessibile dal menu profilo in testata (`🔑 Alterar Minha Senha`) per consentire a ogni camareira/operatore di aggiornare la propria password personale in totale autonomia.
 - **Sicurezza Cambio Turno & Logout:** Il cambio operatore richiede la password dell'utente selezionato; il pulsante `Sair (Backup)` chiude la sessione e propone il salvataggio del backup JSON.
+- **Validazione & Rendering JSX:** Risolto refuso di sintassi post-merge nel parser Babel standalone e collegato il guard di autenticazione condizionale a livello di root React (`App`).
 
 ---
 
