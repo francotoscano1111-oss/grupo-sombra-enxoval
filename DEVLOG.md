@@ -4,6 +4,22 @@
 
 ---
 
+## [2026-09-10] — Protezione Unità Strutturali & Reatribuição Automatica Saldi alla Cancellazione
+
+**Status AS IS:** Il modulo Unidades & Locais protegge ora le unità strutturali native da eliminazioni accidentali e garantisce l'integrità totale dei dati inventariali tramite trasferimento automatico dei saldi in caso di eliminazione di locali secondari.
+
+### ✅ Fatto
+- **Unità Protette (Non Eliminabili):**
+  - *Hotel & Resort:* `Resort`, `Hotel`, `Villas`, `Rouparia Principal`, `Almoxarifado Central`
+  - *Floresta & SPA:* `Hotel Floresta`, `Yeu SPA`, `Rouparia Principal`, `Almoxarifado Central`
+  - Blocco del tasto cestino con badge `Protegido` e icona di lucchetto informativa.
+- **Reatribuição Automatica dei Saldi:**
+  - In *Hotel & Resort:* se si elimina una `unidade` (es. *Outros* o nuove stanze), i pezzi vengono trasferiti su **`Hotel`**; se si elimina un punto di `circulacao`, i pezzi vengono trasferiti su **`Rouparia Principal`**.
+  - In *Floresta & SPA:* se si elimina una `unidade`, i pezzi vengono trasferiti su **`Hotel Floresta`**; se si elimina un punto di `circulacao`, i pezzi vengono trasferiti su **`Rouparia Principal`**.
+- **Dialogo Informativo & Notifica:** L'utente visualizza un avviso che calcola e quantifica in tempo reale il numero esatto di capi da trasferire prima della conferma.
+
+---
+
 ## [2026-09-09] — SOMBRA ENXOVAL PRO v3.0: Manuale Utente 6 Capitoli, Deploy Vercel & High-Contrast UI
 
 **Status AS IS:** L'applicazione di gestione e controllo biancheria (SOMBRA ENXOVAL PRO) è ora in produzione su Vercel (https://grupo-sombra-enxoval.vercel.app), completa di manuale utente interattivo a 6 capitoli con esportazione PDF A4, backup di sicurezza in uscita e design system high-contrast.
