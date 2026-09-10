@@ -138,6 +138,25 @@ const [ambienteAtivo, setAmbienteAtivo] = useState('hotel_resort'); // 'hotel_re
   - `almoxarifado` (Magazzino Principale)
 - Aggiunta/Modifica/Eliminazione rapida dei locali con ricalcolo immediato della colonna *Total em Uso*.
 
+
+### 4.3.1 Regole di Protezione Unità & Integrità Dati a Due Livelli
+
+Nel modulo **Unidades & Locais** è implementato il principio di **Integrità Contabile a due livelli**:
+
+#### 1. Unità Protette (Non Eliminabili):
+- **Hotel & Resort:** `Resort`, `Hotel`, `Villas`, `Rouparia Principal`, `Almoxarifado Central`
+- **Floresta & SPA:** `Hotel Floresta`, `Yeu SPA`, `Rouparia Principal`, `Almoxarifado Central`
+- Su queste unità il pulsante di eliminazione è bloccato con un badge `Protegido` e icona di lucchetto per impedire manomissioni alla struttura portante del resort.
+
+#### 2. Reatribuição Automatica dei Saldi Vivi (Giacenza Attiva Corrente):
+- Se l'utente elimina un'Acomodação secondaria (es. *Outros* o nuove stanze create), tutte le giacenze attive confluiscono automaticamente su **`Hotel`** (per Hotel & Resort) o **`Hotel Floresta`** (per Floresta & SPA).
+- Se l'utente elimina un punto di Circulação (es. *Rouparia Recepção*, *Roupa Suja*, *Na Lavanderia*), tutte le giacenze attive confluiscono automaticamente su **`Rouparia Principal`**.
+- Un dialogo interattivo calcola in tempo reale il numero esatto di pezzi da trasferire prima della conferma.
+
+#### 3. Immutabilità dei Dati Storici (Audit Passati & Snapshot Illo Tempore):
+- Gli inventari chiusi e archiviati nello storico (**Relatórios & Histórico**) e i log dei movimenti passati mantengono la fotografia immutabile originale (*snapshot*) con i locali e i quantitativi registrati alla data dell'audit.
+- Questo assicura piena validità probatoria e contabile, garantendo che le auditorie passate non vengano alterate a posteriori.
+
 ### 4.4 Catálogo de Itens de Enxoval
 - Anagrafica articoli con:
   - Nome Articolo (es: *Lençol Casal 300 Fios*, *Toalha Banho Gigante*)

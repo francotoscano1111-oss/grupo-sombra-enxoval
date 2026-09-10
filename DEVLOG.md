@@ -13,6 +13,9 @@
   - *Hotel & Resort:* `Resort`, `Hotel`, `Villas`, `Rouparia Principal`, `Almoxarifado Central`
   - *Floresta & SPA:* `Hotel Floresta`, `Yeu SPA`, `Rouparia Principal`, `Almoxarifado Central`
   - Blocco del tasto cestino con badge `Protegido` e icona di lucchetto informativa.
+- **Principio di Integrità a Due Livelli:**
+  - *Dati Storici (Snapshot passati):* Rimangono immutabili e fedeli ai dati registrati *illo tempore* per validità probatoria e contabile.
+  - *Giacenza Operativa Attiva:* I saldi vivi del locale eliminato vengono re-indirizzati istantaneamente su `Hotel` (per unità) o `Rouparia Principal` (per circolazione), azzerando capi orfani e mantenendo le quadrature al 100%.
 - **Reatribuição Automatica dei Saldi:**
   - In *Hotel & Resort:* se si elimina una `unidade` (es. *Outros* o nuove stanze), i pezzi vengono trasferiti su **`Hotel`**; se si elimina un punto di `circulacao`, i pezzi vengono trasferiti su **`Rouparia Principal`**.
   - In *Floresta & SPA:* se si elimina una `unidade`, i pezzi vengono trasferiti su **`Hotel Floresta`**; se si elimina un punto di `circulacao`, i pezzi vengono trasferiti su **`Rouparia Principal`**.
