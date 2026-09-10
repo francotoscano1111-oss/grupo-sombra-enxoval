@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-09-10] — Sistema di Autenticazione: Login, Gestione Username & Self-Service Password
+
+**Status AS IS:** SOMBRA ENXOVAL PRO è ora protetto da una schermata di Login istituzionale. Ciascun profilo dispone di Username e Password personalizzati, con gestione centralizzata per l'Admin e cambio password autonomo per ogni utente.
+
+### ✅ Fatto
+- **Schermata di Login (`LoginScreen`):** Interfaccia a tutto schermo con branding *GRUPO SOMBRA*, validazione credenziali, toggle visibilità password (👁️) e chip di accesso rapido per demo.
+- **Credenziali Predefinite di Default:** `admin` / `sombra2026`, `camareira` / `hotel123`, `spa` / `spa123`, `lavanderia` / `lav123`.
+- **Gestione Credenziali Admin (`UserManagementModal`):** L'amministratore può creare nuovi utenti definendo `Username` e `Password`, modificare le credenziali degli utenti esistenti o generare password casuali.
+- **Cambio Password Autonomo Utenti (`ChangePasswordModal`):** Modale accessibile dal menu profilo in testata (`🔑 Alterar Minha Senha`) per consentire a ogni camareira/operatore di aggiornare la propria password personale in totale autonomia.
+- **Sicurezza Cambio Turno & Logout:** Il cambio operatore richiede la password dell'utente selezionato; il pulsante `Sair (Backup)` chiude la sessione e propone il salvataggio del backup JSON.
+
+---
+
 ## [2026-09-10] — Sistema di Profili Utente & Controllo Accessi Granulare (RBAC)
 
 **Status AS IS:** SOMBRA ENXOVAL PRO supporta ora la gestione multi-utente con profili differenziati tra operatori dello stock in uso (camareiras/piso) e responsabili generali, con permessi selettivi su Ambienti, Operazioni e Locali.

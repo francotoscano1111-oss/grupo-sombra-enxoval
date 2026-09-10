@@ -207,6 +207,37 @@ Il sistema integra un motore di **Controllo degli Accessi Basato sui Ruoli (RBAC
 - **🌿 Atendente Floresta & SPA:** Assegnata a `Floresta & SPA` per i locali dedicati.
 - **🧺 Operador de Lavanderia:** Dedicato al flusso circolare di invio e rientro capi puliti.
 
+
+### 5.1 Sistema di Autenticazione & Gestione Password (Login / Admin / Self-Service)
+
+L'accesso a **SOMBRA ENXOVAL PRO** è protetto da un motore di autenticazione con credenziali dedicate:
+
+#### 1. Schermata di Login Istituzionale (`LoginScreen`):
+- Visualizzata all'apertura dell'applicazione quando la sessione non è attiva (`isAuthenticated === false`).
+- Richiede `Usuário (Login)` e `Senha (Password)` con validazione e feedback immediato.
+- Integra un pannello di accesso rapido dimostrativo con credenziali iniziali.
+
+#### 2. Credenziali Predefinite di Default:
+| Profilo | Username (Login) | Password Iniziale | Ambito & Permessi |
+| :--- | :--- | :--- | :--- |
+| **👑 Governanta Geral (Admin)** | `admin` | `sombra2026` | Accesso completo a tutto il sistema |
+| **🧹 Camareira / Governança Hotel** | `camareira` | `hotel123` | Solo stock in uso Hotel & Resort |
+| **🌿 Atendente Floresta & SPA** | `spa` | `spa123` | Solo stock in uso Floresta & SPA |
+| **🧺 Operador de Lavanderia** | `lavanderia` | `lav123` | Movimentazione lavanderia |
+
+#### 3. Poteri Amministrativi (Governanta Geral):
+- Creazione di nuovi profili operatore con impostazione libera di `Nome`, `Cargo`, `Username` univoco e `Password`.
+- Modifica o reset di `Username` e `Password` di qualsiasi utente dal modale *Gerenciador de Usuários & Senhas*.
+- Generatore rapido di password casuali sicure (`Gerar Aleatória`).
+
+#### 4. Cambio Password Autonomo per gli Utenti (Self-Service):
+- Qualsiasi operatore loggato può cliccare su **`🔑 Alterar Minha Senha`** nel menu del proprio profilo in alto a destra.
+- Inserendo la password attuale e la nuova password desiderata (minimo 3 caratteri), aggiorna autonomamente le proprie credenziali senza dover ricorrere all'Admin.
+
+#### 5. Flusso di Logout & Cambio Turno:
+- Nel menu profilo o tramite il pulsante **`Sair (Backup)`**, l'operatore chiude la sessione con prompt per scaricare il dump di sicurezza JSON.
+- Il passaggio rapido ad un altro operatore richiede la password di quest'ultimo per prevenire accessi non autorizzati.
+
 ## 5. 💾 Modello dei Dati & Persistenza (Schema JSON)
 
 L'intero stato applicativo risiede in memoria React e viene sincronizzato nel `localStorage` del browser:

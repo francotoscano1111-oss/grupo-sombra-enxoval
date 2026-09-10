@@ -764,19 +764,22 @@
       ]
     };
 
-        const DB_KEY_ITEMS = 'sombra_enxoval_items_v4';
+            const DB_KEY_ITEMS = 'sombra_enxoval_items_v4';
     const DB_KEY_LOCATIONS = 'sombra_enxoval_locations_v4';
     const DB_KEY_MOVIMENTOS = 'sombra_enxoval_movimentos_v4';
     const DB_KEY_INVENTARIOS = 'sombra_enxoval_inventarios_v4';
     const DB_KEY_USERS = 'sombra_enxoval_users_v2';
     const DB_KEY_CURRENT_USER = 'sombra_enxoval_current_user_id';
+    const DB_KEY_AUTH = 'sombra_enxoval_auth_session';
 
-    // PERFIS E USUÁRIOS PADRÃO (RBAC)
+    // PERFIS E USUÁRIOS PADRÃO COM LOGIN E SENHA (RBAC)
     const DEFAULT_USERS = [
       {
         id: 'user_admin',
         nome: 'Governanta Geral (Responsável)',
         cargo: 'Governanta Geral / Diretoria',
+        username: 'admin',
+        password: 'sombra2026',
         isAdmin: true,
         ambientes: ['hotel', 'spa'],
         operacoesPermitidas: ['COMPRA', 'ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'DESCARTE', 'PERDA'],
@@ -789,6 +792,8 @@
         id: 'user_piso_hotel',
         nome: 'Camareira / Governança de Piso',
         cargo: 'Operador de Piso (Hotel & Resort)',
+        username: 'camareira',
+        password: 'hotel123',
         isAdmin: false,
         ambientes: ['hotel'],
         operacoesPermitidas: ['ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA'],
@@ -801,6 +806,8 @@
         id: 'user_piso_spa',
         nome: 'Atendente Floresta & SPA',
         cargo: 'Operador de Piso (Floresta & SPA)',
+        username: 'spa',
+        password: 'spa123',
         isAdmin: false,
         ambientes: ['spa'],
         operacoesPermitidas: ['ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA'],
@@ -813,6 +820,8 @@
         id: 'user_lavanderia',
         nome: 'Operador de Lavanderia',
         cargo: 'Lavanderia & Rouparia Geral',
+        username: 'lavanderia',
+        password: 'lav123',
         isAdmin: false,
         ambientes: ['hotel', 'spa'],
         operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'ABASTECIMENTO'],
@@ -927,13 +936,20 @@
         return INITIAL_RAW_DATA.initial_inventarios || [];
       });
 
-            // ESTADO DE USUÁRIOS E PERMISSÕES (RBAC)
+                  // ESTADO DE USUÁRIOS E AUTENTICAÇÃO (RBAC)
       const [users, setUsers] = useState(() => {
         try {
           const saved = localStorage.getItem(DB_KEY_USERS);
           if (saved) {
             const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              // Ensure default usernames/passwords exist if missing
+              return parsed.map(u => ({
+                ...u,
+                username: u.username || (u.id === 'user_admin' ? 'admin' : u.id),
+                password: u.password || 'sombra2026'
+              }));
+            }
           }
         } catch (e) {}
         return DEFAULT_USERS;
@@ -943,14 +959,56 @@
         return localStorage.getItem(DB_KEY_CURRENT_USER) || 'user_admin';
       });
 
+      const [isAuthenticated, setIsAuthenticated] = useState(() => {
+        return localStorage.getItem(DB_KEY_AUTH) === 'true';
+      });
+
       const currentUser = users.find(u => u.id === currentUserId) || users[0] || DEFAULT_USERS[0];
       const [showUserModal, setShowUserModal] = useState(false);
+      const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
       const [editingUser, setEditingUser] = useState(null);
 
       // Salvar usuários no localStorage
       useEffect(() => {
         localStorage.setItem(DB_KEY_USERS, JSON.stringify(users));
       }, [users]);
+
+      // HANDLER: LOGIN DE USUÁRIO
+      const handleLogin = (loginUser, loginPass) => {
+        const trimmedUser = (loginUser || '').trim().toLowerCase();
+        const userFound = users.find(u => (u.username || '').toLowerCase() === trimmedUser);
+        if (!userFound) {
+          return { success: false, message: 'Usuário não encontrado. Verifique o login digitado.' };
+        }
+        if (userFound.password !== loginPass) {
+          return { success: false, message: 'Senha incorreta. Tente novamente.' };
+        }
+
+        setCurrentUserId(userFound.id);
+        setIsAuthenticated(true);
+        localStorage.setItem(DB_KEY_CURRENT_USER, userFound.id);
+        localStorage.setItem(DB_KEY_AUTH, 'true');
+
+        if (!userFound.isAdmin && Array.isArray(userFound.ambientes) && userFound.ambientes.length === 1) {
+          if (userFound.ambientes[0] !== ambiente) {
+            setAmbiente(userFound.ambientes[0]);
+            localStorage.setItem('sombra_enxoval_ambiente', userFound.ambientes[0]);
+          }
+        }
+        return { success: true };
+      };
+
+      // HANDLER: LOGOUT DE USUÁRIO COM BACKUP DE SEGURANÇA OPCIONAL
+      const handleLogout = (promptBackup = false) => {
+        if (promptBackup) {
+          if (confirm('Deseja baixar um arquivo de Backup de Segurança em JSON antes de sair da sua conta?')) {
+            handleDownloadBackup();
+          }
+        }
+        setIsAuthenticated(false);
+        localStorage.removeItem(DB_KEY_AUTH);
+        showToast('Sessão encerrada com sucesso.');
+      };
 
       // HELPER: PERMISSÕES POR USUÁRIO
       const canAccessAmbiente = (amb) => {
@@ -975,88 +1033,32 @@
       };
 
       const handleSwitchUser = (userId) => {
+        const targetUser = users.find(u => u.id === userId);
+        if (!targetUser) return;
+        
+        // Se for o mesmo usuário, não faz nada
+        if (userId === currentUserId) return;
+
+        // Solicita senha para trocar de usuário
+        const senhaDigitada = prompt(`Digite a senha de acesso para o usuário "${targetUser.nome}" (@${targetUser.username}):`);
+        if (senhaDigitada === null) return; // cancelou
+        
+        if (senhaDigitada !== targetUser.password) {
+          alert('Senha incorreta! Não foi possível trocar de usuário.');
+          return;
+        }
+
         setCurrentUserId(userId);
         localStorage.setItem(DB_KEY_CURRENT_USER, userId);
-        const targetUser = users.find(u => u.id === userId);
-        if (targetUser && !targetUser.isAdmin && Array.isArray(targetUser.ambientes) && targetUser.ambientes.length === 1) {
+        
+        if (!targetUser.isAdmin && Array.isArray(targetUser.ambientes) && targetUser.ambientes.length === 1) {
           if (targetUser.ambientes[0] !== ambiente) {
             setAmbiente(targetUser.ambientes[0]);
             localStorage.setItem('sombra_enxoval_ambiente', targetUser.ambientes[0]);
           }
         }
-        showToast(`Perfil ativo: ${targetUser?.nome || 'Usuário'} (${targetUser?.cargo || ''})`);
-      };
-
-      const [searchQuery, setSearchQuery] = useState('');
-      const [selectedCategory, setSelectedCategory] = useState('Todos');
-      const [toastMessage, setToastMessage] = useState(null);
-      
-      const [showMovimentoModal, setShowMovimentoModal] = useState(false);
-      const [movimentoTipo, setMovimentoTipo] = useState('COMPRA');
-      const [selectedItemForMov, setSelectedItemForMov] = useState('');
-      const [editingMovimento, setEditingMovimento] = useState(null);
-      const [viewingInventario, setViewingInventario] = useState(null);
-      const [activeKpiModal, setActiveKpiModal] = useState(null);
-      const [showManualModal, setShowManualModal] = useState(false);
-      const [importModalData, setImportModalData] = useState(null);
-      const excelImportInputRef = useRef(null);
-      const [movFiltroTipo, setMovFiltroTipo] = useState('ALL');
-      const [movFiltroItem, setMovFiltroItem] = useState('ALL');
-      const [movSortOrder, setMovSortOrder] = useState('desc');
-      
-      const [showItemModal, setShowItemModal] = useState(false);
-      const [editingItem, setEditingItem] = useState(null);
-
-      const [showLocationModal, setShowLocationModal] = useState(false);
-      const [editingLocation, setEditingLocation] = useState(null);
-
-      const [isDirectEditMode, setIsDirectEditMode] = useState(false);
-      const [unsavedEdits, setUnsavedEdits] = useState({});
-
-      const showToast = useCallback((msg, type = 'success') => {
-        setToastMessage({ msg, type });
-        setTimeout(() => setToastMessage(null), 3500);
-      }, []);
-
-      useEffect(() => {
-        localStorage.setItem(DB_KEY_ITEMS, JSON.stringify(items));
-        localStorage.setItem('sombra_enxoval_ambiente', ambiente);
-      }, [items, ambiente]);
-
-      useEffect(() => {
-        localStorage.setItem(DB_KEY_LOCATIONS, JSON.stringify(locations));
-      }, [locations]);
-
-      useEffect(() => {
-        localStorage.setItem(DB_KEY_MOVIMENTOS, JSON.stringify(movimentos));
-      }, [movimentos]);
-
-      useEffect(() => {
-        localStorage.setItem(DB_KEY_INVENTARIOS, JSON.stringify(inventarios));
-      }, [inventarios]);
-
-      useEffect(() => {
-        localStorage.setItem('sombra_enxoval_view_mode', viewModeEmUso);
-      }, [viewModeEmUso]);
-
-      const currentItems = useMemo(() => {
-        return items[ambiente] || [];
-      }, [items, ambiente]);
-
-      // All locations active
-      const allActiveLocations = useMemo(() => {
-        return (locations[ambiente] || []).filter(l => l.ativo !== false);
-      }, [locations, ambiente]);
-
-      // Em Uso Locations (Unidades + Circulação - everything except Almoxarifado Central)
-      const emUsoLocations = useMemo(() => {
-        return allActiveLocations.filter(loc => loc.tipo !== 'almoxarifado');
-      }, [allActiveLocations]);
-
-      // Almoxarifado Location
-      const almoxarifadoLocation = useMemo(() => {
-        return allActiveLocations.find(loc => loc.tipo === 'almoxarifado') || { id: 'almoxarifado', nome: 'Almoxarifado Central' };
-      }, [allActiveLocations]);
+        showToast(`Sessão alterada: ${targetUser.nome} (${targetUser.cargo})`);
+      };, [allActiveLocations]);
 
       // Categories list for dropdown
       const categories = useMemo(() => {
@@ -2751,14 +2753,14 @@
                     <div className="px-3 py-2 border-b border-sombra-800 mb-1">
                       <div className="text-[10px] uppercase font-black tracking-wider text-sombra-400">Perfil Ativo</div>
                       <div className="text-xs font-bold text-white mt-0.5">{currentUser?.nome}</div>
-                      <div className="text-[10px] text-brand-400">{currentUser?.cargo}</div>
+                      <div className="text-[10px] text-brand-400 font-mono">@{currentUser?.username} • {currentUser?.cargo}</div>
                     </div>
 
                     <div className="text-[10px] uppercase font-bold tracking-wider text-sombra-500 px-3 py-1">
-                      Trocar de Operador:
+                      Trocar de Operador (Requer Senha):
                     </div>
 
-                    <div className="max-h-60 overflow-y-auto space-y-1 py-1">
+                    <div className="max-h-52 overflow-y-auto space-y-1 py-1">
                       {users.map(u => (
                         <button
                           key={u.id}
@@ -2773,7 +2775,7 @@
                             <span>{u.isAdmin ? '👑' : '👤'}</span>
                             <div>
                               <div className="font-bold text-xs">{u.nome}</div>
-                              <div className="text-[10px] text-sombra-400">{u.cargo}</div>
+                              <div className="text-[10px] text-sombra-400 font-mono">@{u.username} • {u.cargo}</div>
                             </div>
                           </div>
                           {u.id === currentUserId && <span className="text-brand-400 font-bold"><Icons.Check /></span>}
@@ -2781,20 +2783,34 @@
                       ))}
                     </div>
 
-                    <div className="pt-2 border-t border-sombra-800 mt-1">
+                    <div className="pt-2 border-t border-sombra-800 mt-1 space-y-1">
                       <button
-                        onClick={() => {
-                          if (!currentUser?.isAdmin) {
-                            alert('Apenas usuários com perfil Administrador / Responsável Geral podem gerenciar usuários e permissões.');
-                            return;
-                          }
-                          setEditingUser(null);
-                          setShowUserModal(true);
-                        }}
-                        className="w-full py-2 px-3 bg-sombra-800 hover:bg-brand-600 hover:text-slate-950 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                        onClick={() => setShowChangePasswordModal(true)}
+                        className="w-full py-2 px-3 bg-sombra-800 hover:bg-indigo-600 hover:text-white text-slate-200 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <Icons.Settings />
-                        <span>Gerenciar Usuários & Permissões</span>
+                        <Icons.Key />
+                        <span>Alterar Minha Senha</span>
+                      </button>
+
+                      {currentUser?.isAdmin && (
+                        <button
+                          onClick={() => {
+                            setEditingUser(null);
+                            setShowUserModal(true);
+                          }}
+                          className="w-full py-2 px-3 bg-sombra-800 hover:bg-brand-600 hover:text-slate-950 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <Icons.Settings />
+                          <span>Gerenciar Usuários & Senhas</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleLogout(true)}
+                        className="w-full py-2 px-3 bg-rose-950/60 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-800/40 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Icons.LogOut />
+                        <span>Sair da Conta (Logout)</span>
                       </button>
                     </div>
                   </div>
@@ -4951,6 +4967,20 @@
             />
           )}
 
+          {/* MODAL: ALTERAR MINHA SENHA */}
+          {showChangePasswordModal && (
+            <ChangePasswordModal
+              user={currentUser}
+              onClose={() => setShowChangePasswordModal(false)}
+              onSavePassword={(newPassword) => {
+                const updated = users.map(u => u.id === currentUser.id ? { ...u, password: newPassword } : u);
+                setUsers(updated);
+                setShowChangePasswordModal(false);
+                showToast('Sua senha foi alterada com sucesso!');
+              }}
+            />
+          )}
+
           {/* MODAL: USER MANAGEMENT & PERMISSIONS (RBAC) */}
           {showUserModal && (
             <UserManagementModal
@@ -5451,15 +5481,311 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
     /* =========================================================================
        MODAL: GERENCIAMENTO DE USUÁRIOS E PERMISSÕES (RBAC)
        ========================================================================= */
+    
+    /* =========================================================================
+       COMPONENTE: SCHERMATA DI LOGIN (LOGIN SCREEN)
+       ========================================================================= */
+    function LoginScreen({ users, onLogin }) {
+      const [loginUser, setLoginUser] = useState('');
+      const [loginPass, setLoginPass] = useState('');
+      const [showPassword, setShowPassword] = useState(false);
+      const [errorMessage, setErrorMessage] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setErrorMessage('');
+        setIsLoading(true);
+
+        setTimeout(() => {
+          const res = onLogin(loginUser, loginPass);
+          if (!res.success) {
+            setErrorMessage(res.message);
+            setIsLoading(false);
+          }
+        }, 150);
+      };
+
+      const handleQuickFill = (u) => {
+        setLoginUser(u.username || '');
+        setLoginPass(u.password || '');
+        setErrorMessage('');
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sombra-900 to-indigo-950 text-white flex items-center justify-center p-4 font-sans selection:bg-brand-500 selection:text-slate-950">
+          <div className="w-full max-w-md space-y-6 animate-fade-in">
+            
+            {/* BRANDING HEADER */}
+            <div className="text-center space-y-3">
+              <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 via-emerald-500 to-teal-400 items-center justify-center text-slate-950 font-black shadow-2xl shadow-brand-500/30 border border-emerald-300/40 transform hover:scale-105 transition">
+                <Icons.Box />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
+                  <span>SOMBRA ENXOVAL</span>
+                  <span className="text-brand-400 font-mono text-sm px-2 py-0.5 bg-brand-950/80 border border-brand-800 rounded-lg">PRO</span>
+                </h1>
+                <p className="text-xs text-slate-400 mt-1 font-medium">
+                  GRUPO SOMBRA • Gestão, Movimentação & Auditoria de Enxoval
+                </p>
+              </div>
+            </div>
+
+            {/* LOGIN CARD */}
+            <div className="bg-sombra-900/90 border border-sombra-700/80 backdrop-blur-xl rounded-3xl p-7 shadow-2xl space-y-5">
+              <div className="border-b border-sombra-800 pb-3">
+                <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <Icons.Shield />
+                  <span>Acesso Autorizado</span>
+                </h2>
+                <p className="text-xs text-sombra-400 mt-0.5">
+                  Digite seu usuário e senha para iniciar sua sessão de trabalho.
+                </p>
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 bg-rose-950/80 border border-rose-600/80 rounded-xl text-xs text-rose-200 flex items-center gap-2 animate-bounce">
+                  <Icons.AlertTriangle />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-sombra-300 uppercase tracking-wider mb-1.5">
+                    Usuário / Login
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={loginUser}
+                      onChange={(e) => setLoginUser(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="Ex: admin ou camareira"
+                      className="w-full px-4 py-2.5 bg-sombra-950 border border-sombra-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl text-sm text-white placeholder-sombra-600 transition"
+                    />
+                    <div className="absolute right-3 top-3 text-sombra-500 pointer-events-none">
+                      <Icons.User />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-sombra-300 uppercase tracking-wider">
+                      Senha de Acesso
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[11px] text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1 cursor-pointer"
+                    >
+                      <Icons.Eye />
+                      <span>{showPassword ? 'Ocultar' : 'Mostrar'}</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={loginPass}
+                      onChange={(e) => setLoginPass(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="w-full px-4 py-2.5 bg-sombra-950 border border-sombra-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl text-sm text-white placeholder-sombra-600 font-mono transition"
+                    />
+                    <div className="absolute right-3 top-3 text-sombra-500 pointer-events-none">
+                      <Icons.Key />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-500 hover:to-emerald-400 text-slate-950 font-extrabold rounded-xl text-sm transition shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-[0.99]"
+                >
+                  <Icons.Check />
+                  <span>{isLoading ? 'Autenticando...' : 'Entrar no Sistema'}</span>
+                </button>
+              </form>
+
+              {/* QUICK DEMO USERS CHIPS */}
+              <div className="pt-4 border-t border-sombra-800 space-y-2">
+                <div className="text-[11px] font-bold text-sombra-400 uppercase tracking-wider">
+                  Acesso Rápido para Demonstração:
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {users.map(u => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => handleQuickFill(u)}
+                      className="p-2 bg-sombra-950 hover:bg-sombra-800 border border-sombra-800 hover:border-sombra-700 rounded-xl text-left transition flex items-center gap-2 group cursor-pointer"
+                    >
+                      <span className="text-sm">{u.isAdmin ? '👑' : '👤'}</span>
+                      <div className="truncate">
+                        <div className="font-bold text-[11px] text-slate-200 group-hover:text-brand-300 truncate">{u.nome}</div>
+                        <div className="text-[10px] text-sombra-500 font-mono truncate">@{u.username}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* FOOTER */}
+            <div className="text-center text-xs text-sombra-500">
+              GRUPO SOMBRA Finance & Operations Hub • Versão 3.0
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    /* =========================================================================
+       COMPONENTE: MODAL ALTERAR MINHA SENHA
+       ========================================================================= */
+    function ChangePasswordModal({ user, onClose, onSavePassword }) {
+      const [senhaAtual, setSenhaAtual] = useState('');
+      const [novaSenha, setNovaSenha] = useState('');
+      const [confirmarSenha, setConfirmarSenha] = useState('');
+      const [showPass, setShowPass] = useState(false);
+      const [error, setError] = useState('');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (senhaAtual !== user.password) {
+          setError('A senha atual digitada está incorreta.');
+          return;
+        }
+
+        if (novaSenha.length < 3) {
+          setError('A nova senha deve conter no mínimo 3 caracteres.');
+          return;
+        }
+
+        if (novaSenha !== confirmarSenha) {
+          setError('A confirmação da nova senha não confere.');
+          return;
+        }
+
+        onSavePassword(novaSenha);
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-sombra-900 border border-sombra-700 w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
+            
+            <div className="flex items-center justify-between border-b border-sombra-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-md">
+                  <Icons.Key />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white">Alterar Minha Senha</h3>
+                  <p className="text-xs text-sombra-400">@{user.username} ({user.nome})</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="text-sombra-400 hover:text-white text-lg font-mono">✕</button>
+            </div>
+
+            {error && (
+              <div className="p-2.5 bg-rose-950/80 border border-rose-600 rounded-xl text-xs text-rose-200">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-sombra-300 uppercase mb-1">Senha Atual *</label>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={senhaAtual}
+                  onChange={(e) => setSenhaAtual(e.target.value)}
+                  required
+                  placeholder="Digite sua senha atual"
+                  className="w-full px-3 py-2 bg-sombra-950 border border-sombra-700 rounded-xl text-xs text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sombra-300 uppercase mb-1">Nova Senha *</label>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  required
+                  placeholder="Digite a nova senha desejada"
+                  className="w-full px-3 py-2 bg-sombra-950 border border-sombra-700 rounded-xl text-xs text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sombra-300 uppercase mb-1">Confirmar Nova Senha *</label>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  required
+                  placeholder="Repita a nova senha"
+                  className="w-full px-3 py-2 bg-sombra-950 border border-sombra-700 rounded-xl text-xs text-white font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-1">
+                <label className="flex items-center gap-1.5 text-sombra-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showPass}
+                    onChange={(e) => setShowPass(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded text-indigo-600"
+                  />
+                  <span>Mostrar senhas</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-sombra-800">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-sombra-800 hover:bg-sombra-700 text-slate-300 font-bold rounded-xl text-xs transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md cursor-pointer"
+                >
+                  Salvar Nova Senha
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      );
+    }
+
+
     function UserManagementModal({ users, locations, onClose, onSaveUsers }) {
       const [userList, setUserList] = useState(users);
       const [activeEditingUser, setActiveEditingUser] = useState(null);
+      const [showFormPassword, setShowFormPassword] = useState(false);
 
       const handleCreateNewUser = () => {
+        const randomPass = 'sombra' + Math.floor(1000 + Math.random() * 9000);
         const newUser = {
           id: 'user_' + Date.now(),
           nome: 'Novo Operador',
           cargo: 'Camareira / Operador',
+          username: 'operador_' + Math.floor(100 + Math.random() * 900),
+          password: randomPass,
           isAdmin: false,
           ambientes: ['hotel'],
           operacoesPermitidas: ['ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA'],
@@ -5478,12 +5804,35 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
           return;
         }
 
-        const exists = userList.some(u => u.id === activeEditingUser.id);
+        const usernameClean = (activeEditingUser.username || '').trim().toLowerCase().replace(/[^a-z0-9_.]/g, '');
+        if (!usernameClean) {
+          alert('Por favor, defina um nome de usuário (login) válido.');
+          return;
+        }
+
+        // Verifica se o username já está em uso por outro usuário
+        const duplicate = userList.some(u => u.id !== activeEditingUser.id && (u.username || '').toLowerCase() === usernameClean);
+        if (duplicate) {
+          alert(`O nome de usuário "@${usernameClean}" já está em uso por outro operador. Escolha um login diferente.`);
+          return;
+        }
+
+        if (!activeEditingUser.password || activeEditingUser.password.length < 3) {
+          alert('A senha deve conter no mínimo 3 caracteres.');
+          return;
+        }
+
+        const finalUser = {
+          ...activeEditingUser,
+          username: usernameClean
+        };
+
+        const exists = userList.some(u => u.id === finalUser.id);
         let updated;
         if (exists) {
-          updated = userList.map(u => u.id === activeEditingUser.id ? activeEditingUser : u);
+          updated = userList.map(u => u.id === finalUser.id ? finalUser : u);
         } else {
-          updated = [...userList, activeEditingUser];
+          updated = [...userList, finalUser];
         }
         setUserList(updated);
         onSaveUsers(updated);
@@ -5569,11 +5918,11 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                    <span>Gerenciador de Usuários & Permissões (RBAC)</span>
+                    <span>Gerenciador de Usuários & Senhas (RBAC)</span>
                     <span className="badge-emerald-contrast px-3 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-800 rounded-full text-[11px] font-extrabold shadow-sm">{userList.length} Usuários Configurados</span>
                   </h3>
                   <p className="text-xs text-sombra-400 mt-0.5">
-                    Defina quem acessa cada ambiente, quais operações de movimentação são autorizadas e quais locais são visíveis.
+                    Defina quem acessa cada ambiente, quais operações de movimentação são autorizadas e as credenciais de login.
                   </p>
                 </div>
               </div>
@@ -5619,23 +5968,31 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                               {u.isAdmin ? '👑' : '👤'}
                             </div>
                             <div>
-                              <div className="font-bold text-sm text-slate-900 dark:text-white">{u.nome}</div>
+                              <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                                <span>{u.nome}</span>
+                                <span className="font-mono text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.2 rounded border border-indigo-200 dark:border-indigo-800">
+                                  @{u.username || 'sem_login'}
+                                </span>
+                              </div>
                               <div className="text-[11px] text-slate-500 dark:text-sombra-400">{u.cargo}</div>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => setActiveEditingUser(u)}
-                              className="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-sombra-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-sombra-800 rounded-lg transition"
-                              title="Editar Permissões do Usuário"
+                              onClick={() => {
+                                setShowFormPassword(false);
+                                setActiveEditingUser(u);
+                              }}
+                              className="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-sombra-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-sombra-800 rounded-lg transition cursor-pointer"
+                              title="Editar Permissões e Senha do Usuário"
                             >
                               <Icons.Edit />
                             </button>
                             {u.id !== 'user_admin' && (
                               <button
                                 onClick={() => handleDeleteUser(u.id)}
-                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
+                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition cursor-pointer"
                                 title="Excluir Usuário"
                               >
                                 <Icons.Trash />
@@ -5675,7 +6032,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 </div>
               ) : (
                 // USER EDITOR FORM
-                <form onSubmit={handleSaveUserForm} className="space-y-6">
+                <form onSubmit={handleSaveUserForm} className="space-y-5">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-sombra-800">
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                       <span>{activeEditingUser.id.startsWith('user_') && !userList.some(u => u.id === activeEditingUser.id) ? 'Criando Novo Usuário' : `Editando: ${activeEditingUser.nome}`}</span>
@@ -5683,16 +6040,16 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                     <button
                       type="button"
                       onClick={() => setActiveEditingUser(null)}
-                      className="text-xs text-slate-500 hover:text-slate-800 dark:text-sombra-400 dark:hover:text-white"
+                      className="text-xs text-slate-500 hover:text-slate-800 dark:text-sombra-400 dark:hover:text-white cursor-pointer"
                     >
                       ← Voltar para lista
                     </button>
                   </div>
 
-                  {/* IDENTIFICAÇÃO */}
+                  {/* IDENTIFICAÇÃO E CREDENCIAIS */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-sombra-300 mb-1">Nome do Operador / Usuário *</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-sombra-300 mb-1">Nome Completo / Exibição *</label>
                       <input
                         type="text"
                         value={activeEditingUser.nome}
@@ -5711,6 +6068,57 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                         required
                         placeholder="Ex: Camareira de Piso, Rouparia"
                         className="w-full px-3 py-2 bg-white dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-sombra-300 mb-1">Nome de Usuário (Login de Acesso) *</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2 text-slate-400 font-mono text-xs">@</span>
+                        <input
+                          type="text"
+                          value={activeEditingUser.username || ''}
+                          onChange={(e) => setActiveEditingUser({ ...activeEditingUser, username: e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, '') })}
+                          required
+                          placeholder="maria.villas"
+                          className="w-full pl-7 pr-3 py-2 bg-white dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <span className="text-[10px] text-slate-400">Usado para entrar no sistema (letras, números e sublinhado).</span>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-sombra-300">Senha de Acesso *</label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const autoPass = 'sombra' + Math.floor(1000 + Math.random() * 9000);
+                              setActiveEditingUser({ ...activeEditingUser, password: autoPass });
+                              setShowFormPassword(true);
+                            }}
+                            className="text-[10px] text-indigo-600 hover:underline cursor-pointer"
+                          >
+                            Gerar Aleatória
+                          </button>
+                          <span>•</span>
+                          <button
+                            type="button"
+                            onClick={() => setShowFormPassword(!showFormPassword)}
+                            className="text-[10px] text-slate-500 hover:underline cursor-pointer"
+                          >
+                            {showFormPassword ? 'Ocultar' : 'Mostrar'}
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type={showFormPassword ? 'text' : 'password'}
+                        value={activeEditingUser.password || ''}
+                        onChange={(e) => setActiveEditingUser({ ...activeEditingUser, password: e.target.value })}
+                        required
+                        placeholder="••••••••"
+                        className="w-full px-3 py-2 bg-white dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-1 focus:ring-indigo-500"
                       />
                     </div>
                   </div>
