@@ -182,6 +182,31 @@ Nel modulo **Unidades & Locais** è implementato il principio di **Integrità Co
 
 ---
 
+
+---
+
+## 5. 👥 Modulo Profili Utente & Controllo Accessi (RBAC)
+
+Il sistema integra un motore di **Controllo degli Accessi Basato sui Ruoli (RBAC)** per differenziare l'operatività tra chi si occupa dello **stock in uso (camareiras / governança de piso)** e la **responsabile generale (Governanta Geral / Diretoria)**.
+
+### Struttura Permessi per Profilo (`UserProfile`):
+1. **Ambiente Abilitato:** Accesso limitato a `Hotel & Resort`, `Floresta & SPA` o `Tutti (entrambi)`.
+2. **Tipologia di Operazioni (Movimentações Rápidas):** Abilitazione granulare tra le 6 tipologie:
+   - `1. Nova Compra / Entrada` (Almoxarifado)
+   - `2. Abastecimento / Transferência`
+   - `3. Envio para Lavanderia`
+   - `4. Retorno da Lavanderia`
+   - `5. Descarte por Avaria / Desgaste`
+   - `6. Registro de Perda / Extravio`
+3. **Unidades & Locais Assegnati:** Selezione specifica di quali camere/chalés o rouparias l'operatore può visualizzare e movimentare (escludendo l'Almoxarifado per gli operatori di piano).
+4. **Ruolo Amministratore (`isAdmin`):** Accesso illimitato al configuratore utenti, anagrafica catalogo, gestione strutture fisiche e cancellazione storico.
+
+### Profili Predefiniti:
+- **👑 Governanta Geral (Responsável):** Accesso completo a entrambe le strutture, tutte le 6 operazioni e tutti i locali.
+- **🧹 Camareira / Governança de Piso:** Assegnata a `Hotel & Resort`, abilitata solo per Abastecimento e Lavanderia sui locali di piano (no Compras, no Descartes, no Almoxarifado).
+- **🌿 Atendente Floresta & SPA:** Assegnata a `Floresta & SPA` per i locali dedicati.
+- **🧺 Operador de Lavanderia:** Dedicato al flusso circolare di invio e rientro capi puliti.
+
 ## 5. 💾 Modello dei Dati & Persistenza (Schema JSON)
 
 L'intero stato applicativo risiede in memoria React e viene sincronizzato nel `localStorage` del browser:

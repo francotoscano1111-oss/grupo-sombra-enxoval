@@ -4,6 +4,22 @@
 
 ---
 
+## [2026-09-10] — Sistema di Profili Utente & Controllo Accessi Granulare (RBAC)
+
+**Status AS IS:** SOMBRA ENXOVAL PRO supporta ora la gestione multi-utente con profili differenziati tra operatori dello stock in uso (camareiras/piso) e responsabili generali, con permessi selettivi su Ambienti, Operazioni e Locali.
+
+### ✅ Fatto
+- **Selettore Utente nell'Header:** Aggiunto badge dinamico con dropdown rapido per il cambio turno/operatore (`👑 Responsável Geral`, `🧹 Camareira de Piso`, `🌿 Atendente SPA`, `🧺 Lavanderia`).
+- **3 Variabili di Configurazione per Utente:**
+  - *Ambienti:* Checkbox *Hotel & Resort* / *Floresta & SPA*.
+  - *Operazioni:* 6 Checkbox per autorizzare o bloccare acquisti, rifornimenti, lavanderia, scarti e perdite.
+  - *Locali:* Selezione per singolo alloggio o rouparia con opzioni *Marcar/Desmarcar Todos*.
+- **Modale Amministrativa `UserManagementModal`:** Interfaccia completa per creare, modificare ed eliminare profili con anteprima in tempo reale.
+- **Protezione Operazioni:** I bottoni non autorizzati vengono disabilitati con etichetta `🔒 Bloqueado`, i menu a tendina filtrano solo le stanze assegnate e il campo *Responsável* si auto-compila con il nome dell'utente attivo.
+- **Persistenza & Backup JSON:** I profili utente vengono salvati in `localStorage` e inclusi nel dump di sicurezza JSON.
+
+---
+
 ## [2026-09-10] — Protezione Unità Strutturali & Reatribuição Automatica Saldi alla Cancellazione
 
 **Status AS IS:** Il modulo Unidades & Locais protegge ora le unità strutturali native da eliminazioni accidentali e garantisce l'integrità totale dei dati inventariali tramite trasferimento automatico dei saldi in caso di eliminazione di locali secondari.

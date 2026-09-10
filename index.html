@@ -731,13 +731,71 @@
       ]
     };
 
-    const DB_KEY_ITEMS = 'sombra_enxoval_items_v4';
+        const DB_KEY_ITEMS = 'sombra_enxoval_items_v4';
     const DB_KEY_LOCATIONS = 'sombra_enxoval_locations_v4';
     const DB_KEY_MOVIMENTOS = 'sombra_enxoval_movimentos_v4';
     const DB_KEY_INVENTARIOS = 'sombra_enxoval_inventarios_v4';
+    const DB_KEY_USERS = 'sombra_enxoval_users_v2';
+    const DB_KEY_CURRENT_USER = 'sombra_enxoval_current_user_id';
+
+    // PERFIS E USUÁRIOS PADRÃO (RBAC)
+    const DEFAULT_USERS = [
+      {
+        id: 'user_admin',
+        nome: 'Governanta Geral (Responsável)',
+        cargo: 'Governanta Geral / Diretoria',
+        isAdmin: true,
+        ambientes: ['hotel', 'spa'],
+        operacoesPermitidas: ['COMPRA', 'ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'DESCARTE', 'PERDA'],
+        locaisPermitidos: {
+          hotel: 'ALL',
+          spa: 'ALL'
+        }
+      },
+      {
+        id: 'user_piso_hotel',
+        nome: 'Camareira / Governança de Piso',
+        cargo: 'Operador de Piso (Hotel & Resort)',
+        isAdmin: false,
+        ambientes: ['hotel'],
+        operacoesPermitidas: ['ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA'],
+        locaisPermitidos: {
+          hotel: ['resort', 'hotel', 'villas', 'outros', 'rouparia', 'roupariaRecepcao', 'suja', 'lavanderia', 'chegouEnsacada'],
+          spa: []
+        }
+      },
+      {
+        id: 'user_piso_spa',
+        nome: 'Atendente Floresta & SPA',
+        cargo: 'Operador de Piso (Floresta & SPA)',
+        isAdmin: false,
+        ambientes: ['spa'],
+        operacoesPermitidas: ['ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA'],
+        locaisPermitidos: {
+          hotel: [],
+          spa: ['spa', 'yeu', 'outros_spa', 'rouparia', 'suja', 'lavanderia']
+        }
+      },
+      {
+        id: 'user_lavanderia',
+        nome: 'Operador de Lavanderia',
+        cargo: 'Lavanderia & Rouparia Geral',
+        isAdmin: false,
+        ambientes: ['hotel', 'spa'],
+        operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'ABASTECIMENTO'],
+        locaisPermitidos: {
+          hotel: ['rouparia', 'suja', 'lavanderia', 'chegouEnsacada'],
+          spa: ['rouparia', 'suja', 'lavanderia']
+        }
+      }
+    ];
 
     // SVG Icons
     const Icons = {
+      User: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+      Users: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+      Shield: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+      Key: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>,
       Lock: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
       Home: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
       Tags: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
@@ -835,6 +893,66 @@
         } catch (e) {}
         return INITIAL_RAW_DATA.initial_inventarios || [];
       });
+
+            // ESTADO DE USUÁRIOS E PERMISSÕES (RBAC)
+      const [users, setUsers] = useState(() => {
+        try {
+          const saved = localStorage.getItem(DB_KEY_USERS);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {}
+        return DEFAULT_USERS;
+      });
+
+      const [currentUserId, setCurrentUserId] = useState(() => {
+        return localStorage.getItem(DB_KEY_CURRENT_USER) || 'user_admin';
+      });
+
+      const currentUser = users.find(u => u.id === currentUserId) || users[0] || DEFAULT_USERS[0];
+      const [showUserModal, setShowUserModal] = useState(false);
+      const [editingUser, setEditingUser] = useState(null);
+
+      // Salvar usuários no localStorage
+      useEffect(() => {
+        localStorage.setItem(DB_KEY_USERS, JSON.stringify(users));
+      }, [users]);
+
+      // HELPER: PERMISSÕES POR USUÁRIO
+      const canAccessAmbiente = (amb) => {
+        if (!currentUser) return true;
+        if (currentUser.isAdmin) return true;
+        return Array.isArray(currentUser.ambientes) && currentUser.ambientes.includes(amb);
+      };
+
+      const canPerformOperation = (tipo) => {
+        if (!currentUser) return true;
+        if (currentUser.isAdmin) return true;
+        return Array.isArray(currentUser.operacoesPermitidas) && currentUser.operacoesPermitidas.includes(tipo);
+      };
+
+      const canAccessLocation = (locId, currentAmb = ambiente) => {
+        if (!currentUser) return true;
+        if (currentUser.isAdmin) return true;
+        const allowed = currentUser.locaisPermitidos?.[currentAmb];
+        if (allowed === 'ALL') return true;
+        if (Array.isArray(allowed)) return allowed.includes(locId);
+        return false;
+      };
+
+      const handleSwitchUser = (userId) => {
+        setCurrentUserId(userId);
+        localStorage.setItem(DB_KEY_CURRENT_USER, userId);
+        const targetUser = users.find(u => u.id === userId);
+        if (targetUser && !targetUser.isAdmin && Array.isArray(targetUser.ambientes) && targetUser.ambientes.length === 1) {
+          if (targetUser.ambientes[0] !== ambiente) {
+            setAmbiente(targetUser.ambientes[0]);
+            localStorage.setItem('sombra_enxoval_ambiente', targetUser.ambientes[0]);
+          }
+        }
+        showToast(`Perfil ativo: ${targetUser?.nome || 'Usuário'} (${targetUser?.cargo || ''})`);
+      };
 
       const [searchQuery, setSearchQuery] = useState('');
       const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -1708,7 +1826,7 @@
               sheetName: sheetName,
               dataInventario: defaultDate,
               titulo: `Inventário Importado — ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
-              responsavel: 'Governança',
+              responsavel: currentUser?.nome || 'Governança',
               parsedItems: parsedItemsList,
               evaluatedSaldos: evaluatedSaldos
             });
@@ -2526,28 +2644,127 @@
                 </div>
               </div>
 
-              {/* Environment Switcher: HOTEL vs SPA */}
-              <div className="flex items-center bg-sombra-950 p-1 rounded-xl border border-sombra-800">
-                <button
-                  onClick={() => setAmbiente('hotel')}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-                    ambiente === 'hotel'
-                      ? 'bg-brand-600 text-slate-950 shadow-md'
-                      : 'text-sombra-400 hover:text-white'
-                  }`}
-                >
-                  <span>🏨 Hotel & Resort</span>
-                </button>
-                <button
-                  onClick={() => setAmbiente('spa')}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-                    ambiente === 'spa'
-                      ? 'bg-brand-600 text-slate-950 shadow-md'
-                      : 'text-sombra-400 hover:text-white'
-                  }`}
-                >
-                  <span>🌿 Floresta & SPA</span>
-                </button>
+              {/* Environment Switcher & USER PROFILE SELECTOR */}
+              <div className="flex flex-wrap items-center gap-2">
+                
+                {/* Environment Switcher: HOTEL vs SPA */}
+                <div className="flex items-center bg-sombra-950 p-1 rounded-xl border border-sombra-800">
+                  <button
+                    onClick={() => {
+                      if (!canAccessAmbiente('hotel')) {
+                        alert(`O usuário "${currentUser.nome}" não possui permissão para acessar o ambiente Hotel & Resort.`);
+                        return;
+                      }
+                      setAmbiente('hotel');
+                    }}
+                    disabled={!canAccessAmbiente('hotel')}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                      ambiente === 'hotel'
+                        ? 'bg-brand-600 text-slate-950 shadow-md'
+                        : canAccessAmbiente('hotel')
+                        ? 'text-sombra-400 hover:text-white cursor-pointer'
+                        : 'text-sombra-600 opacity-40 cursor-not-allowed'
+                    }`}
+                    title={canAccessAmbiente('hotel') ? 'Alternar para Hotel & Resort' : 'Acesso não permitido para este perfil'}
+                  >
+                    <span>🏨 Hotel & Resort</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!canAccessAmbiente('spa')) {
+                        alert(`O usuário "${currentUser.nome}" não possui permissão para acessar o ambiente Floresta & SPA.`);
+                        return;
+                      }
+                      setAmbiente('spa');
+                    }}
+                    disabled={!canAccessAmbiente('spa')}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                      ambiente === 'spa'
+                        ? 'bg-brand-600 text-slate-950 shadow-md'
+                        : canAccessAmbiente('spa')
+                        ? 'text-sombra-400 hover:text-white cursor-pointer'
+                        : 'text-sombra-600 opacity-40 cursor-not-allowed'
+                    }`}
+                    title={canAccessAmbiente('spa') ? 'Alternar para Floresta & SPA' : 'Acesso não permitido para este perfil'}
+                  >
+                    <span>🌿 Floresta & SPA</span>
+                  </button>
+                </div>
+
+                {/* USER PROFILE SELECTOR & SWITCHER */}
+                <div className="relative group/user">
+                  <button
+                    className="flex items-center gap-2 px-3 py-1.5 bg-sombra-950 hover:bg-sombra-800 border border-sombra-700 hover:border-brand-500/50 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                    title="Perfil do Operador / Usuário Ativo"
+                  >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black ${
+                      currentUser?.isAdmin ? 'bg-amber-500 text-slate-950 shadow-amber-500/30' : 'bg-indigo-600 text-white shadow-indigo-600/30'
+                    } shadow-sm`}>
+                      {currentUser?.isAdmin ? '👑' : '👤'}
+                    </div>
+                    <div className="text-left hidden sm:block">
+                      <div className="text-[11px] font-black text-white flex items-center gap-1">
+                        <span className="truncate max-w-[130px]">{currentUser?.nome || 'Usuário'}</span>
+                        <span className="text-[9px] text-sombra-400">▼</span>
+                      </div>
+                      <div className="text-[9px] text-brand-400 font-mono truncate max-w-[130px]">{currentUser?.cargo || 'Operador'}</div>
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  <div className="absolute right-0 mt-2 w-72 bg-sombra-900 border border-sombra-700 rounded-2xl shadow-2xl p-2 hidden group-hover/user:block z-50 animate-fade-in">
+                    <div className="px-3 py-2 border-b border-sombra-800 mb-1">
+                      <div className="text-[10px] uppercase font-black tracking-wider text-sombra-400">Perfil Ativo</div>
+                      <div className="text-xs font-bold text-white mt-0.5">{currentUser?.nome}</div>
+                      <div className="text-[10px] text-brand-400">{currentUser?.cargo}</div>
+                    </div>
+
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-sombra-500 px-3 py-1">
+                      Trocar de Operador:
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto space-y-1 py-1">
+                      {users.map(u => (
+                        <button
+                          key={u.id}
+                          onClick={() => handleSwitchUser(u.id)}
+                          className={`w-full text-left p-2 rounded-xl text-xs transition flex items-center justify-between cursor-pointer ${
+                            u.id === currentUserId
+                              ? 'bg-brand-600/20 text-brand-300 border border-brand-500/40 font-bold'
+                              : 'text-slate-300 hover:bg-sombra-800 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>{u.isAdmin ? '👑' : '👤'}</span>
+                            <div>
+                              <div className="font-bold text-xs">{u.nome}</div>
+                              <div className="text-[10px] text-sombra-400">{u.cargo}</div>
+                            </div>
+                          </div>
+                          {u.id === currentUserId && <span className="text-brand-400 font-bold"><Icons.Check /></span>}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="pt-2 border-t border-sombra-800 mt-1">
+                      <button
+                        onClick={() => {
+                          if (!currentUser?.isAdmin) {
+                            alert('Apenas usuários com perfil Administrador / Responsável Geral podem gerenciar usuários e permissões.');
+                            return;
+                          }
+                          setEditingUser(null);
+                          setShowUserModal(true);
+                        }}
+                        className="w-full py-2 px-3 bg-sombra-800 hover:bg-brand-600 hover:text-slate-950 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Icons.Settings />
+                        <span>Gerenciar Usuários & Permissões</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
               {/* Quick Actions Header */}
@@ -3205,24 +3422,37 @@
                     <p className="text-xs text-sombra-400">Escolha o tipo de movimentação de enxoval para atualizar os saldos em tempo real:</p>
 
                     <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setMovimentoTipo('COMPRA');
-                          setShowMovimentoModal(true);
-                        }}
-                        className="w-full flex items-center justify-between p-3.5 bg-sombra-800/70 hover:bg-brand-950/60 hover:border-brand-500/50 border border-sombra-700 rounded-xl transition text-left group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:bg-emerald-500 group-hover:text-slate-950 transition">
-                            <Icons.ShoppingCart />
+                      {canPerformOperation('COMPRA') ? (
+                        <button
+                          onClick={() => {
+                            setMovimentoTipo('COMPRA');
+                            setShowMovimentoModal(true);
+                          }}
+                          className="w-full flex items-center justify-between p-3.5 bg-sombra-800/70 hover:bg-brand-950/60 hover:border-brand-500/50 border border-sombra-700 rounded-xl transition text-left group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:bg-emerald-500 group-hover:text-slate-950 transition">
+                              <Icons.ShoppingCart />
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-white group-hover:text-emerald-300">1. Nova Compra / Entrada</div>
+                              <div className="text-[11px] text-sombra-400">Itens novos no Almoxarifado Central</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-xs font-bold text-white group-hover:text-emerald-300">1. Nova Compra / Entrada</div>
-                            <div className="text-[11px] text-sombra-400">Itens novos no Almoxarifado Central</div>
+                          <Icons.Plus />
+                        </button>
+                      ) : (
+                        <div className="w-full flex items-center justify-between p-3.5 bg-sombra-950/60 border border-sombra-800/60 rounded-xl opacity-40">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-sombra-800 text-sombra-500 rounded-lg"><Icons.Lock /></div>
+                            <div>
+                              <div className="text-xs font-bold text-sombra-400">1. Nova Compra / Entrada</div>
+                              <div className="text-[10px] text-sombra-500">Restrito à Responsável Geral</div>
+                            </div>
                           </div>
+                          <span className="text-[10px] bg-sombra-800 text-sombra-400 px-2 py-0.5 rounded font-mono">Bloqueado</span>
                         </div>
-                        <Icons.Plus />
-                      </button>
+                      )}
 
                       <button
                         onClick={() => {
@@ -4686,6 +4916,19 @@
             />
           )}
 
+          {/* MODAL: USER MANAGEMENT & PERMISSIONS (RBAC) */}
+          {showUserModal && (
+            <UserManagementModal
+              users={users}
+              locations={locations}
+              onClose={() => setShowUserModal(false)}
+              onSaveUsers={(updatedUsers) => {
+                setUsers(updatedUsers);
+                showToast('Usuários e permissões salvos com sucesso!');
+              }}
+            />
+          )}
+
           {/* MODAL: LOCATION EDIT / CREATE */}
           {showLocationModal && (
             <LocationModal
@@ -5164,6 +5407,452 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 <button type="submit" className="px-5 py-2 bg-brand-600 text-slate-950 font-bold rounded-xl text-xs">Salvar Item</button>
               </div>
             </form>
+          </div>
+        </div>
+      );
+    }
+
+    
+    /* =========================================================================
+       MODAL: GERENCIAMENTO DE USUÁRIOS E PERMISSÕES (RBAC)
+       ========================================================================= */
+    function UserManagementModal({ users, locations, onClose, onSaveUsers }) {
+      const [userList, setUserList] = useState(users);
+      const [activeEditingUser, setActiveEditingUser] = useState(null);
+
+      const handleCreateNewUser = () => {
+        const newUser = {
+          id: 'user_' + Date.now(),
+          nome: 'Novo Operador',
+          cargo: 'Camareira / Operador',
+          isAdmin: false,
+          ambientes: ['hotel'],
+          operacoesPermitidas: ['ABASTECIMENTO', 'ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA'],
+          locaisPermitidos: {
+            hotel: ['resort', 'hotel', 'villas', 'rouparia'],
+            spa: ['spa', 'yeu', 'rouparia']
+          }
+        };
+        setActiveEditingUser(newUser);
+      };
+
+      const handleSaveUserForm = (e) => {
+        e.preventDefault();
+        if (!activeEditingUser.nome.trim()) {
+          alert('Por favor, digite o nome do usuário.');
+          return;
+        }
+
+        const exists = userList.some(u => u.id === activeEditingUser.id);
+        let updated;
+        if (exists) {
+          updated = userList.map(u => u.id === activeEditingUser.id ? activeEditingUser : u);
+        } else {
+          updated = [...userList, activeEditingUser];
+        }
+        setUserList(updated);
+        onSaveUsers(updated);
+        setActiveEditingUser(null);
+      };
+
+      const handleDeleteUser = (userId) => {
+        if (userList.length <= 1) {
+          alert('Você não pode excluir o único usuário do sistema.');
+          return;
+        }
+        if (userId === 'user_admin') {
+          alert('O usuário Administrador Principal não pode ser excluído.');
+          return;
+        }
+        if (confirm('Tem certeza que deseja excluir este perfil de usuário?')) {
+          const updated = userList.filter(u => u.id !== userId);
+          setUserList(updated);
+          onSaveUsers(updated);
+        }
+      };
+
+      const allHotelLocs = locations['hotel'] || [];
+      const allSpaLocs = locations['spa'] || [];
+
+      const toggleAmbiente = (amb) => {
+        const current = activeEditingUser.ambientes || [];
+        const next = current.includes(amb)
+          ? current.filter(a => a !== amb)
+          : [...current, amb];
+        if (next.length === 0) {
+          alert('O usuário precisa ter acesso a pelo menos um ambiente.');
+          return;
+        }
+        setActiveEditingUser({ ...activeEditingUser, ambientes: next });
+      };
+
+      const toggleOperacao = (op) => {
+        const current = activeEditingUser.operacoesPermitidas || [];
+        const next = current.includes(op)
+          ? current.filter(o => o !== op)
+          : [...current, op];
+        setActiveEditingUser({ ...activeEditingUser, operacoesPermitidas: next });
+      };
+
+      const toggleLocation = (amb, locId) => {
+        const currentLocsObj = activeEditingUser.locaisPermitidos || {};
+        const currentList = Array.isArray(currentLocsObj[amb]) ? currentLocsObj[amb] : [];
+        const nextList = currentList.includes(locId)
+          ? currentList.filter(id => id !== locId)
+          : [...currentList, locId];
+        
+        setActiveEditingUser({
+          ...activeEditingUser,
+          locaisPermitidos: {
+            ...currentLocsObj,
+            [amb]: nextList
+          }
+        });
+      };
+
+      const toggleAllLocations = (amb, selectAll) => {
+        const locs = amb === 'hotel' ? allHotelLocs : allSpaLocs;
+        const nextList = selectAll ? locs.map(l => l.id) : [];
+        setActiveEditingUser({
+          ...activeEditingUser,
+          locaisPermitidos: {
+            ...(activeEditingUser.locaisPermitidos || {}),
+            [amb]: nextList
+          }
+        });
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-sombra-900 border border-sombra-700 w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            
+            {/* HEADER */}
+            <div className="p-5 border-b border-sombra-800 bg-sombra-950 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md">
+                  <Icons.Users />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                    <span>Gerenciador de Usuários & Permissões (RBAC)</span>
+                    <span className="px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded-full text-[10px] font-bold">
+                      {userList.length} Usuários Configurados
+                    </span>
+                  </h3>
+                  <p className="text-xs text-sombra-400 mt-0.5">
+                    Defina quem acessa cada ambiente, quais operações de movimentação são autorizadas e quais locais são visíveis.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="p-2 text-sombra-400 hover:text-white hover:bg-sombra-800 rounded-xl transition text-base"
+                title="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-6 text-xs text-slate-200 bg-slate-50 dark:bg-sombra-900">
+              
+              {!activeEditingUser ? (
+                // LIST VIEW OF USERS
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 dark:text-sombra-300 uppercase tracking-wider">
+                      Lista de Usuários e Perfis
+                    </span>
+                    <button
+                      onClick={handleCreateNewUser}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-slate-950 font-bold rounded-xl text-xs transition shadow-md cursor-pointer"
+                    >
+                      <Icons.Plus />
+                      <span>Criar Novo Usuário</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {userList.map(u => (
+                      <div key={u.id} className="bg-white dark:bg-sombra-950 border border-slate-200 dark:border-sombra-800 p-4 rounded-xl shadow-sm hover:border-indigo-500/50 transition space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                              u.isAdmin ? 'bg-amber-500 text-slate-950' : 'bg-indigo-600 text-white'
+                            }`}>
+                              {u.isAdmin ? '👑' : '👤'}
+                            </div>
+                            <div>
+                              <div className="font-bold text-sm text-slate-900 dark:text-white">{u.nome}</div>
+                              <div className="text-[11px] text-slate-500 dark:text-sombra-400">{u.cargo}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setActiveEditingUser(u)}
+                              className="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-sombra-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-sombra-800 rounded-lg transition"
+                              title="Editar Permissões do Usuário"
+                            >
+                              <Icons.Edit />
+                            </button>
+                            {u.id !== 'user_admin' && (
+                              <button
+                                onClick={() => handleDeleteUser(u.id)}
+                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
+                                title="Excluir Usuário"
+                              >
+                                <Icons.Trash />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Badges Summary */}
+                        <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-sombra-800/80 text-[10px]">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-slate-400 font-bold">Ambientes:</span>
+                            {u.ambientes?.includes('hotel') && (
+                              <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded font-semibold">🏨 Hotel & Resort</span>
+                            )}
+                            {u.ambientes?.includes('spa') && (
+                              <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded font-semibold">🌿 Floresta & SPA</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-slate-400 font-bold">Operações:</span>
+                            {u.isAdmin ? (
+                              <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 rounded font-bold">Todas (Admin Completo)</span>
+                            ) : (
+                              (u.operacoesPermitidas || []).map(op => (
+                                <span key={op} className="px-1.5 py-0.5 bg-slate-100 dark:bg-sombra-800 text-slate-700 dark:text-slate-300 rounded">
+                                  {op === 'COMPRA' ? 'Compras' : op === 'ABASTECIMENTO' ? 'Abastec.' : op === 'ENVIO_LAVANDERIA' ? 'Envio Lav.' : op === 'RETORNO_LAVANDERIA' ? 'Ret. Lav.' : op === 'DESCARTE' ? 'Descartes' : 'Perdas'}
+                                </span>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                // USER EDITOR FORM
+                <form onSubmit={handleSaveUserForm} className="space-y-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-sombra-800">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>{activeEditingUser.id.startsWith('user_') && !userList.some(u => u.id === activeEditingUser.id) ? 'Criando Novo Usuário' : `Editando: ${activeEditingUser.nome}`}</span>
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setActiveEditingUser(null)}
+                      className="text-xs text-slate-500 hover:text-slate-800 dark:text-sombra-400 dark:hover:text-white"
+                    >
+                      ← Voltar para lista
+                    </button>
+                  </div>
+
+                  {/* IDENTIFICAÇÃO */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-sombra-300 mb-1">Nome do Operador / Usuário *</label>
+                      <input
+                        type="text"
+                        value={activeEditingUser.nome}
+                        onChange={(e) => setActiveEditingUser({ ...activeEditingUser, nome: e.target.value })}
+                        required
+                        placeholder="Ex: Maria - Camareira Villas"
+                        className="w-full px-3 py-2 bg-white dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-sombra-300 mb-1">Cargo / Função *</label>
+                      <input
+                        type="text"
+                        value={activeEditingUser.cargo}
+                        onChange={(e) => setActiveEditingUser({ ...activeEditingUser, cargo: e.target.value })}
+                        required
+                        placeholder="Ex: Camareira de Piso, Rouparia"
+                        className="w-full px-3 py-2 bg-white dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* CHECKBOX ADMIN */}
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="user_is_admin"
+                      checked={!!activeEditingUser.isAdmin}
+                      onChange={(e) => setActiveEditingUser({ ...activeEditingUser, isAdmin: e.target.checked })}
+                      className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                    />
+                    <label htmlFor="user_is_admin" className="text-xs text-slate-800 dark:text-amber-200 cursor-pointer font-medium">
+                      <strong>Perfil Administrador / Responsável Geral:</strong> Concede acesso irrestrito a todos os ambientes, todas as 6 operações de movimentação e todos os locais (incluindo Almoxarifado Central e configurações).
+                    </label>
+                  </div>
+
+                  {!activeEditingUser.isAdmin && (
+                    <div className="space-y-6 pt-2">
+                      
+                      {/* 1. AMBIENTES PERMITIDOS */}
+                      <div className="bg-white dark:bg-sombra-950 p-4 rounded-xl border border-slate-200 dark:border-sombra-800 space-y-2">
+                        <div className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+                          1. Ambientes Permitidos
+                        </div>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={activeEditingUser.ambientes?.includes('hotel')}
+                              onChange={() => toggleAmbiente('hotel')}
+                              className="w-4 h-4 rounded text-indigo-600"
+                            />
+                            <span>🏨 Hotel & Resort</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={activeEditingUser.ambientes?.includes('spa')}
+                              onChange={() => toggleAmbiente('spa')}
+                              className="w-4 h-4 rounded text-indigo-600"
+                            />
+                            <span>🌿 Floresta & SPA</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* 2. OPERAÇÕES DE MOVIMENTAÇÃO */}
+                      <div className="bg-white dark:bg-sombra-950 p-4 rounded-xl border border-slate-200 dark:border-sombra-800 space-y-3">
+                        <div className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+                          2. Operações Permitidas em Movimentações Rápidas
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                          {[
+                            { id: 'COMPRA', label: '1. Nova Compra / Entrada', desc: 'Entrada no Almoxarifado' },
+                            { id: 'ABASTECIMENTO', label: '2. Abastecimento', desc: 'Transferência para quartos' },
+                            { id: 'ENVIO_LAVANDERIA', label: '3. Envio para Lavanderia', desc: 'Saída de roupa suja' },
+                            { id: 'RETORNO_LAVANDERIA', label: '4. Retorno Lavanderia', desc: 'Entrada de peças limpas' },
+                            { id: 'DESCARTE', label: '5. Descarte por Avaria', desc: 'Baixa definitiva de tecidos' },
+                            { id: 'PERDA', label: '6. Registro de Perda', desc: 'Baixa por extravio' },
+                          ].map(op => (
+                            <label key={op.id} className="p-2.5 rounded-lg border border-slate-200 dark:border-sombra-800 flex items-start gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-sombra-850">
+                              <input
+                                type="checkbox"
+                                checked={activeEditingUser.operacoesPermitidas?.includes(op.id)}
+                                onChange={() => toggleOperacao(op.id)}
+                                className="w-4 h-4 mt-0.5 rounded text-indigo-600"
+                              />
+                              <div>
+                                <div className="font-bold text-slate-900 dark:text-white">{op.label}</div>
+                                <div className="text-[10px] text-slate-500 dark:text-sombra-400">{op.desc}</div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 3. UNIDADES E LOCAIS PERMITIDOS */}
+                      <div className="bg-white dark:bg-sombra-950 p-4 rounded-xl border border-slate-200 dark:border-sombra-800 space-y-4">
+                        <div className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+                          3. Unidades & Locais Permitidos para Visualização e Movimentação
+                        </div>
+
+                        {/* Hotel & Resort Locations */}
+                        {activeEditingUser.ambientes?.includes('hotel') && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
+                              <span>🏨 Locais em Hotel & Resort:</span>
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => toggleAllLocations('hotel', true)} className="text-[10px] text-indigo-600 hover:underline">Marcar Todos</button>
+                                <span>•</span>
+                                <button type="button" onClick={() => toggleAllLocations('hotel', false)} className="text-[10px] text-slate-500 hover:underline">Desmarcar Todos</button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                              {allHotelLocs.map(l => (
+                                <label key={l.id} className="p-2 rounded border border-slate-200 dark:border-sombra-800 flex items-center gap-2 cursor-pointer text-xs">
+                                  <input
+                                    type="checkbox"
+                                    checked={activeEditingUser.locaisPermitidos?.hotel === 'ALL' || (Array.isArray(activeEditingUser.locaisPermitidos?.hotel) && activeEditingUser.locaisPermitidos?.hotel.includes(l.id))}
+                                    onChange={() => toggleLocation('hotel', l.id)}
+                                    className="w-3.5 h-3.5 rounded text-indigo-600"
+                                  />
+                                  <span className="truncate">{l.nome}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Floresta & SPA Locations */}
+                        {activeEditingUser.ambientes?.includes('spa') && (
+                          <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-sombra-800">
+                            <div className="flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                              <span>🌿 Locais em Floresta & SPA:</span>
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => toggleAllLocations('spa', true)} className="text-[10px] text-indigo-600 hover:underline">Marcar Todos</button>
+                                <span>•</span>
+                                <button type="button" onClick={() => toggleAllLocations('spa', false)} className="text-[10px] text-slate-500 hover:underline">Desmarcar Todos</button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                              {allSpaLocs.map(l => (
+                                <label key={l.id} className="p-2 rounded border border-slate-200 dark:border-sombra-800 flex items-center gap-2 cursor-pointer text-xs">
+                                  <input
+                                    type="checkbox"
+                                    checked={activeEditingUser.locaisPermitidos?.spa === 'ALL' || (Array.isArray(activeEditingUser.locaisPermitidos?.spa) && activeEditingUser.locaisPermitidos?.spa.includes(l.id))}
+                                    onChange={() => toggleLocation('spa', l.id)}
+                                    className="w-3.5 h-3.5 rounded text-indigo-600"
+                                  />
+                                  <span className="truncate">{l.nome}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* FORM ACTIONS */}
+                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-sombra-800">
+                    <button
+                      type="button"
+                      onClick={() => setActiveEditingUser(null)}
+                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md cursor-pointer"
+                    >
+                      Salvar Usuário & Permissões
+                    </button>
+                  </div>
+                </form>
+              )}
+
+            </div>
+
+            {/* FOOTER */}
+            <div className="p-4 border-t border-slate-200 dark:border-sombra-800 bg-slate-100 dark:bg-sombra-950 flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-sombra-400">
+                GRUPO SOMBRA • Gestão de Acessos & Perfis
+              </span>
+              <button
+                onClick={onClose}
+                className="px-4 py-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Concluir
+              </button>
+            </div>
+
           </div>
         </div>
       );
