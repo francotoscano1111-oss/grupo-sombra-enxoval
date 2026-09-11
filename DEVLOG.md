@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-09-11] — Refactoring Visuale: Sfondi Chiari ad Alto Contrasto per Bottoni Lavanderia & Pulizia Toolbar
+
+**Status AS IS:** Riprogettato lo stile visivo delle 3 card principali di movimento lavanderia con sfondi chiari e testi ad altissimo contrasto (nero/scuro in Light Mode, chiaro luminoso in Dark Mode) ed eliminati i bottoni duplicati dalla barra superiore.
+
+### ✅ Fatto
+- **Sfondi Chiari & Alta Leggibilità:**
+  - Card 1 (*Envio Roupa Suja*): sfondo viola chiarissimo (`bg-purple-50`), bordi lilla marcati (`border-purple-300`) e testi in viola scuro/nero (`text-purple-950`), con icona viola brillante.
+  - Card 2 (*Retorno Roupa Limpa*): sfondo verde chiarissimo (`bg-emerald-50`), bordi smeraldo marcati (`border-emerald-300`) e testi in verde scuro/nero (`text-emerald-950`).
+  - Card 3 (*Resolução de Pendências*): sfondo ambra chiarissimo (`bg-amber-50`), bordi ambra marcati (`border-amber-300`) e testi in ambra scuro/nero (`text-amber-950`).
+- **Eliminazione Pulsanti Ridondanti:** Rimossi dalla barra superiore i vecchi bottoni duplicati `+ Envio Roupa Suja` e `+ Retorno Roupa Limpa`, lasciando la toolbar pulita con solo `⚖️ Auditoria & Acordos`, `Excel`, `PDF` e `Nova Quinzena`.
+
+---
+
 ## [2026-09-11] — Flusso Puntuale Giornaliero di Lavanderia (IN / OUT per Data & Mobile-First per Operatore)
 
 **Status AS IS:** Trasformato il caricamento dati del modulo *Controle de Lavanderia* da un sistema quindicinale statico a un flusso continuo per data puntuale (IN / OUT / PEND), con interfaccia touch ottimizzata per smartphone e tablet per il profilo `Operador de Lavanderia`.
