@@ -4,6 +4,21 @@
 
 ---
 
+## [2026-09-11] — Interfaccia Dedicata & Esclusiva per Operatore di Lavanderia (Mobile Focus & Bottoni Ultra-Luminosi)
+
+**Status AS IS:** Per gli utenti con profilo `Operador de Lavanderia`, l'applicazione è ora configurata in modalità dedicata ed esclusiva: tutti i menu generali dell'hotel e le card KPI globali di inventario sono nascoste, mostrando unicamente il pannello di controllo In & Out con i 3 grandi bottoni ad altissimo contrasto su sfondo bianco.
+
+### ✅ Fatto
+- **Accesso Esclusivo al Modulo Lavanderia:**
+  - Nascosta la barra dei 7 menu generali (`Matriz de Estoque`, `Unidades & Locais`, `Catálogo`, `Inventário`, `Relatórios`).
+  - Sostituita la navigazione con una testata dedicata e pulita: *Painel do Operador de Lavanderia*, con nome operatore, badge dell'ambiente di competenza (*Hotel & Resort* o *Floresta & SPA*) e pulsante rapido di logout.
+  - Nascoste tutte le 6 KPI card globali dell'hotel (`Total em Estoque`, `Total em Uso`, `Almoxarifado`, ecc.) per non distrarre l'operatore.
+- **Sfondo Bianco Puro & Massima Nitidezza sui 3 Bottoni Grandi:**
+  - Applicato sfondo bianco solido (`#ffffff`) con bordi rinforzati e testi scuri ad altissimo contrasto per garantire che sia su mobile che desktop le scritte non risultino mai nere su nero o poco leggibili.
+  - Pulsanti grandi, icone vivaci e responsive con feedback tattile immediato.
+
+---
+
 ## [2026-09-11] — Rimozione Date Future Indefinite & Colonne Dinamiche su Movimentazioni Effettive
 
 **Status AS IS:** Eliminati dalla matrice di lavanderia i 15 giorni placeholder vuoti (`DIA 1`, `DIA 2`, etc.). Le colonne di data compaiono ora dinamicamente e in ordine cronologico solo man mano che vengono effettuati e registrati i flussi effettivi (Envio / Retorno / Pendências).
