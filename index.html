@@ -2960,7 +2960,17 @@
       }, [theme]);
       const [ambiente, setAmbiente] = useState(() => localStorage.getItem('sombra_enxoval_ambiente') || 'hotel');
       const ambienteNome = ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA';
-      const [activeTab, setActiveTab] = useState('estoque');
+      const [activeTab, setActiveTab] = useState(() => {
+        try {
+          const savedUser = localStorage.getItem(DB_KEY_CURRENT_USER);
+          if (savedUser && savedUser.toLowerCase().includes('lavanderia')) {
+            return 'lavanderia';
+          }
+          const savedTab = localStorage.getItem('sombra_enxoval_active_tab');
+          if (savedTab) return savedTab;
+        } catch (e) {}
+        return 'estoque';
+      });
       
       // Default view is 'resumida' (grouped / summarized view)
       const [viewModeEmUso, setViewModeEmUso] = useState(() => localStorage.getItem('sombra_enxoval_view_mode') || 'resumida');
@@ -3053,6 +3063,18 @@
         (currentUser?.id && currentUser.id.toLowerCase().includes('lavanderia')) ||
         (currentUser?.cargo && currentUser.cargo.toLowerCase().includes('lavanderia')) ||
         (currentUser?.username && currentUser.username.toLowerCase().includes('lavanderia'));
+
+      // Persistência de aba ativa e bloqueio estrito para Operador de Lavanderia
+      useEffect(() => {
+        if (isLaundryOperator) {
+          if (activeTab !== 'lavanderia') {
+            setActiveTab('lavanderia');
+          }
+          localStorage.setItem('sombra_enxoval_active_tab', 'lavanderia');
+        } else {
+          localStorage.setItem('sombra_enxoval_active_tab', activeTab);
+        }
+      }, [isLaundryOperator, activeTab]);
       const [showUserModal, setShowUserModal] = useState(false);
       const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
       const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -5388,6 +5410,42 @@
             </div>
             )}
 
+            {/* PARA OPERADOR DE LAVANDERIA: RENDERIZA EXCLUSIVAMENTE O MÓDULO DE LAVANDERIA */}
+            {isLaundryOperator ? (
+              <LavanderiaTab
+                ambiente={ambiente}
+                items={currentItems}
+                lavanderiaData={lavanderiaData}
+                onUpdateLavanderiaData={(updated) => {
+                  setLavanderiaData(updated);
+                  showToast('Dados de lavanderia atualizados com sucesso!');
+                }}
+                currentUser={currentUser}
+                canPerformOperation={canPerformOperation}
+                onApplyToStock={(itemDeltas) => {
+                  setItems(prev => {
+                    const list = [...(prev[ambiente] || [])];
+                    list.forEach((it, idx) => {
+                      if (itemDeltas[it.nome] || itemDeltas[it.id]) {
+                        const delta = itemDeltas[it.nome] || itemDeltas[it.id];
+                        const saldos = { ...(it.saldos || {}) };
+                        if (delta.tipo === 'ENVIO') {
+                          saldos.suja = Math.max(0, (saldos.suja || 0) - delta.qtd);
+                          saldos.lavanderia = (saldos.lavanderia || 0) + delta.qtd;
+                        } else if (delta.tipo === 'RETORNO') {
+                          saldos.lavanderia = Math.max(0, (saldos.lavanderia || 0) - delta.qtd);
+                          saldos.rouparia = (saldos.rouparia || 0) + delta.qtd;
+                        }
+                        list[idx] = { ...it, saldos };
+                      }
+                    });
+                    return { ...prev, [ambiente]: list };
+                  });
+                }}
+                showToast={showToast}
+              />
+            ) : (
+            <>
             {/* TAB 1: MATRIZ DE ESTOQUE */}
             {activeTab === 'estoque' && (
               <div className="space-y-4">
@@ -6490,6 +6548,8 @@
                 </div>
 
               </div>
+            )}
+            </>
             )}
 
           </main>
