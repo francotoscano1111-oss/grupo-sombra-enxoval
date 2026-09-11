@@ -4,6 +4,16 @@
 
 ---
 
+## [2026-09-11] — Rimozione Bottone Ridondante "Sair (Backup)" dalla Toolbar Superiore
+
+**Status AS IS:** La barra superiore delle azioni è stata snellita rimuovendo il pulsante rosso ridondante `Sair (Backup)`, lasciando la gestione del logout e del backup di sicurezza integrata unicamente all'interno del menu profilo utente (`👤 Perfil > 🚪 Sair da Conta (Logout)`).
+
+### ✅ Fatto
+- **Pulizia Toolbar Superiore:** Eliminato il pulsante rosso `Sair (Backup)` dalla barra delle azioni principale, migliorando l'ergonomia visiva e lo spazio orizzontale per i comandi di esportazione Excel/PDF e sincronizzazione.
+- **Flusso di Logout Unificato:** L'uscita sicura dalla sessione con opzione di salvataggio del backup JSON è ora centralizzata nel menu a tendina dell'operatore in alto a destra.
+
+---
+
 ## [2026-09-11] — Fix Interazione Menu Cambio Utente (Click Toggle & Zero Gap)
 
 **Status AS IS:** Il menu a tendina dell'operatore/profilo attivo in testata ora si apre/chiude con **clic diretto** (`showUserDropdown`) e rimane saldamente aperto e accessibile mentre ci si sposta con il mouse verso le opzioni interne, chiudendosi automaticamente con clic all'esterno o alla selezione di un'opzione.

@@ -3133,22 +3133,12 @@
                   <input type="file" accept=".json" onChange={handleRestoreBackup} className="hidden" />
                 </label>
 
-<button
+                <button
                   onClick={handleResetToExcelData}
                   title="Recarregar Dados da Planilha Original"
                   className="p-2 bg-sombra-800 hover:bg-rose-950 border border-sombra-700 hover:border-rose-800 text-rose-400 rounded-lg text-xs transition"
                 >
                   <Icons.RefreshCw />
-                </button>
-
-                {/* EXIT & SAFETY BACKUP BUTTON */}
-                <button
-                  onClick={handleExitAndBackup}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs transition shadow-md shadow-rose-600/30"
-                  title="Fazer Backup de Segurança Completo e Sair"
-                >
-                  <Icons.LogOut />
-                  <span>Sair (Backup)</span>
                 </button>
               </div>
 
