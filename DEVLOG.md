@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-09-11] — Riprogettazione Modale Movimenti Lavanderia: Sfondo Bianco Puro & Massima Leggibilità
+
+**Status AS IS:** Riprogettata la finestra modale (`RomaneioModal`) che si apre al tocco delle 3 card di movimento, sostituendo lo sfondo scuro con un layout 100% bianco brillante ad altissimo contrasto per garantire perfetta visibilità e facilità di digitazione su smartphone e tablet.
+
+### ✅ Fatto
+- **Finestra Modale a Sfondo Bianco Solido:** La schermata di inserimento presenta ora testata chiara (`bg-slate-50`), corpo bianco puro (`bg-white`) e testi scuri nitidi (`text-slate-900`).
+- **Campi Numerici e Stepper Touch ad Alto Contrasto:**
+  - Campi di digitazione con bordo rinforzato e numeri neri in evidenza.
+  - Pulsanti stepper (`-10`, `-1`, `+1`, `+10`) con colori vivi e distinti su sfondo chiaro.
+  - Selettori e chip di causale con sfondi chiari e testi leggibili.
+
+---
+
 ## [2026-09-11] — Interfaccia Dedicata & Esclusiva per Operatore di Lavanderia (Mobile Focus & Bottoni Ultra-Luminosi)
 
 **Status AS IS:** Per gli utenti con profilo `Operador de Lavanderia`, l'applicazione è ora configurata in modalità dedicata ed esclusiva: tutti i menu generali dell'hotel e le card KPI globali di inventario sono nascoste, mostrando unicamente il pannello di controllo In & Out con i 3 grandi bottoni ad altissimo contrasto su sfondo bianco.

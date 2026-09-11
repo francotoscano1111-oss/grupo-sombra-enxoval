@@ -1372,6 +1372,7 @@
        COMPONENTE: MODAL NOVO ROMANEIO DE LAVANDERIA (ENVIO / RETORNO / GUIA)
        ========================================================================= */
         // COMPONENTE: MODAL MOBILE-FIRST DE REGISTRO DE MOVIMENTAÇÕES DE LAVANDERIA (ENVIO / RETORNO / PENDÊNCIAS)
+        // COMPONENTE: MODAL MOBILE-FIRST DE REGISTRO DE MOVIMENTAÇÕES DE LAVANDERIA (ENVIO / RETORNO / PENDÊNCIAS) - HIGH CONTRAST LIGHT THEME
     function RomaneioModal({ isOpen, ambiente, itensLista = [], defaultTipo = 'ENVIO', onClose, onSaveRomaneio, currentUser }) {
       if (!isOpen) return null;
 
@@ -1605,62 +1606,57 @@
         doc.save(`Movimentacao_Lavanderia_${numeroRomaneio}_${dataRomaneio}.pdf`);
       };
 
-      const getThemeColor = () => {
-        if (tipo === 'ENVIO') return { bg: 'bg-purple-600', text: 'text-purple-400', border: 'border-purple-500', lightBg: 'bg-purple-950/40', badge: 'bg-purple-900/60 text-purple-200 border-purple-700' };
-        if (tipo === 'RETORNO') return { bg: 'bg-emerald-600', text: 'text-emerald-400', border: 'border-emerald-500', lightBg: 'bg-emerald-950/40', badge: 'bg-emerald-900/60 text-emerald-200 border-emerald-700' };
-        return { bg: 'bg-amber-600', text: 'text-amber-400', border: 'border-amber-500', lightBg: 'bg-amber-950/40', badge: 'bg-amber-900/60 text-amber-200 border-amber-700' };
-      };
-
-      const theme = getThemeColor();
-
       return (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl max-h-[96vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white border-2 border-slate-300 w-full max-w-2xl max-h-[96vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900">
             
-            {/* HEADER */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
+            {/* HEADER (White & High Contrast) */}
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-xl shadow-lg text-white ${theme.bg}`}>
+                <div className={`p-3 rounded-2xl shadow-md text-white ${
+                  tipo === 'ENVIO' ? 'bg-purple-600 shadow-purple-600/30' : tipo === 'RETORNO' ? 'bg-emerald-600 shadow-emerald-600/30' : 'bg-amber-600 shadow-amber-600/30'
+                }`}>
                   <Icons.Truck />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-white flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2 flex-wrap">
                     <span>
                       {tipo === 'ENVIO' && '📤 Envio de Roupa Suja'}
                       {tipo === 'RETORNO' && '📥 Retorno de Roupa Limpa'}
                       {tipo === 'REC_PEND' && '⚖️ Resolução de Pendências'}
                     </span>
-                    <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md text-[11px] font-mono border border-slate-700">{numeroRomaneio}</span>
+                    <span className="px-2.5 py-0.5 bg-slate-200 text-slate-800 rounded-lg text-xs font-mono font-bold border border-slate-300">{numeroRomaneio}</span>
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {tipo === 'ENVIO' && 'Hotel ➔ Lavanderia | Registra a saída de peças para higienização.'}
-                    {tipo === 'RETORNO' && 'Lavanderia ➔ Hotel | Pré-preenchido com o último envio para conferência ágil.'}
-                    {tipo === 'REC_PEND' && 'Baixa definitiva de pendências / perdas com justificativa obrigatória.'}
+                  <p className="text-xs text-slate-600 mt-0.5 font-medium">
+                    {tipo === 'ENVIO' && 'Hotel ➔ Lavanderia | Registra as peças enviadas para lavar.'}
+                    {tipo === 'RETORNO' && 'Lavanderia ➔ Hotel | Pré-carregado com o último envio para conferência.'}
+                    {tipo === 'REC_PEND' && 'Baixa de faltas / acordos com justificativa obrigatória.'}
                   </p>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={onClose} 
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xl font-bold transition cursor-pointer"
+                className="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-700 hover:text-slate-950 text-2xl font-bold transition cursor-pointer shadow-sm"
               >
                 &times;
               </button>
             </div>
 
-            {/* FORM BODY */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs text-slate-200">
+            {/* FORM BODY (Crisp White & Clear Controls) */}
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-white text-xs text-slate-900">
               
               {/* SELETOR RÁPIDO DE OPERAÇÃO */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipo de Movimentação</label>
+                <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5">Tipo de Movimentação</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => handleSelectTipo('ENVIO')}
-                    className={`py-3 px-2 rounded-xl font-bold text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border cursor-pointer ${
+                    className={`py-3 px-2 rounded-2xl font-black text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border-2 cursor-pointer ${
                       tipo === 'ENVIO'
-                        ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-600/30 ring-2 ring-purple-400/40'
-                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                        ? 'bg-purple-600 text-white border-purple-700 shadow-md ring-2 ring-purple-400'
+                        : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     <span>📤 Envio Sujo</span>
@@ -1668,10 +1664,10 @@
                   <button
                     type="button"
                     onClick={() => handleSelectTipo('RETORNO')}
-                    className={`py-3 px-2 rounded-xl font-bold text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border cursor-pointer ${
+                    className={`py-3 px-2 rounded-2xl font-black text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border-2 cursor-pointer ${
                       tipo === 'RETORNO'
-                        ? 'bg-emerald-600 text-white border-emerald-400 shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400/40'
-                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400'
+                        : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     <span>📥 Retorno Limpo</span>
@@ -1679,10 +1675,10 @@
                   <button
                     type="button"
                     onClick={() => handleSelectTipo('REC_PEND')}
-                    className={`py-3 px-2 rounded-xl font-bold text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border cursor-pointer ${
+                    className={`py-3 px-2 rounded-2xl font-black text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border-2 cursor-pointer ${
                       tipo === 'REC_PEND'
-                        ? 'bg-amber-600 text-white border-amber-400 shadow-lg shadow-amber-600/30 ring-2 ring-amber-400/40'
-                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
+                        ? 'bg-amber-600 text-white border-amber-700 shadow-md ring-2 ring-amber-400'
+                        : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     <span>⚖️ Pendências</span>
@@ -1692,9 +1688,9 @@
 
               {/* BANNER INFORMATIVO PARA RETORNO (LAST SHIPMENT PREFILL) */}
               {tipo === 'RETORNO' && lastShipmentInfo && (
-                <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-xl flex items-center justify-between gap-3 text-emerald-200 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">💡</span>
+                <div className="p-3.5 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-center justify-between gap-3 text-emerald-950 text-xs font-medium shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">💡</span>
                     <span>
                       Quantidades pré-carregadas do último envio de <strong>{lastShipmentInfo.data}</strong> ({lastShipmentInfo.totalPecas} peças). Ajuste se houver diferenças!
                     </span>
@@ -1702,7 +1698,7 @@
                   <button
                     type="button"
                     onClick={handleRestaurarUltimoEnvio}
-                    className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold whitespace-nowrap cursor-pointer"
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black whitespace-nowrap cursor-pointer shadow-sm"
                   >
                     🔄 Recarregar
                   </button>
@@ -1711,9 +1707,9 @@
 
               {/* BANNER & MOTIVO PARA RESOLUÇÃO DE PENDÊNCIAS */}
               {tipo === 'REC_PEND' && (
-                <div className="p-3.5 bg-amber-950/60 border border-amber-800/80 rounded-xl space-y-3">
-                  <div className="flex items-center gap-2 text-amber-200 text-xs font-bold">
-                    <span className="text-base">⚖️</span>
+                <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3 text-amber-950 shadow-sm">
+                  <div className="flex items-center gap-2 font-black text-xs">
+                    <span className="text-lg">⚖️</span>
                     <span>Razão / Motivo da Resolução da Pendência (Obrigatório)</span>
                   </div>
                   
@@ -1730,10 +1726,10 @@
                         key={motivo}
                         type="button"
                         onClick={() => setMotivoResolucao(motivo)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black border transition cursor-pointer ${
                           motivoResolucao === motivo
-                            ? 'bg-amber-600 text-white border-amber-400 shadow'
-                            : 'bg-slate-900 text-amber-300 border-amber-800/60 hover:bg-slate-800'
+                            ? 'bg-amber-600 text-white border-amber-700 shadow-md'
+                            : 'bg-white text-amber-900 border-amber-300 hover:bg-amber-100'
                         }`}
                       >
                         {motivo}
@@ -1745,43 +1741,43 @@
                     type="text"
                     value={motivoResolucao}
                     onChange={(e) => setMotivoResolucao(e.target.value)}
-                    placeholder="Especifique a razão (ex: Acordo ref. perda de agosto, NF 4587...)"
-                    className="w-full px-3 py-2 bg-slate-900 border border-amber-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                    placeholder="Especifique a razão detalhada (ex: NF 4587, desconto em fatura...)"
+                    className="w-full px-3.5 py-2.5 bg-white border-2 border-amber-400 rounded-xl text-xs text-slate-900 font-bold placeholder-slate-400 focus:outline-none focus:border-amber-600 shadow-sm"
                   />
                 </div>
               )}
 
               {/* DADOS GERAIS: DATA, RESPONSÁVEL E MOTORISTA */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Data do Movimento *</label>
+                  <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Data do Movimento *</label>
                   <input
                     type="date"
                     required
                     value={dataRomaneio}
                     onChange={(e) => setDataRomaneio(e.target.value)}
-                    className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-bold text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Operador / Responsável *</label>
+                  <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Operador / Responsável *</label>
                   <input
                     type="text"
                     required
                     value={responsavel}
                     onChange={(e) => setResponsavel(e.target.value)}
                     placeholder="Nome do operador"
-                    className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Motorista / Transporte</label>
+                  <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Motorista / Transporte</label>
                   <input
                     type="text"
                     value={motorista}
                     onChange={(e) => setMotorista(e.target.value)}
-                    placeholder="Nome ou empresa"
-                    className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                    placeholder="Nome ou transportadora"
+                    className="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 shadow-sm"
                   />
                 </div>
               </div>
@@ -1789,10 +1785,10 @@
               {/* LISTA DE ITENS COM BUSCA E STEPPERS TOUCH */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <span>Artigos e Quantidades</span>
-                    <span className="px-2 py-0.5 bg-blue-950 text-blue-300 rounded-full text-[10px] font-mono font-bold">
-                      {totalPecasCalculado} peças no total
+                    <span className="px-2.5 py-0.5 bg-blue-100 text-blue-900 rounded-full text-xs font-mono font-black border border-blue-200">
+                      {totalPecasCalculado} peças
                     </span>
                   </label>
                   
@@ -1800,7 +1796,7 @@
                     <button
                       type="button"
                       onClick={handleZerarTudo}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer"
+                      className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-[11px] font-bold cursor-pointer transition shadow-sm"
                     >
                       🧹 Zerar Tudo
                     </button>
@@ -1814,13 +1810,13 @@
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="🔍 Digite para filtrar itens (ex: banho, lençol, rosto, fronha)..."
-                    className="w-full pl-3 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-medium"
+                    className="w-full pl-3.5 pr-8 py-2.5 bg-white border-2 border-slate-300 rounded-2xl text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 shadow-sm"
                   />
                   {searchTerm && (
                     <button
                       type="button"
                       onClick={() => setSearchTerm('')}
-                      className="absolute right-2.5 top-2 text-slate-400 hover:text-white font-bold"
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-900 font-black text-sm"
                     >
                       &times;
                     </button>
@@ -1828,7 +1824,7 @@
                 </div>
 
                 {/* GRID DE ITENS TOUCH */}
-                <div className="max-h-64 sm:max-h-72 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-800/60">
+                <div className="max-h-64 sm:max-h-80 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-100">
                   {filteredItens.map((itName) => {
                     const currentVal = quantidades[itName] || '';
                     const numVal = parseInt(currentVal || 0, 10);
@@ -1836,27 +1832,29 @@
                     return (
                       <div
                         key={itName}
-                        className={`pt-1.5 pb-1 px-2 rounded-xl flex items-center justify-between gap-2 transition ${
-                          numVal > 0 ? 'bg-slate-800/80 border border-slate-700' : 'hover:bg-slate-950/40'
+                        className={`pt-2 pb-1.5 px-3 rounded-2xl flex items-center justify-between gap-2 transition border ${
+                          numVal > 0 
+                            ? 'bg-emerald-50/70 border-emerald-300 shadow-sm' 
+                            : 'bg-slate-50/50 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-xs text-white truncate" title={itName}>
+                          <p className="font-black text-xs text-slate-900 truncate" title={itName}>
                             {itName}
                           </p>
                           {numVal > 0 && (
-                            <span className="text-[10px] font-bold font-mono text-emerald-400">
+                            <span className="text-[11px] font-black font-mono text-emerald-700">
                               {numVal} {numVal === 1 ? 'peça' : 'peças'}
                             </span>
                           )}
                         </div>
 
                         {/* STEPPERS TOUCH (+/-) */}
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleQuickAdd(itName, -10)}
-                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white rounded-lg font-mono font-bold text-[10px] flex items-center justify-center cursor-pointer active:scale-95"
+                            className="w-8 h-9 bg-slate-200 hover:bg-slate-300 border border-slate-300 text-slate-800 rounded-xl font-mono font-black text-[11px] flex items-center justify-center cursor-pointer active:scale-95 transition shadow-sm"
                             title="-10 peças"
                           >
                             -10
@@ -1864,7 +1862,7 @@
                           <button
                             type="button"
                             onClick={() => handleQuickAdd(itName, -1)}
-                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white rounded-lg font-mono font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95"
+                            className="w-8 h-9 bg-slate-200 hover:bg-slate-300 border border-slate-300 text-slate-800 rounded-xl font-mono font-black text-xs flex items-center justify-center cursor-pointer active:scale-95 transition shadow-sm"
                             title="-1 peça"
                           >
                             -1
@@ -1877,15 +1875,17 @@
                             value={currentVal}
                             onChange={(e) => handleQtdChange(itName, e.target.value)}
                             placeholder="0"
-                            className={`w-14 sm:w-16 h-8 text-center bg-slate-900 border rounded-lg font-mono font-black text-xs text-white focus:outline-none ${
-                              numVal > 0 ? 'border-emerald-500 bg-emerald-950/30 text-emerald-300' : 'border-slate-700 focus:border-blue-500'
+                            className={`w-14 sm:w-16 h-9 text-center rounded-xl font-mono font-black text-sm text-slate-900 border-2 focus:outline-none shadow-sm ${
+                              numVal > 0 
+                                ? 'border-emerald-500 bg-white text-emerald-900' 
+                                : 'border-slate-300 bg-white focus:border-blue-600'
                             }`}
                           />
 
                           <button
                             type="button"
                             onClick={() => handleQuickAdd(itName, 1)}
-                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-emerald-400 hover:text-emerald-300 rounded-lg font-mono font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95"
+                            className="w-8 h-9 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-900 rounded-xl font-mono font-black text-xs flex items-center justify-center cursor-pointer active:scale-95 transition shadow-sm"
                             title="+1 peça"
                           >
                             +1
@@ -1893,7 +1893,7 @@
                           <button
                             type="button"
                             onClick={() => handleQuickAdd(itName, 10)}
-                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-emerald-400 hover:text-emerald-300 rounded-lg font-mono font-bold text-[10px] flex items-center justify-center cursor-pointer active:scale-95"
+                            className="w-8 h-9 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-900 rounded-xl font-mono font-black text-[11px] flex items-center justify-center cursor-pointer active:scale-95 transition shadow-sm"
                             title="+10 peças"
                           >
                             +10
@@ -1907,39 +1907,41 @@
 
               {/* OBSERVAÇÕES ADICIONAIS */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Observações Adicionais (Opcional)</label>
+                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Observações Adicionais (Opcional)</label>
                 <input
                   type="text"
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
-                  placeholder="Ex: Sacos lacrados nº 45 e 46, entrega com atraso..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  placeholder="Ex: Sacos lacrados, devolução parcial..."
+                  className="w-full px-3.5 py-2.5 bg-white border-2 border-slate-300 rounded-2xl text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 shadow-sm"
                 />
               </div>
 
               {/* FOOTER / AÇÕES PRINCIPAIS */}
-              <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-4 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 rounded-b-3xl">
                 <button
                   type="button"
                   onClick={handleImprimirRomaneioPDF}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-100 border-2 border-slate-300 text-slate-800 rounded-2xl font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <Icons.Printer />
-                  <span>Gerar Romaneio PDF (A4)</span>
+                  <span>Romaneio PDF (A4)</span>
                 </button>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer"
+                    className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-2xl font-black text-xs transition cursor-pointer"
                   >
                     Cancelar
                   </button>
 
                   <button
                     type="submit"
-                    className={`flex-1 sm:flex-none px-6 py-2.5 text-white font-black rounded-xl text-xs transition shadow-xl cursor-pointer flex items-center justify-center gap-1.5 ${theme.bg}`}
+                    className={`flex-1 sm:flex-none px-6 py-3 text-white font-black rounded-2xl text-xs transition shadow-lg cursor-pointer flex items-center justify-center gap-1.5 ${
+                      tipo === 'ENVIO' ? 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/30' : tipo === 'RETORNO' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/30'
+                    }`}
                   >
                     <Icons.Check />
                     <span>Confirmar {tipo === 'ENVIO' ? 'Envio Sujo' : tipo === 'RETORNO' ? 'Retorno Limpo' : 'Resolução'} ({totalPecasCalculado} pçs)</span>
