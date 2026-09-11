@@ -4,7 +4,42 @@
 
 ---
 
-## [2026-09-11] — Rimozione Bottone Ridondante "Sair (Backup)" dalla Toolbar Superiore
+## [2026-09-11] — Implementazione Modulo "Controle de Lavanderia" con Storico 25 Quindicine da Excel
+
+**Status AS IS:** Aggiunto il modulo completo e specializzato **«Controle de Lavanderia»** accessibile tramite la nuova tab principale della navigazione. Il modulo digitalizza fedelmente il modello operativo della lavanderia convenzionata del GRUPO SOMBRA (Floresta & SPA e Resort), precaricando l'intero storico di **25 quindicine** dal file Excel `NOVA PLANILHA SOMBRA.xlsx` (Settembre 2025 – Settembre 2026) e fornendo strumenti interattivi per la gestione dei flussi futuri.
+
+### ✅ Fatto
+- **Estrazione & Iniezione Storico Excel (25 Sheets, 33 Categorie di Biancheria):**
+  - Estratte e convertite tutte le 25 quindicine storiche dal foglio Excel originale `NOVA PLANILHA SOMBRA.xlsx`.
+  - Configurato il saldo iniziale riportato (*Saldo Quinz. Ant.*) e il calcolo dinamico del saldo progressivo per ciascun articolo:
+    $$\text{Saldo}_t = \text{Saldo}_{t-1} + \text{Recebido}_t - \text{Enviado}_t - \text{Rec. Pend}_t$$
+  - I saldi residui dell'ultima quindicina (*1ª quinz SETEMBRO 2026*) sono attivi e pronti per i nuovi movimenti giornalieri (es. FRONHA: 29, LENÇOL CASAL: 18, TOALHA BANHO: 10, ecc.).
+- **Nuovo Tab di Navigazione "Controle de Lavanderia":**
+  - Icona `🚚 Truck` dedicata nella barra di navigazione con conteggio live del saldo totale dei capi attualmente trattenuti in lavanderia.
+  - Accessibilità e permessi integrati con il sistema RBAC.
+- **Cruscotto KPI & Statistiche in Tempo Reale:**
+  - **Saldo Retido na Lavanderia:** Somma totale dei pezzi attualmente in lavanderia in attesa di reso pulito.
+  - **Enviados para Lavar (Mês/Quinz):** Totale capi sporchi inviati dall'hotel.
+  - **Recebidos Limpos (Mês/Quinz):** Totale capi puliti rientrati in struttura.
+  - **Pendências Recuperadas:** Totale capi recuperati da sospesi precedenti.
+- **Matrice Quindicinale Interattiva con Editing Diretto:**
+  - Griglia per tutti i 15/16 giorni del periodo con colonne `REC` (Inviato a Lavanderia), `ENV` (Ricevuto da Lavanderia), `PEND` (Recupero Pendenti) e `SALDO` calcolato al volo.
+  - Possibilità di modifica diretta in linea (*inline edit*) con persistenza automatica e salvataggio nel database locale (`DB_KEY_LAVANDERIA`).
+  - Funzione per creare istantaneamente una **Nuova Quindicina** (1ª Quinzena o 2ª Quinzena di qualsiasi mese/anno) ereditando automaticamente i saldi finali della precedente.
+- **Generatore di Romaneio / Guida di Consegna & Ritiro (RomaneioModal):**
+  - Modal dedicata per registrare un nuovo invio o ricevimento merci rapido.
+  - Opzione per sincronizzare automaticamente il movimento con l'inventario generale dell'Almoxarifado/Estoque.
+  - Stampa immediata e download della **Guida di Consegna / Romaneio in formato PDF** con campi firma per Responsabile Hotel e Autista/Incaricato Lavanderia.
+- **Importazione ed Esportazione Excel (.xlsx) & PDF:**
+  - Esportazione della quindicina corrente in formato Excel compatibile con il foglio della lavanderia (`SheetJS`).
+  - Stampa e salvataggio in PDF tabellare ad alta risoluzione con jsPDF.
+  - Importazione di nuovi file Excel compilati dalla lavanderia per aggiornare o aggiungere quindicine senza digitazione manuale.
+
+### 🔧 Decisioni tecniche
+- **Architettura a Singolo File SPA Preservata:** L'intero dataset storico e la logica reattiva sono compilati e validati da Babel Standalone in un unico bundle statico distribuibile su Vercel.
+- **Persistenza Dedicata:** Creata la chiave `sombra_enxoval_lavanderia_v1` in `localStorage` con fallback automatico allo storico precaricato in assenza di modifiche utente.
+
+---
 
 **Status AS IS:** La barra superiore delle azioni è stata snellita rimuovendo il pulsante rosso ridondante `Sair (Backup)`, lasciando la gestione del logout e del backup di sicurezza integrata unicamente all'interno del menu profilo utente (`👤 Perfil > 🚪 Sair da Conta (Logout)`).
 

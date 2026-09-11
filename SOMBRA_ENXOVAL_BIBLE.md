@@ -14,13 +14,14 @@
 1. [Visione & Obiettivi dell'Applicazione](#1-visione--obiettivi-dellapplicazione)
 2. [Architettura Software & Stack Tecnologico](#2-architettura-software--stack-tecnologico)
 3. [Ambienti Operativi (Multi-Property)](#3-ambienti-operativi-multi-property)
-4. [Anatomia dei 6 Moduli Funzionali](#4-anatomia-dei-6-moduli-funzionali)
+4. [Anatomia dei 7 Moduli Funzionali](#4-anatomia-dei-7-moduli-funzionali)
    - [4.1 Matriz de Estoque & Par Stock (Mudas)](#41-matriz-de-estoque--par-stock-mudas)
    - [4.2 Movimentações Rápidas (Entradas, Transferências, Avarias)](#42-movimentações-rápidas)
    - [4.3 Unidades & Locais (Camere, Vilas, Setori)](#43-unidades--locais)
    - [4.4 Catálogo de Itens de Enxoval](#44-catálogo-de-itens-de-enxoval)
    - [4.5 Inventário & Contagem Física (Auditorie Periodiche)](#45-inventário--contagem-física)
    - [4.6 Relatórios, Histórico & Backup](#46-relatórios-histórico--backup)
+   - [4.7 Controle de Lavanderia (Fluxos & Histórico Excel)](#47-controle-de-lavanderia)
 5. [Modello dei Dati & Persistenza (Schema JSON)](#5-modello-dei-dati--persistenza-schema-json)
 6. [Motore di Reportistica & Generazione PDF (jsPDF + AutoTable)](#6-motore-di-reportistica--generazione-pdf)
 7. [Manuale Utente Integrato (Viewer + PDF A4 6 Capitoli)](#7-manuale-utente-integrato)
@@ -235,8 +236,27 @@ L'accesso a **SOMBRA ENXOVAL PRO** è protetto da un motore di autenticazione co
 - Inserendo la password attuale e la nuova password desiderata (minimo 3 caratteri), aggiorna autonomamente le proprie credenziali senza dover ricorrere all'Admin.
 
 #### 5. Flusso di Logout & Cambio Turno:
-- Nel menu profilo o tramite il pulsante **`Sair (Backup)`**, l'operatore chiude la sessione con prompt per scaricare il dump di sicurezza JSON.
+- Nel menu profilo (o logout), l'operatore chiude la sessione con prompt per scaricare il dump di sicurezza JSON.
 - Il passaggio rapido ad un altro operatore richiede la password di quest'ultimo per prevenire accessi non autorizzati.
+
+### 4.7 Controle de Lavanderia (Fluxos & Histórico Excel)
+
+Il modulo **Controle de Lavanderia** digitalizza il tracciamento dei flussi tra l'Hotel/SPA e la lavanderia industriale esterna, integrando l'intero storico di **25 quindicine** originariamente gestite su fogli Excel (`NOVA PLANILHA SOMBRA.xlsx`).
+
+#### 1. Modello Matematico dei Flussi:
+- **`RECEBIDO` (Hotel ➔ Lavanderia):** Capi sporchi inviati alla lavanderia (*Roupa Suja remetida*).
+- **`ENVIADO` (Lavanderia ➔ Hotel):** Capi puliti riconsegnati all'hotel (*Roupa Limpa entregue*).
+- **`REC. PEND` (Recupero Pendenti):** Capi restituiti a recupero di ammanchi o capi trattenuti in precedenza.
+- **`SALDO` (Trattenuto in Lavanderia):** Quantità netta di capi attualmente in lavorazione o trattenuti:
+  $$\text{Saldo}_t = \text{Saldo}_{t-1} + \text{Recebido}_t - \text{Enviado}_t - \text{Rec. Pend}_t$$
+- **Chiusura e Riporto Quindicina:** Il saldo finale di ciascun articolo al termine della quindicina diventa il `Saldo Quinz. Ant.` all'apertura della quindicina successiva.
+
+#### 2. Funzionalità Chiave del Modulo:
+- **Matrice Quindicinale Giornaliera:** Visualizzazione e modifica diretta (*inline editing*) giorno per giorno (1–15 / 16–31) per tutti i 33 articoli di biancheria.
+- **Navigatore Quindicine:** Selettore a tendina per consultare qualsiasi quindicina passata (Settembre 2025 – Settembre 2026) o generare una nuova quindicina con riporto automatico dei saldi.
+- **Generatore di Romaneio / Guida di Consegna (PDF con Firme):** Modale per generare e stampare documenti di carico/scarico da firmare congiuntamente con l'autista della lavanderia.
+- **Sincronizzazione Bidirezionale:** Opzione per aggiornare contestualmente le giacenze dell'Almoxarifado/Estoque principale quando si invia o si riceve biancheria.
+- **Import / Export Excel & PDF:** Esportazione diretta della quindicina in formato foglio di calcolo compatibile con la lavanderia e importazione di nuovi file `.xlsx`.
 
 ## 5. 💾 Modello dei Dati & Persistenza (Schema JSON)
 
