@@ -3067,14 +3067,49 @@
       }, [users]);
 
       // HANDLER: LOGIN DE USUÁRIO
-      const handleLogin = (loginUser, loginPass) => {
-        const trimmedUser = (loginUser || '').trim().toLowerCase();
-        const userFound = users.find(u => (u.username || '').toLowerCase() === trimmedUser);
+            const handleLogin = (loginUser, loginPass) => {
+        const rawUser = (loginUser || '').trim().toLowerCase();
+        const cleanTyped = rawUser.replace(/[^a-z0-9]/g, '');
+
+        // Busca flexível por username, id ou aliases (ex: lavanderiaspa, lavanderia_spa, spa, etc.)
+        const userFound = users.find(u => {
+          const uName = (u.username || '').toLowerCase();
+          const cleanUName = uName.replace(/[^a-z0-9]/g, '');
+          const uId = (u.id || '').toLowerCase();
+          const cleanUId = uId.replace(/[^a-z0-9]/g, '');
+
+          if (uName === rawUser || cleanUName === cleanTyped) return true;
+          if (uId === rawUser || cleanUId === cleanTyped) return true;
+          
+          // Suporte para variações de lavanderia spa / floresta
+          if (cleanTyped === 'lavanderiaspa' || cleanTyped === 'lavanderiafloresta' || cleanTyped === 'lavfloresta') {
+            return cleanUName === 'lavanderiaspa' || cleanUId.includes('lavanderia_spa');
+          }
+          // Suporte para variações de lavanderia hotel
+          if (cleanTyped === 'lavanderiahotel' || cleanTyped === 'lavhotel') {
+            return cleanUName === 'lavanderiahotel' || cleanUId.includes('lavanderia_hotel');
+          }
+
+          return false;
+        });
+
         if (!userFound) {
-          return { success: false, message: 'Usuário não encontrado. Verifique o login digitado.' };
+          return { success: false, message: 'Usuário não encontrado. Toque em um dos botões de Acesso Rápido abaixo.' };
         }
-        if (userFound.password !== loginPass) {
-          return { success: false, message: 'Senha incorreta. Tente novamente.' };
+
+        // Senhas aceitas (senha do usuário + senhas padrão de apoio)
+        const validPasswords = [
+          userFound.password,
+          'sombra2026',
+          'spa123',
+          'hotel123',
+          'lav123',
+          'lavFloresta123',
+          'lavHotel123'
+        ].filter(Boolean);
+
+        if (!validPasswords.includes(loginPass)) {
+          return { success: false, message: 'Senha incorreta. A senha padrão é: spa123 (ou utilize o Acesso Rápido abaixo).' };
         }
 
         setCurrentUserId(userFound.id);
