@@ -1471,31 +1471,6 @@
         return sum;
       }, [quantidades]);
 
-      // Dias com movimentações reais ou datas registradas pontualmente (elimina colunas vazias futuras ou placeholders DIA 1, DIA 2...)
-      const activeDias = useMemo(() => {
-        if (!activeQuinzena || !activeQuinzena.dias || !activeQuinzena.itens) return [];
-        
-        const diasValidos = [];
-        (activeQuinzena.dias || []).forEach((diaName, dIdx) => {
-          // Verifica se há alguma movimentação diferente de zero em qualquer item deste dia
-          const temMovimento = (activeQuinzena.itens || []).some(it => {
-            const d = (it.dias || [])[dIdx];
-            return d && ((d.recebido || 0) > 0 || (d.enviado || 0) > 0 || (d.recPend || 0) > 0);
-          });
-
-          // Se tem movimentação real OU é uma data formatada inserida (ex: 11/09/2026)
-          const isRealDate = diaName && (diaName.includes('/') || diaName.includes('-'));
-          if (temMovimento || isRealDate) {
-            diasValidos.push({
-              nome: diaName,
-              index: dIdx
-            });
-          }
-        });
-
-        return diasValidos;
-      }, [activeQuinzena]);
-
       const filteredItens = useMemo(() => {
         if (!searchTerm) return itensLista || [];
         return (itensLista || []).filter(name => (name || '').toLowerCase().includes(searchTerm.toLowerCase()));
@@ -2398,6 +2373,31 @@
         doc.save(`Relatorio_Lavanderia_${activeQuinzena.nome.replace(/[^a-zA-Z0-9_]/g, '_')}.pdf`);
         showToast('Relatório PDF de Lavanderia exportado com sucesso!');
       };
+
+      // Dias com movimentações reais ou datas registradas pontualmente (elimina colunas vazias futuras ou placeholders DIA 1, DIA 2...)
+      const activeDias = useMemo(() => {
+        if (!activeQuinzena || !activeQuinzena.dias || !activeQuinzena.itens) return [];
+        
+        const diasValidos = [];
+        (activeQuinzena.dias || []).forEach((diaName, dIdx) => {
+          // Verifica se há alguma movimentação diferente de zero em qualquer item deste dia
+          const temMovimento = (activeQuinzena.itens || []).some(it => {
+            const d = (it.dias || [])[dIdx];
+            return d && ((d.recebido || 0) > 0 || (d.enviado || 0) > 0 || (d.recPend || 0) > 0);
+          });
+
+          // Se tem movimentação real OU é uma data formatada inserida (ex: 11/09/2026)
+          const isRealDate = diaName && (diaName.includes('/') || diaName.includes('-'));
+          if (temMovimento || isRealDate) {
+            diasValidos.push({
+              nome: diaName,
+              index: dIdx
+            });
+          }
+        });
+
+        return diasValidos;
+      }, [activeQuinzena]);
 
       const filteredItens = useMemo(() => {
         if (!activeQuinzena || !activeQuinzena.itens) return [];
