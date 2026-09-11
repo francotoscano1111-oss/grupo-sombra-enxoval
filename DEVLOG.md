@@ -4,6 +4,23 @@
 
 ---
 
+## [2026-09-11] — Modulo Auditoria & Acordos de Saldos (Differenze Matematiche vs Conteggi Manuali Lavanderia)
+
+**Status AS IS:** Integrato il modulo completo `⚖️ Auditoria & Acordos de Saldos` che preserva fedelmente i dati originali inseriti a mano dalla lavanderia nei fogli storici, evidenziando e tracciando al contempo tutte le 67 discrepanze/accordi tra il calcolo matematico teorico (chiusura quindicina precedente) e il saldo iniziale riportato dalla lavanderia.
+
+### ✅ Fatto
+- **Preservazione Dati Originali Storici:** Mantenuti tutti i valori storici scritti a mano dalla lavanderia in colonna B (`Saldo Quinz. Ant.`) come richiesto dalla direzione (evitando azzeramenti forzati o ricalcoli non concordati).
+- **Modulo e Modale `⚖️ Auditoria & Acordos de Saldos`:**
+  - Tabella interattiva con ricerca per articolo/quindicina, filtro per tipologia (Crediti azzerati, Rettifiche contate, Modifiche manuali) e indicatori cromatici (verde = a favore dell'hotel, rosso = a favore della lavanderia).
+  - KPI riassuntivi in tempo reale: totale discrepanze (67 eventi), pezzi netti a credito hotel (+77 pezzi) e pezzi a credito lavanderia (+35 pezzi).
+  - Visualizzazione del motivo dettagliato per ciascuna discrepanza (es. *"Credito hotel di fine agosto azzerato a 0 a inizio settembre"*).
+- **Esportazione Dati Audit:**
+  - Esportazione in foglio di calcolo Excel (`.xlsx`) con formattazione tabellare automatica tramite SheetJS.
+  - Esportazione in report PDF A4 stampabile per discussione e accordi con la lavanderia.
+- **Risoluzione Bug Crash Modali (Safe Props):** Aggiunti valori di default sicuri `(arr || []).map(...)` su `RomaneioModal` ed `EditLavanderiaItemModal` per evitare crash `map of undefined`.
+
+---
+
 ## [2026-09-11] — Bugfix: Risoluzione Errore React #130 (Icona Sparkles Mancante)
 
 **Status AS IS:** Risolto l'errore di renderizzazione `Minified React error #130` aggiungendo la definizione SVG dell'icona `<Icons.Sparkles />` nell'oggetto globale `Icons`.

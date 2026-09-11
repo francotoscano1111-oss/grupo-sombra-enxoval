@@ -1077,10 +1077,289 @@
     };
 
     
+    
+    /* =========================================================================
+       COMPONENTE: MODAL AUDITORIA & CONCILIAÇÃO DE DISCREPÂNCIAS (PLANILHA VS MATEMÁTICO)
+       ========================================================================= */
+    const HISTORICO_DISCREPANCIAS = [{"deQuinzena": "1ª quinz setembro", "paraQuinzena": "2ª quinz setembro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 1, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "1ª quinz setembro", "paraQuinzena": "2ª quinz setembro.", "item": "COLCHA CASAL", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "1ª quinz setembro", "paraQuinzena": "2ª quinz setembro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 47, "diferenca": 48, "motivoProvavel": "Ajuste manual (+48 peças)"}, {"deQuinzena": "2ª quinz setembro.", "paraQuinzena": "1ª quinz outubro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 63, "diferenca": 63, "motivoProvavel": "Ajuste manual (+63 peças)"}, {"deQuinzena": "1ª quinz outubro.", "paraQuinzena": "2ª quinz outubro.", "item": "TOALHA BANHO", "saldoFinalMatematico": 6, "saldoInicialLavanderia": 7, "diferenca": 1, "motivoProvavel": "Ajuste manual (+1 peças)"}, {"deQuinzena": "1ª quinz outubro.", "paraQuinzena": "2ª quinz outubro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 55, "diferenca": 55, "motivoProvavel": "Ajuste manual (+55 peças)"}, {"deQuinzena": "2ª quinz outubro.", "paraQuinzena": "1ª quinz novembro.", "item": "TRAVESSEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 4, "diferenca": 4, "motivoProvavel": "Ajuste manual (+4 peças)"}, {"deQuinzena": "2ª quinz outubro.", "paraQuinzena": "1ª quinz novembro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 3, "saldoInicialLavanderia": 34, "diferenca": 31, "motivoProvavel": "Ajuste manual (+31 peças)"}, {"deQuinzena": "1ª quinz novembro.", "paraQuinzena": "2ª quinz novembro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 48, "diferenca": 48, "motivoProvavel": "Ajuste manual (+48 peças)"}, {"deQuinzena": "2ª quinz novembro.", "paraQuinzena": "1ª quinz dezembro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 2, "saldoInicialLavanderia": 48, "diferenca": 46, "motivoProvavel": "Ajuste manual (+46 peças)"}, {"deQuinzena": "1ª quinz dezembro.", "paraQuinzena": "2ª quinz dezembro.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 46, "diferenca": 46, "motivoProvavel": "Ajuste manual (+46 peças)"}, {"deQuinzena": "2ª quinz dezembro.", "paraQuinzena": "1ª quinz janeiro 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 1, "saldoInicialLavanderia": 52, "diferenca": 51, "motivoProvavel": "Ajuste manual (+51 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "FRONHA", "saldoFinalMatematico": 83, "saldoInicialLavanderia": 75, "diferenca": -8, "motivoProvavel": "Abatimento / Desconto (-8 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "TOALHA BANHO", "saldoFinalMatematico": 61, "saldoInicialLavanderia": 50, "diferenca": -11, "motivoProvavel": "Abatimento / Desconto (-11 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "TOALHA ROSTO", "saldoFinalMatematico": 49, "saldoInicialLavanderia": 35, "diferenca": -14, "motivoProvavel": "Abatimento / Desconto (-14 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "PISO", "saldoFinalMatematico": 16, "saldoInicialLavanderia": 8, "diferenca": -8, "motivoProvavel": "Abatimento / Desconto (-8 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "TOALHA PISCINA LISTRADA", "saldoFinalMatematico": 19, "saldoInicialLavanderia": 20, "diferenca": 1, "motivoProvavel": "Ajuste manual (+1 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "COLCHA CASAL", "saldoFinalMatematico": 6, "saldoInicialLavanderia": 2, "diferenca": -4, "motivoProvavel": "Abatimento / Desconto (-4 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "PROT. COLCHÃO", "saldoFinalMatematico": 3, "saldoInicialLavanderia": 1, "diferenca": -2, "motivoProvavel": "Abatimento / Desconto (-2 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "EDREDON SOLTEIRO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "ROUPÃO", "saldoFinalMatematico": 4, "saldoInicialLavanderia": 2, "diferenca": -2, "motivoProvavel": "Abatimento / Desconto (-2 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "FAIXA", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 1, "diferenca": 1, "motivoProvavel": "Ajuste manual (+1 peças)"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "FARDAMENTO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "1ª quinz janeiro 2026.", "paraQuinzena": "2ª quinz janeiro 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 3, "saldoInicialLavanderia": 70, "diferenca": 67, "motivoProvavel": "Ajuste manual (+67 peças)"}, {"deQuinzena": "2ª quinz janeiro 2026.", "paraQuinzena": "1ª quinz fevereiro 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 2, "saldoInicialLavanderia": 47, "diferenca": 45, "motivoProvavel": "Ajuste manual (+45 peças)"}, {"deQuinzena": "1ª quinz fevereiro 2026.", "paraQuinzena": "2ª quinz fevereiro 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 44, "diferenca": 44, "motivoProvavel": "Ajuste manual (+44 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 3, "saldoInicialLavanderia": 2, "diferenca": -1, "motivoProvavel": "Abatimento / Desconto (-1 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "FRONHA", "saldoFinalMatematico": 6, "saldoInicialLavanderia": 18, "diferenca": 12, "motivoProvavel": "Ajuste manual (+12 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "TOALHA BANHO", "saldoFinalMatematico": 12, "saldoInicialLavanderia": 13, "diferenca": 1, "motivoProvavel": "Ajuste manual (+1 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "COLCHA CASAL", "saldoFinalMatematico": 2, "saldoInicialLavanderia": 0, "diferenca": -2, "motivoProvavel": "Abatimento / Desconto (-2 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "CORTINA", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 1, "diferenca": 1, "motivoProvavel": "Ajuste manual (+1 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "PANO DE PRATO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 3, "diferenca": 3, "motivoProvavel": "Ajuste manual (+3 peças)"}, {"deQuinzena": "2ª quinz fevereiro 2026.", "paraQuinzena": "1ª quinz março 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 3, "saldoInicialLavanderia": 23, "diferenca": 20, "motivoProvavel": "Ajuste manual (+20 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": -3, "saldoInicialLavanderia": 1, "diferenca": 4, "motivoProvavel": "Ajuste manual (+4 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "FRONHA", "saldoFinalMatematico": -4, "saldoInicialLavanderia": 12, "diferenca": 16, "motivoProvavel": "Ajuste manual (+16 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "PROT. TRAVESSEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 2, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "ROUPÃO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 3, "diferenca": 3, "motivoProvavel": "Ajuste manual (+3 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "FARDAMENTO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 3, "diferenca": 3, "motivoProvavel": "Ajuste manual (+3 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "CAMISA/JAPONA", "saldoFinalMatematico": 1, "saldoInicialLavanderia": 0, "diferenca": -1, "motivoProvavel": "Abatimento / Desconto (-1 peças)"}, {"deQuinzena": "1ª quinz março 2026.", "paraQuinzena": "2ª quinz março 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": -3, "saldoInicialLavanderia": 55, "diferenca": 58, "motivoProvavel": "Ajuste manual (+58 peças)"}, {"deQuinzena": "2ª quinz março 2026.", "paraQuinzena": "1ª quinz ABRIL 2026.", "item": "LENÇOL CASAL", "saldoFinalMatematico": 10, "saldoInicialLavanderia": 17, "diferenca": 7, "motivoProvavel": "Ajuste manual (+7 peças)"}, {"deQuinzena": "2ª quinz março 2026.", "paraQuinzena": "1ª quinz ABRIL 2026.", "item": "FRONHA", "saldoFinalMatematico": 5, "saldoInicialLavanderia": 10, "diferenca": 5, "motivoProvavel": "Ajuste manual (+5 peças)"}, {"deQuinzena": "2ª quinz março 2026.", "paraQuinzena": "1ª quinz ABRIL 2026.", "item": "TOALHA ROSTO", "saldoFinalMatematico": 6, "saldoInicialLavanderia": 8, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "2ª quinz março 2026.", "paraQuinzena": "1ª quinz ABRIL 2026.", "item": "CORTINA", "saldoFinalMatematico": 5, "saldoInicialLavanderia": 7, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "2ª quinz março 2026.", "paraQuinzena": "1ª quinz ABRIL 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 2, "saldoInicialLavanderia": 44, "diferenca": 42, "motivoProvavel": "Ajuste manual (+42 peças)"}, {"deQuinzena": "1ª quinz ABRIL 2026.", "paraQuinzena": "2ª quinz ABRIL 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 40, "diferenca": 40, "motivoProvavel": "Ajuste manual (+40 peças)"}, {"deQuinzena": "2ª quinz ABRIL 2026.", "paraQuinzena": "1ª quinz MAIO 2026.", "item": "LENÇOL CASAL", "saldoFinalMatematico": -4, "saldoInicialLavanderia": 0, "diferenca": 4, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "2ª quinz ABRIL 2026.", "paraQuinzena": "1ª quinz MAIO 2026.", "item": "FRONHA", "saldoFinalMatematico": -11, "saldoInicialLavanderia": 0, "diferenca": 11, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "2ª quinz ABRIL 2026.", "paraQuinzena": "1ª quinz MAIO 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 1, "saldoInicialLavanderia": 41, "diferenca": 40, "motivoProvavel": "Ajuste manual (+40 peças)"}, {"deQuinzena": "1ª quinz MAIO 2026.", "paraQuinzena": "2ª quinz MAIO 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 2, "saldoInicialLavanderia": 19, "diferenca": 17, "motivoProvavel": "Ajuste manual (+17 peças)"}, {"deQuinzena": "2ª quinz MAIO 2026.", "paraQuinzena": "1ª quinz JUNHO 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 3, "saldoInicialLavanderia": 44, "diferenca": 41, "motivoProvavel": "Ajuste manual (+41 peças)"}, {"deQuinzena": "1ª quinz JUNHO 2026.", "paraQuinzena": "2ª quinz JUNHO 2026.", "item": "PANO DE PRATO", "saldoFinalMatematico": 1, "saldoInicialLavanderia": 0, "diferenca": -1, "motivoProvavel": "Abatimento / Desconto (-1 peças)"}, {"deQuinzena": "2ª quinz JUNHO 2026.", "paraQuinzena": "1ª quinz JULHO 2026.", "item": "LENÇOL CASAL", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "2ª quinz JUNHO 2026.", "paraQuinzena": "1ª quinz JULHO 2026.", "item": "CAMISA FARDAMENTO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 2, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "2ª quinz JUNHO 2026.", "paraQuinzena": "1ª quinz JULHO 2026.", "item": "LUSTRA TAÇA", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "1ª quinz JULHO 2026.", "paraQuinzena": "2ª quinz JULHO 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "1ª quinz JULHO 2026.", "paraQuinzena": "2ª quinz JULHO 2026.", "item": "SHORT FARDAMENTO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 3, "diferenca": 3, "motivoProvavel": "Ajuste manual (+3 peças)"}, {"deQuinzena": "1ª quinz JULHO 2026.", "paraQuinzena": "2ª quinz JULHO 2026.", "item": "CAMISA FARDAMENTO", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 2, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "2ª quinz JULHO 2026.", "paraQuinzena": "1ª quinz AGOSTO 2026.", "item": "LENÇOL SOLTEIRO", "saldoFinalMatematico": 1, "saldoInicialLavanderia": 0, "diferenca": -1, "motivoProvavel": "Abatimento / Desconto (-1 peças)"}, {"deQuinzena": "2ª quinz JULHO 2026.", "paraQuinzena": "1ª quinz AGOSTO 2026.", "item": "TOALHA BANHO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "2ª quinz JULHO 2026.", "paraQuinzena": "1ª quinz AGOSTO 2026.", "item": "TRAVESSEIRO", "saldoFinalMatematico": -1, "saldoInicialLavanderia": 0, "diferenca": 1, "motivoProvavel": "Crédito anterior zerado manualmente"}, {"deQuinzena": "2ª quinz JULHO 2026.", "paraQuinzena": "1ª quinz AGOSTO 2026.", "item": "GUARDANAPO", "saldoFinalMatematico": 36, "saldoInicialLavanderia": 42, "diferenca": 6, "motivoProvavel": "Ajuste manual (+6 peças)"}, {"deQuinzena": "1ª quinz AGOSTO 2026.", "paraQuinzena": "2ª quinz AGOSTO 2026.", "item": "FAIXA", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 5, "diferenca": 5, "motivoProvavel": "Ajuste manual (+5 peças)"}, {"deQuinzena": "1ª quinz AGOSTO 2026.", "paraQuinzena": "2ª quinz AGOSTO 2026.", "item": "GUARDANAPO", "saldoFinalMatematico": 23, "saldoInicialLavanderia": 106, "diferenca": 83, "motivoProvavel": "Ajuste manual (+83 peças)"}, {"deQuinzena": "1ª quinz AGOSTO 2026.", "paraQuinzena": "2ª quinz AGOSTO 2026.", "item": "ALMOFADA", "saldoFinalMatematico": 0, "saldoInicialLavanderia": 2, "diferenca": 2, "motivoProvavel": "Ajuste manual (+2 peças)"}, {"deQuinzena": "1ª quinz AGOSTO 2026.", "paraQuinzena": "2ª quinz AGOSTO 2026.", "item": "CAPA DE ALMOFADA", "saldoFinalMatematico": 2, "saldoInicialLavanderia": 0, "diferenca": -2, "motivoProvavel": "Abatimento / Desconto (-2 peças)"}, {"deQuinzena": "2ª quinz AGOSTO 2026.", "paraQuinzena": "1ª quinz SETEMBRO 2026.", "item": "GUARDANAPO", "saldoFinalMatematico": -3, "saldoInicialLavanderia": 0, "diferenca": 3, "motivoProvavel": "Crédito anterior zerado manualmente"}];
+
+    function AuditoriaDiscrepanciasModal({ isOpen, onClose, ambiente, currentQuinzenas }) {
+      if (!isOpen) return null;
+
+      const [filtroPeriodo, setFiltroPeriodo] = useState('TODOS');
+      const [filtroItem, setFiltroItem] = useState('');
+
+      // Extrai lista única de transições
+      const periodosList = useMemo(() => {
+        const setP = new Set((HISTORICO_DISCREPANCIAS || []).map(d => `${d.deQuinzena} ➔ ${d.paraQuinzena}`));
+        return Array.from(setP);
+      }, []);
+
+      // Filtra discrepâncias
+      const filteredList = useMemo(() => {
+        return (HISTORICO_DISCREPANCIAS || []).filter(d => {
+          const periodoStr = `${d.deQuinzena} ➔ ${d.paraQuinzena}`;
+          const matchPeriodo = filtroPeriodo === 'TODOS' || periodoStr === filtroPeriodo;
+          const matchItem = !filtroItem || (d.item || '').toLowerCase().includes(filtroItem.toLowerCase());
+          return matchPeriodo && matchItem;
+        });
+      }, [filtroPeriodo, filtroItem]);
+
+      // Estatísticas
+      const stats = useMemo(() => {
+        let totalDiferencaPecas = 0;
+        let totalCreditosZerados = 0;
+        let totalAcordos = 0;
+
+        filteredList.forEach(d => {
+          totalDiferencaPecas += Math.abs(d.diferenca);
+          if (d.saldoFinalMatematico < 0 && d.saldoInicialLavanderia === 0) {
+            totalCreditosZerados++;
+          } else {
+            totalAcordos++;
+          }
+        });
+
+        return { totalDiferencaPecas, totalCreditosZerados, totalAcordos, count: filteredList.length };
+      }, [filteredList]);
+
+      const handleExportarExcel = () => {
+        const wsData = [
+          ['AUDITORIA DE SALDOS — GRUPO SOMBRA VS LAVANDERIA'],
+          ['Emissão:', new Date().toLocaleDateString('pt-BR'), 'Ambiente:', ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'],
+          [],
+          ['De Quinzena (Mês Anterior)', 'Para Quinzena (Novo Mês)', 'Artigo de Enxoval', 'Saldo Final Matematico', 'Saldo Inicial Planilha Lavanderia', 'Diferenca (Ajuste)', 'Observação / Motivo Provável']
+        ];
+
+        filteredList.forEach(d => {
+          wsData.push([
+            d.deQuinzena,
+            d.paraQuinzena,
+            d.item,
+            d.saldoFinalMatematico,
+            d.saldoInicialLavanderia,
+            d.diferenca,
+            d.motivoProvavel
+          ]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Discrepancias_Lavanderia');
+        XLSX.writeFile(wb, 'Auditoria_Discrepancias_Lavanderia_SOMBRA.xlsx');
+      };
+
+      const handleImprimirPDF = () => {
+        const doc = new jspdf.jsPDF('l', 'mm', 'a4');
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 297, 26, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('GRUPO SOMBRA — AUDITORIA DE CONCILIAÇÃO DE SALDOS DE LAVANDERIA', 14, 12);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Comparativo: Cálculo Matemático Exato vs Números Manuais da Lavanderia | Total Registros: ${filteredList.length}`, 14, 20);
+
+        const rows = filteredList.map((d, i) => [
+          (i + 1).toString(),
+          `${d.deQuinzena} ➔ ${d.paraQuinzena}`,
+          d.item,
+          d.saldoFinalMatematico.toString(),
+          d.saldoInicialLavanderia.toString(),
+          (d.diferenca > 0 ? `+${d.diferenca}` : d.diferenca.toString()),
+          d.motivoProvavel
+        ]);
+
+        doc.autoTable({
+          startY: 32,
+          head: [['#', 'Transição de Quinzena', 'Artigo de Enxoval', 'Saldo Mat. Anterior', 'Saldo Planilha Lav.', 'Diferença (Ajuste)', 'Observação / Motivo']],
+          body: rows,
+          theme: 'grid',
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 2 },
+          margin: { left: 10, right: 10 }
+        });
+
+        doc.save('Relatorio_Auditoria_Discrepancias_Lavanderia.pdf');
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-sombra-900 border border-slate-300 dark:border-sombra-700 w-full max-w-5xl max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white">
+            
+            {/* HEADER */}
+            <div className="p-5 border-b border-slate-200 dark:border-sombra-800 bg-slate-50 dark:bg-sombra-950 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-tr from-amber-500 to-indigo-600 text-white rounded-2xl shadow-lg">
+                  <Icons.Shield />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Auditoria & Conciliação de Saldos (Planilha vs Cálculo Matemático)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-sombra-400 mt-0.5">
+                    Lista completa de diferenças onde a lavanderia fez ajustes manuais, acordos de pagamento ou zerou saldos negativos.
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={onClose} 
+                className="text-slate-400 hover:text-slate-900 dark:hover:text-white text-2xl font-mono px-3 py-1 cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* KPI STATS */}
+            <div className="p-4 bg-slate-100 dark:bg-sombra-950/80 border-b border-slate-200 dark:border-sombra-800 grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
+                <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Total de Ajustes Identificados</div>
+                <div className="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">{stats.count} ocorrências</div>
+              </div>
+              <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
+                <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Total de Peças Divergentes / Ajustadas</div>
+                <div className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono mt-0.5">{stats.totalDiferencaPecas} peças</div>
+              </div>
+              <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
+                <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Créditos Anteriores Zerados</div>
+                <div className="text-xl font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">{stats.totalCreditosZerados} casos</div>
+              </div>
+              <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
+                <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Acordos / Contagens Manuais</div>
+                <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">{stats.totalAcordos} acordos</div>
+              </div>
+            </div>
+
+            {/* FILTERS & ACTIONS BAR */}
+            <div className="p-4 border-b border-slate-200 dark:border-sombra-800 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-sombra-900">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div>
+                  <select
+                    value={filtroPeriodo}
+                    onChange={(e) => setFiltroPeriodo(e.target.value)}
+                    className="px-3 py-1.5 bg-slate-100 dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value="TODOS">Todas as Quindicinas (Histórico Completo)</option>
+                    {periodosList.map((p, idx) => (
+                      <option key={idx} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="relative w-56">
+                  <input
+                    type="text"
+                    value={filtroItem}
+                    onChange={(e) => setFiltroItem(e.target.value)}
+                    placeholder="Filtrar por artigo..."
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-100 dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white"
+                  />
+                  <span className="absolute left-2.5 top-2 text-slate-400">🔍</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportarExcel}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Icons.Download />
+                  <span>Exportar Excel</span>
+                </button>
+                <button
+                  onClick={handleImprimirPDF}
+                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Icons.Printer />
+                  <span>Imprimir PDF</span>
+                </button>
+              </div>
+            </div>
+
+            {/* TABLE */}
+            <div className="flex-1 overflow-y-auto max-h-[50vh] p-4">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-100 dark:bg-sombra-950 text-slate-700 dark:text-sombra-300 uppercase font-black tracking-wider text-[10px] sticky top-0 z-10 border-b border-slate-300 dark:border-sombra-800">
+                  <tr>
+                    <th className="py-2.5 px-3">#</th>
+                    <th className="py-2.5 px-3">Transição / Período</th>
+                    <th className="py-2.5 px-3">Artigo de Enxoval</th>
+                    <th className="py-2.5 px-3 text-center">Saldo Final Matemático</th>
+                    <th className="py-2.5 px-3 text-center">Saldo Inicial Planilha Lav.</th>
+                    <th className="py-2.5 px-3 text-center">Diferença / Ajuste</th>
+                    <th className="py-2.5 px-4">Motivo Provável / Observação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-sombra-800/60 font-mono text-xs">
+                  {filteredList.map((d, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-sombra-850/50 transition">
+                      <td className="py-2.5 px-3 font-sans font-bold text-slate-400 dark:text-sombra-500">{idx + 1}</td>
+                      <td className="py-2.5 px-3 font-sans font-semibold text-slate-800 dark:text-slate-200">
+                        {d.deQuinzena} <span className="text-indigo-500 font-bold">➔</span> {d.paraQuinzena}
+                      </td>
+                      <td className="py-2.5 px-3 font-sans font-bold text-slate-900 dark:text-white">{d.item}</td>
+                      <td className="py-2.5 px-3 text-center font-bold">
+                        <span className={`px-2 py-0.5 rounded-lg text-xs ${
+                          d.saldoFinalMatematico < 0 ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-slate-200 text-slate-800 dark:bg-sombra-800 dark:text-slate-200'
+                        }`}>
+                          {d.saldoFinalMatematico}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold">
+                        <span className="px-2 py-0.5 rounded-lg text-xs bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">
+                          {d.saldoInicialLavanderia}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-black">
+                        <span className={`px-2.5 py-1 rounded-lg text-xs ${
+                          d.diferenca > 0 ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700' : 'bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-700'
+                        }`}>
+                          {d.diferenca > 0 ? `+${d.diferenca}` : d.diferenca}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 font-sans text-[11px] text-slate-600 dark:text-sombra-300">
+                        {d.motivoProvavel}
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredList.length === 0 && (
+                    <tr>
+                      <td colSpan="7" className="py-8 text-center text-slate-400 dark:text-sombra-500 font-sans font-semibold">
+                        Nenhuma discrepância encontrada para o filtro selecionado.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* FOOTER */}
+            <div className="p-4 bg-slate-50 dark:bg-sombra-950 border-t border-slate-200 dark:border-sombra-800 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-sombra-400">
+              <div>
+                💡 <em>Esta tabela documenta as diferenças históricas entre os saldi matematici e i saldi digitati dalla lavanderia nei vari fogli Excel.</em>
+              </div>
+              <button
+                onClick={onClose}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+
     /* =========================================================================
        COMPONENTE: MODAL NOVO ROMANEIO DE LAVANDERIA (ENVIO / RETORNO / GUIA)
        ========================================================================= */
-    function RomaneioModal({ ambiente, itensLista, defaultTipo = 'ENVIO', onClose, onSaveRomaneio, currentUser }) {
+    function RomaneioModal({ isOpen, ambiente, itensLista = [], defaultTipo = 'ENVIO', onClose, onSaveRomaneio, currentUser }) {
+      if (!isOpen) return null;
+
       const [tipo, setTipo] = useState(defaultTipo);
       const [dataRomaneio, setDataRomaneio] = useState(new Date().toISOString().split('T')[0]);
       const [numeroRomaneio, setNumeroRomaneio] = useState(`ROM-${Date.now().toString().slice(-6)}`);
@@ -1111,7 +1390,7 @@
         const itensValidados = [];
         let totalPecas = 0;
 
-        itensLista.forEach(itName => {
+        (itensLista || []).forEach(itName => {
           const raw = quantidades[itName];
           if (raw !== undefined && raw !== '') {
             const q = evaluateMathExpression(raw);
@@ -1145,7 +1424,9 @@
           totalPecas
         };
 
-        onSaveRomaneio(romaneioObj);
+        if (onSaveRomaneio) {
+          onSaveRomaneio(romaneioObj);
+        }
       };
 
       const handleImprimirRomaneioPDF = () => {
@@ -1177,7 +1458,7 @@
 
         const rows = [];
         let tot = 0;
-        itensLista.forEach((itName, idx) => {
+        (itensLista || []).forEach((itName, idx) => {
           const raw = quantidades[itName];
           if (raw !== undefined && raw !== '') {
             const q = evaluateMathExpression(raw);
@@ -1322,7 +1603,7 @@
                 </div>
 
                 <div className="max-h-64 overflow-y-auto divide-y divide-sombra-800/80 border border-sombra-800 rounded-xl bg-sombra-950">
-                  {itensLista.map((itName, idx) => {
+                  {(itensLista || []).map((itName, idx) => {
                     const currentVal = quantidades[itName] || '';
                     return (
                       <div key={idx} className="p-2.5 flex items-center justify-between gap-3 hover:bg-sombra-900/60 transition">
@@ -1345,9 +1626,9 @@
                           <input
                             type="text"
                             value={currentVal}
-                            onChange={(e) => handleQtdChange(itName, e.target.value)}
                             placeholder="0"
-                            className="w-16 text-center py-1 bg-sombra-900 border border-sombra-700 rounded text-xs font-mono font-bold text-brand-300 focus:outline-none focus:border-brand-500"
+                            onChange={(e) => handleQtdChange(itName, e.target.value)}
+                            className="w-16 px-2.5 py-1 text-center bg-sombra-900 border border-sombra-700 rounded-lg text-xs font-mono font-bold text-brand-400 focus:outline-none focus:border-brand-500"
                           />
                         </div>
                       </div>
@@ -1359,37 +1640,37 @@
               {/* OBSERVAÇÕES */}
               <div>
                 <label className="block text-xs font-bold text-sombra-300 uppercase mb-1">Observações Adicionais</label>
-                <input
-                  type="text"
+                <textarea
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
-                  placeholder="Ex: Peças manchadas separadas para alvejamento especial, sacos lacrados nº 42"
-                  className="w-full px-3 py-2 bg-sombra-950 border border-sombra-700 rounded-xl text-xs text-white"
-                />
+                  placeholder="Ex: Peças conferidas na presença do motorista; sacos lacrados..."
+                  rows="2"
+                  className="w-full px-3 py-2 bg-sombra-950 border border-sombra-800 rounded-xl text-xs text-white resize-none"
+                ></textarea>
               </div>
 
               {/* FOOTER ACTIONS */}
-              <div className="flex items-center justify-between pt-4 border-t border-sombra-800">
+              <div className="pt-3 border-t border-sombra-800 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={handleImprimirRomaneioPDF}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-sombra-800 hover:bg-sombra-700 text-slate-200 rounded-xl text-xs font-bold transition border border-sombra-700 cursor-pointer"
+                  className="px-4 py-2.5 bg-blue-900/60 hover:bg-blue-800 text-blue-300 border border-blue-700 rounded-xl font-bold text-xs transition flex items-center gap-2 cursor-pointer"
                 >
                   <Icons.Printer />
-                  <span>Imprimir Romaneio (PDF)</span>
+                  <span>Imprimir Guia (PDF)</span>
                 </button>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 bg-sombra-800 hover:bg-sombra-700 text-sombra-300 font-bold rounded-xl text-xs transition cursor-pointer"
+                    className="px-4 py-2.5 bg-sombra-800 hover:bg-sombra-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-500 hover:to-emerald-400 text-slate-950 font-black rounded-xl text-xs transition shadow-lg shadow-brand-600/20 cursor-pointer"
+                    className="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-slate-950 font-black rounded-xl text-xs transition shadow-lg shadow-brand-600/30 flex items-center gap-2 cursor-pointer"
                   >
                     <Icons.Check />
                     <span>Salvar Romaneio</span>
@@ -1404,21 +1685,20 @@
       );
     }
 
-    /* =========================================================================
-       COMPONENTE PRINCIPAL: ABA CONTROLE DE LAVANDERIA (LAVANDERIATAB)
-       ========================================================================= */
-    function LavanderiaTab({ ambiente, items, lavanderiaData, onUpdateLavanderiaData, currentUser, canPerformOperation, onApplyToStock, showToast }) {
-      const quinzenaList = lavanderiaData[ambiente] || [];
+
+    function LavanderiaTab({ ambiente, items = [], lavanderiaData = {}, onUpdateLavanderiaData, currentUser, canPerformOperation, onApplyToStock, showToast }) {
+      const quinzenaList = (lavanderiaData && lavanderiaData[ambiente]) || [];
       const [selectedQuinzenaId, setSelectedQuinzenaId] = useState(() => {
         if (quinzenaList.length > 0) return quinzenaList[quinzenaList.length - 1].id;
         return '';
       });
 
-      const activeQuinzena = quinzenaList.find(q => q.id === selectedQuinzenaId) || quinzenaList[quinzenaList.length - 1] || null;
-      const activeIndex = quinzenaList.findIndex(q => q.id === (activeQuinzena?.id || ''));
+      const activeQuinzena = (quinzenaList || []).find(q => q.id === selectedQuinzenaId) || (quinzenaList || [])[quinzenaList.length - 1] || null;
+      const activeIndex = (quinzenaList || []).findIndex(q => q.id === (activeQuinzena?.id || ''));
 
       const [searchItem, setSearchItem] = useState('');
       const [showRomaneioModal, setShowRomaneioModal] = useState(false);
+      const [showAuditoriaModal, setShowAuditoriaModal] = useState(false);
       const [romaneioDefaultTipo, setRomaneioDefaultTipo] = useState('ENVIO');
       const excelFileInputRef = useRef(null);
 
@@ -1427,7 +1707,7 @@
         if (activeQuinzena && activeQuinzena.itens && activeQuinzena.itens.length > 0) {
           return activeQuinzena.itens.map(it => it.item);
         }
-        return items.map(it => it.nome);
+        return (items || []).map(it => it.nome);
       }, [activeQuinzena, items]);
 
       // Estatísticas gerais da quinzena ativa
@@ -1441,7 +1721,7 @@
         let totalRecPend = 0;
         let itensComPendencia = 0;
 
-        activeQuinzena.itens.forEach(it => {
+        (activeQuinzena.itens || []).forEach(it => {
           const sf = it.saldoFinal !== undefined ? it.saldoFinal : (it.saldoAnt || 0);
           if (sf > 0) {
             saldoPendenteTotal += sf;
@@ -1462,10 +1742,10 @@
         if (!activeQuinzena) return;
         const numVal = evaluateMathExpression(val);
 
-        const updatedQuinzenas = quinzenaList.map((q) => {
+        const updatedQuinzenas = (quinzenaList || []).map((q) => {
           if (q.id !== activeQuinzena.id) return q;
 
-          const updatedItens = q.itens.map((it, iIdx) => {
+          const updatedItens = (q.itens || []).map((it, iIdx) => {
             if (iIdx !== itemIdx) return it;
 
             let running = numVal;
@@ -1499,10 +1779,10 @@
         if (!activeQuinzena) return;
         const numVal = evaluateMathExpression(val);
         
-        const updatedQuinzenas = quinzenaList.map((q) => {
+        const updatedQuinzenas = (quinzenaList || []).map((q) => {
           if (q.id !== activeQuinzena.id) return q;
 
-          const updatedItens = q.itens.map((it, iIdx) => {
+          const updatedItens = (q.itens || []).map((it, iIdx) => {
             if (iIdx !== itemIdx) return it;
 
             const updatedDias = (it.dias || []).map((d, dIdx) => {
@@ -1550,14 +1830,14 @@
         }
 
         const prevSaldos = {};
-        prevQuinzena.itens.forEach(it => {
+        (prevQuinzena.itens || []).forEach(it => {
           prevSaldos[it.item.toUpperCase().trim()] = it.saldoFinal !== undefined ? it.saldoFinal : (it.saldoAnt || 0);
         });
 
-        const updatedQuinzenas = quinzenaList.map(q => {
+        const updatedQuinzenas = (quinzenaList || []).map(q => {
           if (q.id !== activeQuinzena.id) return q;
 
-          const updatedItens = q.itens.map(it => {
+          const updatedItens = (q.itens || []).map(it => {
             const key = it.item.toUpperCase().trim();
             const newSaldoAnt = prevSaldos[key] !== undefined ? prevSaldos[key] : (it.saldoAnt || 0);
 
@@ -1602,11 +1882,11 @@
 
         const deltasForStock = {};
 
-        const updatedQuinzenas = quinzenaList.map(q => {
+        const updatedQuinzenas = (quinzenaList || []).map(q => {
           if (q.id !== activeQuinzena.id) return q;
 
-          const updatedItens = q.itens.map(it => {
-            const romItem = romaneio.itens.find(r => r.item.toUpperCase().trim() === it.item.toUpperCase().trim());
+          const updatedItens = (q.itens || []).map(it => {
+            const romItem = (romaneio.itens || []).find(r => r.item.toUpperCase().trim() === it.item.toUpperCase().trim());
             const qtdAdicionada = romItem ? romItem.quantidade : 0;
 
             if (qtdAdicionada > 0) {
@@ -1684,8 +1964,8 @@
         const cleanId = nomeNova.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now();
         
         // Base de itens e saldos anteriores
-        const baseItens = activeQuinzena && activeQuinzena.itens ? activeQuinzena.itens : [];
-        const novosItens = baseItens.map(it => {
+        const baseItens = (activeQuinzena && activeQuinzena.itens) ? activeQuinzena.itens : [];
+        const novosItens = (baseItens || []).map(it => {
           const saldoAnterior = it.saldoFinal !== undefined ? it.saldoFinal : (it.saldoAnt || 0);
           return {
             item: it.item,
@@ -1811,114 +2091,10 @@
         showToast('Relatório PDF de Lavanderia exportado com sucesso!');
       };
 
-      // HANDLER: IMPORTAR PLANILHA EXCEL (.XLSX)
-      const handleImportarExcel = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          try {
-            const data = new Uint8Array(evt.target.result);
-            const wb = XLSX.read(data, { type: 'array' });
-            
-            const importedQuinzenas = [];
-
-            wb.SheetNames.forEach(sheetName => {
-              const ws = wb.Sheets[sheetName];
-              const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z50');
-              
-              const row1 = [];
-              const row2 = [];
-              for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cell1 = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
-                const cell2 = ws[XLSX.utils.encode_cell({ r: 1, c: C })];
-                row1.push(cell1 ? cell1.v : null);
-                row2.push(cell2 ? cell2.v : null);
-              }
-
-              const diasArr = [];
-              for (let c = 2; c < row1.length; c += 4) {
-                const val = row1[c];
-                if (val && !diasArr.includes(String(val))) {
-                  diasArr.push(String(val));
-                }
-              }
-
-              const itensArr = [];
-              for (let R = 2; R <= range.e.r; ++R) {
-                const itemCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
-                if (!itemCell || !itemCell.v) continue;
-                const itemName = String(itemCell.v).trim();
-                if (itemName.toUpperCase() === 'DATA' || itemName.toUpperCase().startsWith('TOTAL')) continue;
-
-                const saldoAntCell = ws[XLSX.utils.encode_cell({ r: R, c: 1 })];
-                const saldoAnt = saldoAntCell ? Number(saldoAntCell.v) || 0 : 0;
-
-                const diasItem = [];
-                let running = saldoAnt;
-
-                for (let d = 0; d < diasArr.length; d++) {
-                  const baseC = 2 + (d * 4);
-                  const recCell = ws[XLSX.utils.encode_cell({ r: R, c: baseC })];
-                  const envCell = ws[XLSX.utils.encode_cell({ r: R, c: baseC + 1 })];
-                  const pendCell = ws[XLSX.utils.encode_cell({ r: R, c: baseC + 2 })];
-
-                  const rec = recCell ? Number(recCell.v) || 0 : 0;
-                  const env = envCell ? Number(envCell.v) || 0 : 0;
-                  const pend = pendCell ? Number(pendCell.v) || 0 : 0;
-
-                  running = running + rec - env - pend;
-
-                  diasItem.push({
-                    data: diasArr[d],
-                    recebido: rec,
-                    enviado: env,
-                    recPend: pend,
-                    saldo: running
-                  });
-                }
-
-                itensArr.push({
-                  item: itemName,
-                  saldoAnt,
-                  dias: diasItem,
-                  saldoFinal: running
-                });
-              }
-
-              if (itensArr.length > 0) {
-                importedQuinzenas.push({
-                  id: sheetName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now(),
-                  nome: sheetName,
-                  ambiente,
-                  dias: diasArr,
-                  itens: itensArr
-                });
-              }
-            });
-
-            if (importedQuinzenas.length > 0) {
-              onUpdateLavanderiaData({
-                ...lavanderiaData,
-                [ambiente]: importedQuinzenas
-              });
-              setSelectedQuinzenaId(importedQuinzenas[importedQuinzenas.length - 1].id);
-              showToast(`Planilha importada com sucesso! ${importedQuinzenas.length} quinzenas carregadas.`);
-            } else {
-              alert('Não foi possível identificar o formato de quinzenas na planilha.');
-            }
-          } catch (err) {
-            alert('Erro ao importar arquivo Excel: ' + err.message);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      };
-
       const filteredItens = useMemo(() => {
         if (!activeQuinzena || !activeQuinzena.itens) return [];
         if (!searchItem) return activeQuinzena.itens;
-        return activeQuinzena.itens.filter(it => it.item.toLowerCase().includes(searchItem.toLowerCase()));
+        return (activeQuinzena.itens || []).filter(it => (it.item || '').toLowerCase().includes(searchItem.toLowerCase()));
       }, [activeQuinzena, searchItem]);
 
       return (
@@ -1969,6 +2145,16 @@
                 <span>+ Retorno Roupa Limpa</span>
               </button>
 
+              {/* AUDITORIA & DISCREPANCIAS BUTTON */}
+              <button
+                onClick={() => setShowAuditoriaModal(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold rounded-xl text-xs transition shadow-md shadow-amber-600/20 cursor-pointer"
+                title="Ver lista completa de diferenças e acordos entre o cálculo matemático e a planilha da lavanderia"
+              >
+                <Icons.Shield />
+                <span>⚖️ Auditoria & Acordos</span>
+              </button>
+
               <button
                 onClick={handleExportarExcel}
                 className="flex items-center gap-1.5 px-3.5 py-2 bg-sombra-800 hover:bg-emerald-950 border border-sombra-700 hover:border-emerald-700 text-emerald-300 rounded-xl text-xs font-bold transition cursor-pointer"
@@ -1986,21 +2172,6 @@
                 <Icons.Printer />
                 <span>PDF</span>
               </button>
-
-              <label
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-sombra-800 hover:bg-sombra-700 border border-sombra-700 text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer"
-                title="Importar planilha da lavanderia (.xlsx)"
-              >
-                <Icons.Upload />
-                <span>Importar Planilha</span>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleImportarExcel}
-                  ref={excelFileInputRef}
-                  className="hidden"
-                />
-              </label>
 
               <button
                 onClick={handleCriarNovaQuinzena}
@@ -2025,7 +2196,7 @@
                   onChange={(e) => setSelectedQuinzenaId(e.target.value)}
                   className="px-3 py-1.5 bg-slate-100 dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 focus:border-indigo-500 rounded-xl text-xs font-black text-slate-900 dark:text-white"
                 >
-                  {quinzenaList.map((q, idx) => (
+                  {(quinzenaList || []).map((q, idx) => (
                     <option key={q.id} value={q.id}>
                       {q.nome} {idx === quinzenaList.length - 1 ? '🌟 (Atual / Mais Recente)' : ''}
                     </option>
@@ -2200,7 +2371,7 @@
 
                 {/* TBODY */}
                 <tbody className="divide-y divide-slate-200 dark:divide-sombra-800/60 font-mono text-xs">
-                  {filteredItens.map((it, itemIdx) => {
+                  {(filteredItens || []).map((it, itemIdx) => {
                     let totRec = 0;
                     let totEnv = 0;
                     let totPend = 0;
@@ -2337,9 +2508,22 @@
           {showRomaneioModal && (
             <RomaneioModal
               isOpen={showRomaneioModal}
+              ambiente={ambiente}
+              itensLista={itensNomes || []}
+              defaultTipo={romaneioDefaultTipo}
               onClose={() => setShowRomaneioModal(false)}
               onSaveRomaneio={handleSaveRomaneio}
               currentUser={currentUser}
+            />
+          )}
+
+          {/* AUDITORIA & DISCREPANCIAS MODAL */}
+          {showAuditoriaModal && (
+            <AuditoriaDiscrepanciasModal
+              isOpen={showAuditoriaModal}
+              onClose={() => setShowAuditoriaModal(false)}
+              ambiente={ambiente}
+              currentQuinzenas={quinzenaList}
             />
           )}
 
