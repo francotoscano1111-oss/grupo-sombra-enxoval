@@ -4,6 +4,16 @@
 
 ---
 
+## [2026-09-11] — Bugfix: Risoluzione Errore React #130 (Icona Sparkles Mancante)
+
+**Status AS IS:** Risolto l'errore di renderizzazione `Minified React error #130` aggiungendo la definizione SVG dell'icona `<Icons.Sparkles />` nell'oggetto globale `Icons`.
+
+### ✅ Fatto
+- **Definizione SVG `Sparkles`:** Aggiunta l'icona utilizzata nella KPI card *Total Retornado (Lav. ➔ Hotel)*, ripristinando il corretto caricamento dell'interfaccia.
+- **Verifica Completa di Tutte le 36 Icone:** Eseguito test automatizzato su tutti i tag `<Icons.*>` utilizzati nel codice per garantire che nessuna icona sia indefinita.
+
+---
+
 ## [2026-09-11] — Visibilità Elevata Colonne Saldo Lavanderia & Sincronizzazione Saldi Precedenti
 
 **Status AS IS:** Riprogettata la visualizzazione grafica della matrice del modulo *Controle de Lavanderia* garantendo contrasto visivo assoluto (in particolare in Light Mode) per le colonne `SALDO`, `Saldo Quinz. Ant.` e `Saldo Final`. Introdotta la modifica in linea del saldo iniziale e un pulsante per sincronizzare automaticamente i saldi iniziali ereditandoli dalla quindicina precedente.
