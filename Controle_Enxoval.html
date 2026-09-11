@@ -95,6 +95,61 @@
       margin: 0;
     }
 
+        /* =========================================================
+       INSTITUTIONAL LOGIN SCREEN - FIXED HIGH CONTRAST & LEGIBILITY
+       ========================================================= */
+    .login-container {
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #080d1a 100%) !important;
+      color: #f8fafc !important;
+      min-height: 100vh;
+    }
+    .login-title {
+      color: #ffffff !important;
+    }
+    .login-subtitle {
+      color: #cbd5e1 !important;
+    }
+    .login-card {
+      background-color: rgba(15, 23, 42, 0.95) !important;
+      border: 1px solid #334155 !important;
+      color: #ffffff !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+    }
+    .login-card label {
+      color: #e2e8f0 !important;
+    }
+    .login-card input {
+      background-color: #020617 !important;
+      color: #ffffff !important;
+      border: 1px solid #334155 !important;
+    }
+    .login-card input::placeholder {
+      color: #64748b !important;
+    }
+    .login-card input:focus {
+      border-color: #10b981 !important;
+      outline: none !important;
+      box-shadow: 0 0 0 1px #10b981 !important;
+    }
+    .login-chip {
+      background-color: #020617 !important;
+      border: 1px solid #334155 !important;
+      color: #f8fafc !important;
+    }
+    .login-chip:hover {
+      background-color: #1e293b !important;
+      border-color: #10b981 !important;
+    }
+    .login-chip-name {
+      color: #ffffff !important;
+    }
+    .login-chip-user {
+      color: #34d399 !important;
+    }
+    .login-footer {
+      color: #94a3b8 !important;
+    }
+
     /* =========================================================
        LIGHT MODE THEME - HIGH CONTRAST & MAXIMUM LEGIBILITY
        ========================================================= */
@@ -5697,7 +5752,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
       };
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-sombra-900 to-indigo-950 text-white flex items-center justify-center p-4 font-sans selection:bg-brand-500 selection:text-slate-950">
+        <div className="login-container flex items-center justify-center p-4 font-sans selection:bg-brand-500 selection:text-slate-950">
           <div className="w-full max-w-md space-y-6 animate-fade-in">
             
             {/* BRANDING HEADER */}
@@ -5706,30 +5761,30 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 <Icons.Box />
               </div>
               <div>
-                <h1 className="text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
+                <h1 className="login-title text-2xl sm:text-3xl font-black tracking-tight flex items-center justify-center gap-2">
                   <span>SOMBRA ENXOVAL</span>
-                  <span className="text-brand-400 font-mono text-sm px-2 py-0.5 bg-brand-950/80 border border-brand-800 rounded-lg">PRO</span>
+                  <span className="text-brand-400 font-mono text-sm px-2.5 py-0.5 bg-brand-950/90 border border-brand-800 rounded-lg">PRO</span>
                 </h1>
-                <p className="text-xs text-slate-400 mt-1 font-medium">
+                <p className="login-subtitle text-xs sm:text-sm mt-1.5 font-semibold tracking-wide">
                   GRUPO SOMBRA • Gestão, Movimentação & Auditoria de Enxoval
                 </p>
               </div>
             </div>
 
             {/* LOGIN CARD */}
-            <div className="bg-sombra-900/90 border border-sombra-700/80 backdrop-blur-xl rounded-3xl p-7 shadow-2xl space-y-5">
-              <div className="border-b border-sombra-800 pb-3">
+            <div className="login-card backdrop-blur-xl rounded-3xl p-7 space-y-5">
+              <div className="border-b border-slate-700/80 pb-3">
                 <h2 className="text-base font-extrabold text-white flex items-center gap-2">
-                  <Icons.Shield />
+                  <span className="text-brand-400"><Icons.Shield /></span>
                   <span>Acesso Autorizado</span>
                 </h2>
-                <p className="text-xs text-sombra-400 mt-0.5">
+                <p className="text-xs text-slate-300 mt-0.5">
                   Digite seu usuário e senha para iniciar sua sessão de trabalho.
                 </p>
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-rose-950/80 border border-rose-600/80 rounded-xl text-xs text-rose-200 flex items-center gap-2 animate-bounce">
+                <div className="p-3 bg-rose-950/90 border border-rose-600 rounded-xl text-xs text-rose-200 flex items-center gap-2 animate-bounce">
                   <Icons.AlertTriangle />
                   <span>{errorMessage}</span>
                 </div>
@@ -5737,7 +5792,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-sombra-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-1.5">
                     Usuário / Login
                   </label>
                   <div className="relative">
@@ -5748,9 +5803,9 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                       required
                       autoFocus
                       placeholder="Ex: admin ou camareira"
-                      className="w-full px-4 py-2.5 bg-sombra-950 border border-sombra-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl text-sm text-white placeholder-sombra-600 transition"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm transition"
                     />
-                    <div className="absolute right-3 top-3 text-sombra-500 pointer-events-none">
+                    <div className="absolute right-3 top-3 text-slate-400 pointer-events-none">
                       <Icons.User />
                     </div>
                   </div>
@@ -5758,13 +5813,13 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-sombra-300 uppercase tracking-wider">
+                    <label className="block text-xs font-bold uppercase tracking-wider">
                       Senha de Acesso
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-[11px] text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] text-brand-400 hover:text-brand-300 font-bold flex items-center gap-1 cursor-pointer"
                     >
                       <Icons.Eye />
                       <span>{showPassword ? 'Ocultar' : 'Mostrar'}</span>
@@ -5777,9 +5832,9 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                       onChange={(e) => setLoginPass(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="w-full px-4 py-2.5 bg-sombra-950 border border-sombra-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl text-sm text-white placeholder-sombra-600 font-mono transition"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm font-mono transition"
                     />
-                    <div className="absolute right-3 top-3 text-sombra-500 pointer-events-none">
+                    <div className="absolute right-3 top-3 text-slate-400 pointer-events-none">
                       <Icons.Key />
                     </div>
                   </div>
@@ -5788,7 +5843,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-gradient-to-r from-brand-600 to-emerald-500 hover:from-brand-500 hover:to-emerald-400 text-slate-950 font-extrabold rounded-xl text-sm transition shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-[0.99]"
+                  className="w-full py-3 bg-gradient-to-r from-brand-600 via-emerald-500 to-teal-400 hover:from-brand-500 hover:to-teal-300 text-slate-950 font-black rounded-xl text-sm transition shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-[0.99]"
                 >
                   <Icons.Check />
                   <span>{isLoading ? 'Autenticando...' : 'Entrar no Sistema'}</span>
@@ -5796,9 +5851,10 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
               </form>
 
               {/* QUICK DEMO USERS CHIPS */}
-              <div className="pt-4 border-t border-sombra-800 space-y-2">
-                <div className="text-[11px] font-bold text-sombra-400 uppercase tracking-wider">
-                  Acesso Rápido para Demonstração:
+              <div className="pt-4 border-t border-slate-700/80 space-y-2.5">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                  <span>Acesso Rápido para Demonstração:</span>
+                  <span className="text-[10px] text-amber-400/90 font-mono font-normal">Ambiente de Testes</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {users.map(u => (
@@ -5806,12 +5862,12 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                       key={u.id}
                       type="button"
                       onClick={() => handleQuickFill(u)}
-                      className="p-2 bg-sombra-950 hover:bg-sombra-800 border border-sombra-800 hover:border-sombra-700 rounded-xl text-left transition flex items-center gap-2 group cursor-pointer"
+                      className="login-chip p-2.5 rounded-xl text-left transition flex items-center gap-2 group cursor-pointer"
                     >
-                      <span className="text-sm">{u.isAdmin ? '👑' : '👤'}</span>
-                      <div className="truncate">
-                        <div className="font-bold text-[11px] text-slate-200 group-hover:text-brand-300 truncate">{u.nome}</div>
-                        <div className="text-[10px] text-sombra-500 font-mono truncate">@{u.username}</div>
+                      <span className="text-base">{u.isAdmin ? '👑' : '👤'}</span>
+                      <div className="truncate flex-1">
+                        <div className="login-chip-name font-bold text-[11px] group-hover:text-brand-300 truncate">{u.nome}</div>
+                        <div className="login-chip-user text-[10px] font-mono truncate">@{u.username}</div>
                       </div>
                     </button>
                   ))}
@@ -5821,7 +5877,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
             </div>
 
             {/* FOOTER */}
-            <div className="text-center text-xs text-sombra-500">
+            <div className="login-footer text-center text-xs font-medium">
               GRUPO SOMBRA Finance & Operations Hub • Versão 3.0
             </div>
 

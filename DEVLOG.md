@@ -4,6 +4,17 @@
 
 ---
 
+## [2026-09-11] — Fix Contrasto Schermata di Login & Chiarimento Accesso Rapido Demo
+
+**Status AS IS:** La schermata di accesso `LoginScreen` ora utilizza regole CSS dedicate a massimo contrasto (`.login-container`, `.login-card`, `.login-chip`) indipendenti dal tema globale, rendendo perfettamente nitidi e leggibili il titolo, il sottotitolo istituzionale *«GRUPO SOMBRA • Gestão, Movimentação & Auditoria de Enxoval»*, i campi di input e le credenziali demo.
+
+### ✅ Fatto
+- **Risoluzione Sovrascrittura Colori Light Mode:** Impedito che il tema chiaro globale sbiancasse la card o annerisse il sottotitolo su sfondo scuro tramite classi CSS dedicate con specificità `!important`.
+- **Massima Legibilità Istituzionale:** Titoli in bianco puro (`#ffffff`), sottotitolo in grigio chiaro brillante (`#cbd5e1`), badge *PRO* in verde smeraldo e card scura con bordo definito `#334155`.
+- **Sezione "Acesso Rápido para Demonstração":** Riconfigurata con etichetta esplicativa *«Ambiente de Testes»*. I chip sono stati predisposti per poter essere rimossi istantaneamente non appena terminata la validazione da parte dell'utente.
+
+---
+
 ## [2026-09-10] — Blocco Modifica Unità & Locali Non Autorizzati (Almoxarifado & Locais RBAC)
 
 **Status AS IS:** Per gli utenti con permessi ristretti (es. camareiras, operatori SPA, lavanderia), tutte le celle, colonne e campi di conteggio relativi a unità/locali non assegnati (incluso l'Almoxarifado Central) sono bloccati in sola lettura con lucchetto 🔒 sia nella tabella inventario che nella modifica rapida.
