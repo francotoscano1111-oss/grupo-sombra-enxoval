@@ -4,6 +4,18 @@
 
 ---
 
+## [2026-09-10] — Blocco Modifica Unità & Locali Non Autorizzati (Almoxarifado & Locais RBAC)
+
+**Status AS IS:** Per gli utenti con permessi ristretti (es. camareiras, operatori SPA, lavanderia), tutte le celle, colonne e campi di conteggio relativi a unità/locali non assegnati (incluso l'Almoxarifado Central) sono bloccati in sola lettura con lucchetto 🔒 sia nella tabella inventario che nella modifica rapida.
+
+### ✅ Fatto
+- **Tab Inventario (`InventarioTab`):** Le colonne delle unità e dell'Almoxarifado Central non autorizzate per il profilo attivo mostrano un'intestazione oscurata con lucchetto 🔒 e celle disabilitate in sola lettura (`cursor-not-allowed`, badge tratteggiato con valore protetto).
+- **Protezione Saldi alla Finalizzazione Inventario:** Quando un operatore con permessi parziali finalizza una contagem de estoque, il sistema aggiorna esclusivamente i saldi dei locali a lui assegnati, preservando intatti i valori preesistenti per l'Almoxarifado e per tutti i locali non autorizzati.
+- **Modo Modifica Diretta Células (`isDirectEditMode`):** Nella tabella principale dello stock, le celle dei locali non autorizzati, di Almoxarifado, Meta Mudas (riservata admin), Descarte e Perda non mostrano campi di input ma restano visualizzate in sola lettura protetta con tooltip esplicativo.
+- **Guard di Validazione `handleCellChange` & `handleCellBlur`:** Blocca a monte qualsiasi tentativo di modifica di campi non autorizzati mostrando un toast di sicurezza.
+
+---
+
 ## [2026-09-10] — Sistema di Autenticazione: Login, Gestione Username & Self-Service Password
 
 **Status AS IS:** SOMBRA ENXOVAL PRO è ora protetto da una schermata di Login istituzionale. Ciascun profilo dispone di Username e Password personalizzati, con gestione centralizzata per l'Admin e cambio password autonomo per ogni utente.

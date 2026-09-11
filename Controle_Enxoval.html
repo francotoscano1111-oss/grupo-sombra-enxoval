@@ -1280,6 +1280,26 @@
       };
 
       const handleCellChange = (itemId, locationId, value) => {
+        // Validação de permissões de acesso ao local / operação
+        if (locationId === 'metaMudas' && !currentUser?.isAdmin) {
+          showToast('Apenas administradores podem alterar a meta de mudas.', 'error');
+          return;
+        }
+        if (locationId === 'descarte' && !canPerformOperation('DESCARTE')) {
+          showToast('Seu perfil não tem permissão para lançar descartes.', 'error');
+          return;
+        }
+        if (locationId === 'perda' && !canPerformOperation('PERDA')) {
+          showToast('Seu perfil não tem permissão para lançar perdas.', 'error');
+          return;
+        }
+        if (locationId !== 'metaMudas' && locationId !== 'descarte' && locationId !== 'perda') {
+          if (!canAccessLocation(locationId)) {
+            showToast('Ação bloqueada: seu perfil não tem acesso a este local.', 'error');
+            return;
+          }
+        }
+
         setUnsavedEdits(prev => ({
           ...prev,
           [`${itemId}_${locationId}`]: value
@@ -1290,6 +1310,14 @@
         const key = `${itemId}_${locationId}`;
         if (unsavedEdits[key] === undefined) return;
         
+        // Verificação de permissões no blur
+        if (locationId === 'metaMudas' && !currentUser?.isAdmin) return;
+        if (locationId === 'descarte' && !canPerformOperation('DESCARTE')) return;
+        if (locationId === 'perda' && !canPerformOperation('PERDA')) return;
+        if (locationId !== 'metaMudas' && locationId !== 'descarte' && locationId !== 'perda') {
+          if (!canAccessLocation(locationId)) return;
+        }
+
         const evaluated = evaluateMathExpression(unsavedEdits[key]);
         
         setItems(prev => {
@@ -3400,13 +3428,14 @@
 
                               {/* Detailed Location Columns (when expanded) */}
                               {viewModeEmUso === 'detalhada' && emUsoLocations.map(loc => {
+                                const isAllowed = canAccessLocation(loc.id);
                                 const val = saldos[loc.id] || 0;
                                 const editKey = `${item.id}_${loc.id}`;
                                 const editValue = unsavedEdits[editKey] !== undefined ? unsavedEdits[editKey] : val;
 
                                 return (
                                   <td key={loc.id} className="py-2 px-1 text-center border-l border-sombra-800/30">
-                                    {isDirectEditMode ? (
+                                    {isDirectEditMode && isAllowed ? (
                                       <input
                                         type="text"
                                         value={editValue}
@@ -3414,6 +3443,11 @@
                                         onBlur={() => handleCellBlur(item.id, loc.id)}
                                         className="w-14 text-center py-1 bg-sombra-950 border border-brand-500/50 rounded font-mono text-xs text-brand-300 focus:outline-none focus:ring-1 focus:ring-brand-500"
                                       />
+                                    ) : isDirectEditMode && !isAllowed ? (
+                                      <span title="Local bloqueado para seu perfil" className="text-sombra-600 font-mono text-xs flex items-center justify-center gap-0.5 opacity-60">
+                                        <span className="text-[9px]">🔒</span>
+                                        <span>{val > 0 ? val : '-'}</span>
+                                      </span>
                                     ) : (
                                       <span className={`${val > 0 ? 'text-slate-100 font-semibold' : 'text-sombra-600'}`}>
                                         {val > 0 ? val : '-'}
@@ -3429,19 +3463,29 @@
                               </td>
 
                               {/* Almoxarifado Central */}
-                              <td className="py-2.5 px-3 text-center bg-cyan-950/20 text-cyan-300 font-black border-r border-sombra-800">
-                                {isDirectEditMode ? (
-                                  <input
-                                    type="text"
-                                    value={unsavedEdits[`${item.id}_almoxarifado`] !== undefined ? unsavedEdits[`${item.id}_almoxarifado`] : almox}
-                                    onChange={(e) => handleCellChange(item.id, 'almoxarifado', e.target.value)}
-                                    onBlur={() => handleCellBlur(item.id, 'almoxarifado')}
-                                    className="w-14 text-center py-1 bg-sombra-950 border border-cyan-500/50 rounded font-mono text-xs text-cyan-300 focus:outline-none"
-                                  />
-                                ) : (
-                                  <span>{almox}</span>
-                                )}
-                              </td>
+                              {(() => {
+                                const isAlmoxAllowed = canAccessLocation('almoxarifado');
+                                return (
+                                  <td className="py-2.5 px-3 text-center bg-cyan-950/20 text-cyan-300 font-black border-r border-sombra-800">
+                                    {isDirectEditMode && isAlmoxAllowed ? (
+                                      <input
+                                        type="text"
+                                        value={unsavedEdits[`${item.id}_almoxarifado`] !== undefined ? unsavedEdits[`${item.id}_almoxarifado`] : almox}
+                                        onChange={(e) => handleCellChange(item.id, 'almoxarifado', e.target.value)}
+                                        onBlur={() => handleCellBlur(item.id, 'almoxarifado')}
+                                        className="w-14 text-center py-1 bg-sombra-950 border border-cyan-500/50 rounded font-mono text-xs text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                                      />
+                                    ) : isDirectEditMode && !isAlmoxAllowed ? (
+                                      <span title="Almoxarifado bloqueado para seu perfil" className="text-sombra-600 font-mono text-xs flex items-center justify-center gap-0.5 opacity-60">
+                                        <span className="text-[9px]">🔒</span>
+                                        <span>{almox}</span>
+                                      </span>
+                                    ) : (
+                                      <span>{almox}</span>
+                                    )}
+                                  </td>
+                                );
+                              })()}
 
                               {/* Total Geral */}
                               <td className="py-2.5 px-3 text-center bg-emerald-950/30 text-brand-300 font-black text-sm border-r border-sombra-800">
@@ -3450,7 +3494,7 @@
 
                               {/* Meta Mudas */}
                               <td className="py-2.5 px-2 text-center text-indigo-300 font-semibold border-r border-sombra-800/40">
-                                {isDirectEditMode ? (
+                                {isDirectEditMode && currentUser?.isAdmin ? (
                                   <input
                                     type="text"
                                     value={unsavedEdits[`${item.id}_metaMudas`] !== undefined ? unsavedEdits[`${item.id}_metaMudas`] : (item.metaMudas || 0)}
@@ -3484,7 +3528,7 @@
 
                               {/* Total Descartes */}
                               <td className="py-2.5 px-2 text-center text-rose-400 font-semibold border-r border-sombra-800/40">
-                                {isDirectEditMode ? (
+                                {isDirectEditMode && (currentUser?.isAdmin || canPerformOperation('DESCARTE')) ? (
                                   <input
                                     type="text"
                                     value={unsavedEdits[`${item.id}_descarte`] !== undefined ? unsavedEdits[`${item.id}_descarte`] : (saldos.descarte || 0)}
@@ -3501,7 +3545,7 @@
 
                               {/* Total Perdas */}
                               <td className="py-2.5 px-2 text-center text-amber-400 font-semibold border-r border-sombra-800/40">
-                                {isDirectEditMode ? (
+                                {isDirectEditMode && (currentUser?.isAdmin || canPerformOperation('PERDA')) ? (
                                   <input
                                     type="text"
                                     value={unsavedEdits[`${item.id}_perda`] !== undefined ? unsavedEdits[`${item.id}_perda`] : (saldos.perda || 0)}
@@ -3869,6 +3913,9 @@
                 items={currentItems}
                 locations={emUsoLocations}
                 inventarios={inventarios}
+                currentUser={currentUser}
+                canAccessLocation={canAccessLocation}
+                canPerformOperation={canPerformOperation}
                 onTriggerImportExcel={() => excelImportInputRef.current && excelImportInputRef.current.click()}
                 onSaveInventario={(newInv) => {
                   setInventarios(prev => [newInv, ...prev]);
@@ -5269,7 +5316,7 @@
       );
     }
 
-function InventarioTab({ ambiente, items, locations, inventarios, onTriggerImportExcel, onSaveInventario, onApplyInventarioToStock, onPrintFicha }) {
+function InventarioTab({ ambiente, items, locations, inventarios, onTriggerImportExcel, onSaveInventario, onApplyInventarioToStock, onPrintFicha, currentUser, canAccessLocation = () => true, canPerformOperation = () => true }) {
       const [dataInventario, setDataInventario] = useState(new Date().toISOString().split('T')[0]);
       const [titulo, setTitulo] = useState(`Contagem Geral — ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`);
       const [responsavel, setResponsavel] = useState('Governança');
@@ -5312,14 +5359,26 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
 
         const evaluatedSaldos = {};
         items.forEach(it => {
-          evaluatedSaldos[it.id] = {};
+          evaluatedSaldos[it.id] = { ...(it.saldos || {}) };
           locations.forEach(loc => {
-            const rawVal = contagem[it.id]?.[loc.id];
-            evaluatedSaldos[it.id][loc.id] = evaluateMathExpression(rawVal);
+            if (canAccessLocation(loc.id)) {
+              const rawVal = contagem[it.id]?.[loc.id];
+              evaluatedSaldos[it.id][loc.id] = evaluateMathExpression(rawVal);
+            }
           });
-          evaluatedSaldos[it.id].almoxarifado = evaluateMathExpression(contagem[it.id]?.almoxarifado);
-          evaluatedSaldos[it.id].descarte = evaluateMathExpression(contagem[it.id]?.descarte);
-          evaluatedSaldos[it.id].perda = evaluateMathExpression(contagem[it.id]?.perda);
+          if (canAccessLocation('almoxarifado')) {
+            evaluatedSaldos[it.id].almoxarifado = evaluateMathExpression(contagem[it.id]?.almoxarifado);
+          }
+          if (currentUser?.isAdmin || canPerformOperation('DESCARTE')) {
+            if (contagem[it.id]?.descarte !== undefined) {
+              evaluatedSaldos[it.id].descarte = evaluateMathExpression(contagem[it.id]?.descarte);
+            }
+          }
+          if (currentUser?.isAdmin || canPerformOperation('PERDA')) {
+            if (contagem[it.id]?.perda !== undefined) {
+              evaluatedSaldos[it.id].perda = evaluateMathExpression(contagem[it.id]?.perda);
+            }
+          }
         });
 
         const newAudit = {
@@ -5430,10 +5489,28 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
               <thead className="bg-sombra-950 text-sombra-400 font-bold uppercase tracking-wider text-[10px] border-b border-sombra-800">
                 <tr>
                   <th className="py-3 px-4 sticky-col-first bg-sombra-950 min-w-[180px]">Item</th>
-                  {locations.map(loc => (
-                    <th key={loc.id} className="py-3 px-2 text-center min-w-[70px]">{loc.nome}</th>
-                  ))}
-                  <th className="py-3 px-2 text-center bg-cyan-950/40 text-cyan-300 min-w-[80px]">Almoxarifado</th>
+                  {locations.map(loc => {
+                    const isAllowed = canAccessLocation(loc.id);
+                    return (
+                      <th key={loc.id} className={`py-3 px-2 text-center min-w-[75px] ${!isAllowed ? 'opacity-60 text-sombra-500' : ''}`}>
+                        <div className="flex items-center justify-center gap-1">
+                          <span>{loc.nome}</span>
+                          {!isAllowed && <span title="Local bloqueado para seu perfil de usuário" className="text-[10px]">🔒</span>}
+                        </div>
+                      </th>
+                    );
+                  })}
+                  {(() => {
+                    const isAlmoxAllowed = canAccessLocation('almoxarifado');
+                    return (
+                      <th className={`py-3 px-2 text-center bg-cyan-950/40 min-w-[85px] ${isAlmoxAllowed ? 'text-cyan-300' : 'text-sombra-500 opacity-60'}`}>
+                        <div className="flex items-center justify-center gap-1">
+                          <span>Almoxarifado</span>
+                          {!isAlmoxAllowed && <span title="Almoxarifado bloqueado para seu perfil de usuário" className="text-[10px]">🔒</span>}
+                        </div>
+                      </th>
+                    );
+                  })()}
                   <th className="py-3 px-2 text-center bg-emerald-950/40 text-emerald-300 min-w-[90px]">Total Físico</th>
                 </tr>
               </thead>
@@ -5441,10 +5518,10 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 {items.map(item => {
                   let totalFisico = 0;
                   locations.forEach(loc => {
-                    const v = evaluateMathExpression(contagem[item.id]?.[loc.id]);
+                    const v = evaluateMathExpression(contagem[item.id]?.[loc.id] !== undefined ? contagem[item.id]?.[loc.id] : (item.saldos?.[loc.id] || 0));
                     totalFisico += v;
                   });
-                  totalFisico += evaluateMathExpression(contagem[item.id]?.almoxarifado);
+                  totalFisico += evaluateMathExpression(contagem[item.id]?.almoxarifado !== undefined ? contagem[item.id]?.almoxarifado : (item.saldos?.almoxarifado || 0));
 
                   return (
                     <tr key={item.id} className="hover:bg-sombra-850/60 transition">
@@ -5453,29 +5530,56 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                       </td>
 
                       {locations.map(loc => {
+                        const isAllowed = canAccessLocation(loc.id);
                         const rawVal = contagem[item.id]?.[loc.id] !== undefined ? contagem[item.id]?.[loc.id] : (item.saldos?.[loc.id] || '');
                         return (
                           <td key={loc.id} className="py-1 px-1 text-center border-l border-sombra-800/40">
-                            <input
-                              type="text"
-                              value={rawVal}
-                              onChange={(e) => handleCountChange(item.id, loc.id, e.target.value)}
-                              placeholder="0"
-                              className="w-14 text-center py-1 bg-sombra-950 border border-sombra-700 rounded font-mono text-xs text-brand-300 focus:outline-none focus:border-brand-500"
-                            />
+                            {isAllowed ? (
+                              <input
+                                type="text"
+                                value={rawVal}
+                                onChange={(e) => handleCountChange(item.id, loc.id, e.target.value)}
+                                placeholder="0"
+                                className="w-14 text-center py-1 bg-sombra-950 border border-sombra-700 rounded font-mono text-xs text-brand-300 focus:outline-none focus:border-brand-500"
+                              />
+                            ) : (
+                              <div
+                                title="Local bloqueado para o seu perfil de usuário"
+                                className="w-14 mx-auto py-1 px-1 bg-sombra-900/60 border border-dashed border-sombra-800/80 rounded font-mono text-xs text-sombra-500 flex items-center justify-center gap-0.5 cursor-not-allowed select-none"
+                              >
+                                <span className="text-[10px] opacity-70">🔒</span>
+                                <span>{rawVal || 0}</span>
+                              </div>
+                            )}
                           </td>
                         );
                       })}
 
-                      <td className="py-1 px-1 text-center bg-cyan-950/20 border-l border-sombra-800">
-                        <input
-                          type="text"
-                          value={contagem[item.id]?.almoxarifado !== undefined ? contagem[item.id]?.almoxarifado : (item.saldos?.almoxarifado || '')}
-                          onChange={(e) => handleCountChange(item.id, 'almoxarifado', e.target.value)}
-                          placeholder="0"
-                          className="w-14 text-center py-1 bg-sombra-950 border border-cyan-500/50 rounded font-mono text-xs text-cyan-300 focus:outline-none"
-                        />
-                      </td>
+                      {(() => {
+                        const isAlmoxAllowed = canAccessLocation('almoxarifado');
+                        const rawAlmox = contagem[item.id]?.almoxarifado !== undefined ? contagem[item.id]?.almoxarifado : (item.saldos?.almoxarifado || '');
+                        return (
+                          <td className="py-1 px-1 text-center bg-cyan-950/20 border-l border-sombra-800">
+                            {isAlmoxAllowed ? (
+                              <input
+                                type="text"
+                                value={rawAlmox}
+                                onChange={(e) => handleCountChange(item.id, 'almoxarifado', e.target.value)}
+                                placeholder="0"
+                                className="w-14 text-center py-1 bg-sombra-950 border border-cyan-500/50 rounded font-mono text-xs text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                              />
+                            ) : (
+                              <div
+                                title="Almoxarifado Central bloqueado para o seu perfil de usuário"
+                                className="w-14 mx-auto py-1 px-1 bg-sombra-900/60 border border-dashed border-sombra-800/80 rounded font-mono text-xs text-sombra-500 flex items-center justify-center gap-0.5 cursor-not-allowed select-none"
+                              >
+                                <span className="text-[10px] opacity-70">🔒</span>
+                                <span>{rawAlmox || 0}</span>
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })()}
 
                       <td className="py-2 px-2 text-center bg-emerald-950/30 text-brand-400 font-black text-sm border-l border-sombra-800">
                         {totalFisico}
