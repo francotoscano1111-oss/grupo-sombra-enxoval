@@ -4,6 +4,18 @@
 
 ---
 
+## [2026-09-11] — Rimozione Date Future Indefinite & Colonne Dinamiche su Movimentazioni Effettive
+
+**Status AS IS:** Eliminati dalla matrice di lavanderia i 15 giorni placeholder vuoti (`DIA 1`, `DIA 2`, etc.). Le colonne di data compaiono ora dinamicamente e in ordine cronologico solo man mano che vengono effettuati e registrati i flussi effettivi (Envio / Retorno / Pendências).
+
+### ✅ Fatto
+- **Filtraggio Dinamico `activeDias`:** La tabella visualizza esclusivamente le date con movimenti reali registrati (o con date puntuali formattate `DD/MM/AAAA`).
+- **Eliminazione Placeholders Vuoti:** I giorni futuri senza movimenti non ingombrano più la schermata.
+- **Inserimento Dinamico all'Invio:** Non appena l'operatore registra un `Envio Roupa Suja`, `Retorno Roupa Limpa` o `Resolução de Pendências` per una data (es. `11/09/2026`), la colonna relativa appare immediatamente con le relative celle REC, ENV, PEND e il SALDO ricalcolato.
+- **Messaggio di Stato Iniziale:** Quando un periodo non ha ancora movimenti, la tabella mostra chiaramente il Saldo Iniziale e Saldo Finale con una notifica chiara per iniziare le registrazioni tramite i bottoni superiori.
+
+---
+
 ## [2026-09-11] — Refactoring Visuale: Sfondi Chiari ad Alto Contrasto per Bottoni Lavanderia & Pulizia Toolbar
 
 **Status AS IS:** Riprogettato lo stile visivo delle 3 card principali di movimento lavanderia con sfondi chiari e testi ad altissimo contrasto (nero/scuro in Light Mode, chiaro luminoso in Dark Mode) ed eliminati i bottoni duplicati dalla barra superiore.

@@ -1471,6 +1471,31 @@
         return sum;
       }, [quantidades]);
 
+      // Dias com movimentações reais ou datas registradas pontualmente (elimina colunas vazias futuras ou placeholders DIA 1, DIA 2...)
+      const activeDias = useMemo(() => {
+        if (!activeQuinzena || !activeQuinzena.dias || !activeQuinzena.itens) return [];
+        
+        const diasValidos = [];
+        (activeQuinzena.dias || []).forEach((diaName, dIdx) => {
+          // Verifica se há alguma movimentação diferente de zero em qualquer item deste dia
+          const temMovimento = (activeQuinzena.itens || []).some(it => {
+            const d = (it.dias || [])[dIdx];
+            return d && ((d.recebido || 0) > 0 || (d.enviado || 0) > 0 || (d.recPend || 0) > 0);
+          });
+
+          // Se tem movimentação real OU é uma data formatada inserida (ex: 11/09/2026)
+          const isRealDate = diaName && (diaName.includes('/') || diaName.includes('-'));
+          if (temMovimento || isRealDate) {
+            diasValidos.push({
+              nome: diaName,
+              index: dIdx
+            });
+          }
+        });
+
+        return diasValidos;
+      }, [activeQuinzena]);
+
       const filteredItens = useMemo(() => {
         if (!searchTerm) return itensLista || [];
         return (itensLista || []).filter(name => (name || '').toLowerCase().includes(searchTerm.toLowerCase()));
@@ -2699,11 +2724,17 @@
                       Saldo Quinz. Ant. ✏️
                     </th>
 
-                    {(activeQuinzena?.dias || []).map((dia, dIdx) => (
-                      <th key={dIdx} colSpan="4" className="laundry-th-date py-2 px-2 text-center border-r border-sombra-800 bg-slate-900/90 text-indigo-300 font-mono text-[11px]">
-                        📅 {dia}
+                    {activeDias.length > 0 ? (
+                      activeDias.map((diaObj) => (
+                        <th key={diaObj.index} colSpan="4" className="laundry-th-date py-2 px-2 text-center border-r border-sombra-800 bg-slate-900/90 text-indigo-300 font-mono text-[11px]">
+                          📅 {diaObj.nome}
+                        </th>
+                      ))
+                    ) : (
+                      <th colSpan="4" className="py-2.5 px-4 text-center bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-sombra-800 text-slate-500 dark:text-slate-400 font-bold text-xs">
+                        Sem movimentações diárias registradas ainda
                       </th>
-                    ))}
+                    )}
 
                     <th colSpan="4" className="laundry-th-tot py-2 px-3 text-center bg-indigo-950/80 text-indigo-200 font-black">
                       TOTAIS DA QUINZENA
@@ -2712,14 +2743,20 @@
 
                   {/* Linha 2: Subcolunas REC, ENV, PEND, SALDO */}
                   <tr>
-                    {(activeQuinzena?.dias || []).map((_, dIdx) => (
-                      <React.Fragment key={dIdx}>
-                        <th className="py-1.5 px-1 text-center bg-purple-950/40 text-purple-300 min-w-[48px]" title="Recebido pela Lavanderia (Envio Hotel)">REC</th>
-                        <th className="py-1.5 px-1 text-center bg-emerald-950/40 text-emerald-300 min-w-[48px]" title="Enviado pela Lavanderia (Retorno Hotel)">ENV</th>
-                        <th className="py-1.5 px-1 text-center bg-amber-950/40 text-amber-300 min-w-[48px]" title="Rec. Pendente">PEND</th>
-                        <th className="py-1.5 px-1 text-center bg-sombra-950 text-slate-200 font-black border-r border-sombra-800 min-w-[55px]" title="Saldo Acumulado">SALDO</th>
-                      </React.Fragment>
-                    ))}
+                    {activeDias.length > 0 ? (
+                      activeDias.map((diaObj) => (
+                        <React.Fragment key={diaObj.index}>
+                          <th className="py-1.5 px-1 text-center bg-purple-950/40 text-purple-300 min-w-[48px]" title="Recebido pela Lavanderia (Envio Hotel)">REC</th>
+                          <th className="py-1.5 px-1 text-center bg-emerald-950/40 text-emerald-300 min-w-[48px]" title="Enviado pela Lavanderia (Retorno Hotel)">ENV</th>
+                          <th className="py-1.5 px-1 text-center bg-amber-950/40 text-amber-300 min-w-[48px]" title="Rec. Pendente">PEND</th>
+                          <th className="py-1.5 px-1 text-center bg-sombra-950 text-slate-200 font-black border-r border-sombra-800 min-w-[55px]" title="Saldo Acumulado">SALDO</th>
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <th colSpan="4" className="py-1.5 px-4 text-center bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500 text-[11px] font-medium border-r border-slate-200 dark:border-sombra-800">
+                        Clique nos botões acima para registrar por data
+                      </th>
+                    )}
 
                     <th className="py-1.5 px-2 text-center bg-purple-950/60 text-purple-300 min-w-[65px]">Tot. Rec</th>
                     <th className="py-1.5 px-2 text-center bg-emerald-950/60 text-emerald-300 min-w-[65px]">Tot. Env</th>
@@ -2758,64 +2795,71 @@
                           />
                         </td>
 
-                        {/* Colunas Diárias */}
-                        {(activeQuinzena?.dias || []).map((dia, diaIdx) => {
-                          const diaData = (it.dias || [])[diaIdx] || { recebido: 0, enviado: 0, recPend: 0, saldo: it.saldoAnt || 0 };
-                          const rec = diaData.recebido || 0;
-                          const env = diaData.enviado || 0;
-                          const pend = diaData.recPend || 0;
-                          const s = diaData.saldo !== undefined ? diaData.saldo : 0;
+                        {/* Colunas Diárias Pontuais */}
+                        {activeDias.length > 0 ? (
+                          activeDias.map((diaObj) => {
+                            const diaIdx = diaObj.index;
+                            const diaData = (it.dias || [])[diaIdx] || { recebido: 0, enviado: 0, recPend: 0, saldo: it.saldoAnt || 0 };
+                            const rec = diaData.recebido || 0;
+                            const env = diaData.enviado || 0;
+                            const pend = diaData.recPend || 0;
+                            const s = diaData.saldo !== undefined ? diaData.saldo : 0;
 
-                          totRec += rec;
-                          totEnv += env;
-                          totPend += pend;
+                            totRec += rec;
+                            totEnv += env;
+                            totPend += pend;
 
-                          return (
-                            <React.Fragment key={diaIdx}>
-                              
-                              {/* REC (Recebido Lavanderia / Envio Hotel) */}
-                              <td className="py-1 px-1 text-center bg-purple-50 dark:bg-purple-950/10">
-                                <input
-                                  type="text"
-                                  value={rec > 0 ? rec : ''}
-                                  placeholder="–"
-                                  onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'recebido', e.target.value)}
-                                  className="laundry-input-rec w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-purple-300 dark:border-purple-500/30 rounded text-[11px] font-mono font-bold text-purple-900 dark:text-purple-300 focus:outline-none focus:border-purple-500"
-                                />
-                              </td>
+                            return (
+                              <React.Fragment key={diaIdx}>
+                                
+                                {/* REC (Recebido Lavanderia / Envio Hotel) */}
+                                <td className="py-1 px-1 text-center bg-purple-50 dark:bg-purple-950/10">
+                                  <input
+                                    type="text"
+                                    value={rec > 0 ? rec : ''}
+                                    placeholder="–"
+                                    onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'recebido', e.target.value)}
+                                    className="laundry-input-rec w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-purple-300 dark:border-purple-500/30 rounded text-[11px] font-mono font-bold text-purple-900 dark:text-purple-300 focus:outline-none focus:border-purple-500"
+                                  />
+                                </td>
 
-                              {/* ENV (Enviado Lavanderia / Retorno Hotel) */}
-                              <td className="py-1 px-1 text-center bg-emerald-50 dark:bg-emerald-950/10">
-                                <input
-                                  type="text"
-                                  value={env > 0 ? env : ''}
-                                  placeholder="–"
-                                  onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'enviado', e.target.value)}
-                                  className="laundry-input-env w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-emerald-300 dark:border-emerald-500/30 rounded text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-300 focus:outline-none focus:border-emerald-500"
-                                />
-                              </td>
+                                {/* ENV (Enviado Lavanderia / Retorno Hotel) */}
+                                <td className="py-1 px-1 text-center bg-emerald-50 dark:bg-emerald-950/10">
+                                  <input
+                                    type="text"
+                                    value={env > 0 ? env : ''}
+                                    placeholder="–"
+                                    onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'enviado', e.target.value)}
+                                    className="laundry-input-env w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-emerald-300 dark:border-emerald-500/30 rounded text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-300 focus:outline-none focus:border-emerald-500"
+                                  />
+                                </td>
 
-                              {/* PEND (Rec. Pendente) */}
-                              <td className="py-1 px-1 text-center bg-amber-50 dark:bg-amber-950/10">
-                                <input
-                                  type="text"
-                                  value={pend > 0 ? pend : ''}
-                                  placeholder="–"
-                                  onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'recPend', e.target.value)}
-                                  className="laundry-input-pend w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-amber-300 dark:border-amber-500/30 rounded text-[11px] font-mono font-bold text-amber-900 dark:text-amber-300 focus:outline-none focus:border-amber-500"
-                                />
-                              </td>
+                                {/* PEND (Rec. Pendente) */}
+                                <td className="py-1 px-1 text-center bg-amber-50 dark:bg-amber-950/10">
+                                  <input
+                                    type="text"
+                                    value={pend > 0 ? pend : ''}
+                                    placeholder="–"
+                                    onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'recPend', e.target.value)}
+                                    className="laundry-input-pend w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-amber-300 dark:border-amber-500/30 rounded text-[11px] font-mono font-bold text-amber-900 dark:text-amber-300 focus:outline-none focus:border-amber-500"
+                                  />
+                                </td>
 
-                              {/* SALDO ACUMULADO DIÁRIO (MÁXIMO CONTRASTE) */}
-                              <td className={`py-1 px-1 text-center font-black text-xs border-r border-slate-200 dark:border-sombra-800 ${
-                                s > 0 ? 'laundry-saldo-pos' : s < 0 ? 'laundry-saldo-neg' : 'laundry-saldo-zero'
-                              }`}>
-                                {s}
-                              </td>
+                                {/* SALDO ACUMULADO DIÁRIO (MÁXIMO CONTRASTE) */}
+                                <td className={`py-1 px-1 text-center font-black text-xs border-r border-slate-200 dark:border-sombra-800 ${
+                                  s > 0 ? 'laundry-saldo-pos' : s < 0 ? 'laundry-saldo-neg' : 'laundry-saldo-zero'
+                                }`}>
+                                  {s}
+                                </td>
 
-                            </React.Fragment>
-                          );
-                        })}
+                              </React.Fragment>
+                            );
+                          })
+                        ) : (
+                          <td colSpan="4" className="py-2 px-3 text-center text-slate-400 dark:text-slate-600 text-xs italic bg-slate-50/50 dark:bg-sombra-950/30 border-r border-slate-200 dark:border-sombra-800">
+                            –
+                          </td>
+                        )}
 
                         {/* TOTAIS DA QUINZENA */}
                         <td className="laundry-tot-rec py-2 px-2 text-center bg-purple-100 dark:bg-purple-950/40 text-purple-900 dark:text-purple-300 font-black border-l border-slate-200 dark:border-sombra-800">
