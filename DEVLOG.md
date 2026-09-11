@@ -4,6 +4,17 @@
 
 ---
 
+## [2026-09-11] — Fix Interazione Menu Cambio Utente (Click Toggle & Zero Gap)
+
+**Status AS IS:** Il menu a tendina dell'operatore/profilo attivo in testata ora si apre/chiude con **clic diretto** (`showUserDropdown`) e rimane saldamente aperto e accessibile mentre ci si sposta con il mouse verso le opzioni interne, chiudendosi automaticamente con clic all'esterno o alla selezione di un'opzione.
+
+### ✅ Fatto
+- **Eliminazione Chiusura Accidentale Hover:** Sostituita la fragile logica CSS `:hover` con uno stato React esplicito (`showUserDropdown`) e gestore `handleClickOutside` per garantire stabilità totale durante il movimento del puntatore.
+- **Supporto Pieno Light & Dark Mode:** Ridisegnato il menu a tendina con bordi netti e sfondo ad alto contrasto sia con tema chiaro che con tema scuro.
+- **Freccia Dinamica:** L'indicatore `▼` ruota morbidamente di 180° all'apertura del menu.
+
+---
+
 ## [2026-09-11] — Fix Contrasto Schermata di Login & Chiarimento Accesso Rapido Demo
 
 **Status AS IS:** La schermata di accesso `LoginScreen` ora utilizza regole CSS dedicate a massimo contrasto (`.login-container`, `.login-card`, `.login-chip`) indipendenti dal tema globale, rendendo perfettamente nitidi e leggibili il titolo, il sottotitolo istituzionale *«GRUPO SOMBRA • Gestão, Movimentação & Auditoria de Enxoval»*, i campi di input e le credenziali demo.
