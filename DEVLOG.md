@@ -4,6 +4,25 @@
 
 ---
 
+## [2026-09-11] — Flusso Puntuale Giornaliero di Lavanderia (IN / OUT per Data & Mobile-First per Operatore)
+
+**Status AS IS:** Trasformato il caricamento dati del modulo *Controle de Lavanderia* da un sistema quindicinale statico a un flusso continuo per data puntuale (IN / OUT / PEND), con interfaccia touch ottimizzata per smartphone e tablet per il profilo `Operador de Lavanderia`.
+
+### ✅ Fatto
+- **3 Grandi Card di Azione Rapida in Primo Piano (Mobile-First):**
+  - 🟣 **`📤 1. Envio Roupa Suja (Hotel ➔ Lavanderia)`**: Registra la merce in uscita verso la lavanderia, crea o aggiorna la colonna della data selezionata nel campo `REC` (in custodia lavanderia), ricalcola i saldi e salva i quantitativi per l'auto-recupero.
+  - 🟢 **`📥 2. Retorno Roupa Limpa (Lavanderia ➔ Hotel)`**: **Pre-carica automaticamente le quantità esatte dell'ultimo invio registrato** (`last_shipment`), consentendo all'operatore di verificare rapidamente e correggere solo eventuali pezzi mancanti o eccedenti con steppers touch (`-10`, `-1`, `+1`, `+10`). Registra il rientro in `ENV` e aggiorna il saldo residuo.
+  - 🟠 **`⚖️ 3. Resolução de Pendências / Acordo`**: Apre la lista con tutti gli articoli a `0` e richiede obbligatoriamente la **Razão / Motivo da Resolução** con chip di selezione rapida (*Pagamento pezzi smarriti*, *Restituzione tardiva*, *Descarte autorizzato*, *Accordo commerciale*), registrando la voce in `PEND` e scalando i saldi.
+- **Esperienza Mobile per Operatore:**
+  - Steppers touch ampi (`-10`, `-1`, input numerico `inputMode="numeric"`, `+1`, `+10`).
+  - Campo di ricerca dinamica istantanea tra gli articoli.
+  - Barra azioni inferiore fissa con pulsanti ad alto contrasto e generazione documento PDF A4 stampabile.
+- **Configurazione Profilo `Operador de Lavanderia`:**
+  - Assegnato il permesso `RESOLUCAO_PENDENCIA`.
+  - Reindirizzamento automatico al tab `Controle de Lavanderia` al momento del login o ripristino sessione.
+
+---
+
 ## [2026-09-11] — Modulo Auditoria & Acordos de Saldos (Differenze Matematiche vs Conteggi Manuali Lavanderia)
 
 **Status AS IS:** Integrato il modulo completo `⚖️ Auditoria & Acordos de Saldos` che preserva fedelmente i dati originali inseriti a mano dalla lavanderia nei fogli storici, evidenziando e tracciando al contempo tutte le 67 discrepanze/accordi tra il calcolo matematico teorico (chiusura quindicina precedente) e il saldo iniziale riportato dalla lavanderia.

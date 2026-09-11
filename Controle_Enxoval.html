@@ -1028,7 +1028,7 @@
         password: 'lav123',
         isAdmin: false,
         ambientes: ['hotel', 'spa'],
-        operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'ABASTECIMENTO'],
+        operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'RESOLUCAO_PENDENCIA', 'ABASTECIMENTO'],
         locaisPermitidos: {
           hotel: ['rouparia', 'suja', 'lavanderia', 'chegouEnsacada'],
           spa: ['rouparia', 'suja', 'lavanderia']
@@ -1357,16 +1357,67 @@
     /* =========================================================================
        COMPONENTE: MODAL NOVO ROMANEIO DE LAVANDERIA (ENVIO / RETORNO / GUIA)
        ========================================================================= */
+        // COMPONENTE: MODAL MOBILE-FIRST DE REGISTRO DE MOVIMENTAÇÕES DE LAVANDERIA (ENVIO / RETORNO / PENDÊNCIAS)
     function RomaneioModal({ isOpen, ambiente, itensLista = [], defaultTipo = 'ENVIO', onClose, onSaveRomaneio, currentUser }) {
       if (!isOpen) return null;
 
       const [tipo, setTipo] = useState(defaultTipo);
       const [dataRomaneio, setDataRomaneio] = useState(new Date().toISOString().split('T')[0]);
-      const [numeroRomaneio, setNumeroRomaneio] = useState(`ROM-${Date.now().toString().slice(-6)}`);
+      const [numeroRomaneio, setNumeroRomaneio] = useState(() => `ROM-${Date.now().toString().slice(-6)}`);
       const [motorista, setMotorista] = useState('');
-      const [responsavel, setResponsavel] = useState(currentUser?.nome || 'Governança');
+      const [responsavel, setResponsavel] = useState(currentUser?.nome || 'Operador de Lavanderia');
       const [observacao, setObservacao] = useState('');
+      const [motivoResolucao, setMotivoResolucao] = useState('Pagamento de Peças Extraviadas');
       const [quantidades, setQuantidades] = useState({});
+      const [searchTerm, setSearchTerm] = useState('');
+      const [lastShipmentInfo, setLastShipmentInfo] = useState(null);
+
+      // Carregar último envio salvo para auto-preenchimento
+      const carregarUltimoEnvio = useCallback(() => {
+        try {
+          const raw = localStorage.getItem('sombra_last_laundry_shipment_' + ambiente);
+          if (raw) {
+            const data = JSON.parse(raw);
+            setLastShipmentInfo(data);
+            return data;
+          }
+        } catch (e) {
+          console.warn('Erro ao carregar último envio:', e);
+        }
+        return null;
+      }, [ambiente]);
+
+      // Inicialização inteligente conforme o tipo
+      useEffect(() => {
+        setTipo(defaultTipo);
+        if (defaultTipo === 'RETORNO') {
+          const last = carregarUltimoEnvio();
+          if (last && last.quantidades) {
+            setQuantidades({ ...last.quantidades });
+          } else {
+            setQuantidades({});
+          }
+        } else {
+          setQuantidades({});
+        }
+        if (defaultTipo === 'REC_PEND') {
+          setMotivoResolucao('Pagamento de Peças Extraviadas');
+        }
+      }, [defaultTipo, carregarUltimoEnvio]);
+
+      // Mudança de tipo manual pelo usuário
+      const handleSelectTipo = (newTipo) => {
+        setTipo(newTipo);
+        if (newTipo === 'RETORNO') {
+          const last = carregarUltimoEnvio();
+          if (last && last.quantidades) {
+            setQuantidades({ ...last.quantidades });
+          }
+        } else if (newTipo === 'REC_PEND') {
+          if (!motivoResolucao) setMotivoResolucao('Pagamento de Peças Extraviadas');
+          setQuantidades({});
+        }
+      };
 
       const handleQtdChange = (itemName, val) => {
         setQuantidades(prev => ({
@@ -1383,6 +1434,33 @@
           [itemName]: next > 0 ? next.toString() : ''
         }));
       };
+
+      const handleZerarTudo = () => {
+        setQuantidades({});
+      };
+
+      const handleRestaurarUltimoEnvio = () => {
+        const last = carregarUltimoEnvio();
+        if (last && last.quantidades) {
+          setQuantidades({ ...last.quantidades });
+        }
+      };
+
+      const totalPecasCalculado = useMemo(() => {
+        let sum = 0;
+        Object.values(quantidades).forEach(val => {
+          if (val) {
+            const num = evaluateMathExpression(val);
+            if (num > 0) sum += num;
+          }
+        });
+        return sum;
+      }, [quantidades]);
+
+      const filteredItens = useMemo(() => {
+        if (!searchTerm) return itensLista || [];
+        return (itensLista || []).filter(name => (name || '').toLowerCase().includes(searchTerm.toLowerCase()));
+      }, [itensLista, searchTerm]);
 
       const handleSubmit = (e) => {
         e.preventDefault();
@@ -1405,7 +1483,12 @@
         });
 
         if (itensValidados.length === 0) {
-          alert('Por favor, informe a quantidade de pelo menos 1 item para registrar o romaneio.');
+          alert('Por favor, informe a quantidade de pelo menos 1 item para registrar a movimentação.');
+          return;
+        }
+
+        if (tipo === 'REC_PEND' && !motivoResolucao && !observacao) {
+          alert('Por favor, selecione ou informe o motivo / razão da resolução da pendência.');
           return;
         }
 
@@ -1418,11 +1501,26 @@
           dataIso: dataRomaneio,
           numero: numeroRomaneio,
           motorista: motorista || 'Não informado',
-          responsavel: responsavel || 'Governança',
-          observacao,
+          responsavel: responsavel || 'Operador de Lavanderia',
+          observacao: tipo === 'REC_PEND' ? (motivoResolucao ? `[${motivoResolucao}] ${observacao || ''}` : observacao) : observacao,
+          motivoResolucao: tipo === 'REC_PEND' ? motivoResolucao : null,
           itens: itensValidados,
           totalPecas
         };
+
+        // Salvar último envio no localStorage para futuros retornos
+        if (tipo === 'ENVIO') {
+          try {
+            const shipmentToSave = {
+              data: dataFormatada,
+              dataIso: dataRomaneio,
+              numero: numeroRomaneio,
+              quantidades,
+              totalPecas
+            };
+            localStorage.setItem('sombra_last_laundry_shipment_' + ambiente, JSON.stringify(shipmentToSave));
+          } catch (err) {}
+        }
 
         if (onSaveRomaneio) {
           onSaveRomaneio(romaneioObj);
@@ -1439,26 +1537,28 @@
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
         doc.setTextColor(255, 255, 255);
-        doc.text('GRUPO SOMBRA — ROMANEIO DE LAVANDERIA', 14, 15);
+        doc.text('GRUPO SOMBRA — CONTROLE PONTUAL DE LAVANDERIA', 14, 15);
         
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(148, 163, 184);
-        const tipoLabel = tipo === 'ENVIO' ? 'ENVIO DE ROUPA SUJA (Hotel ➔ Lavanderia)' : tipo === 'RETORNO' ? 'RETORNO DE ROUPA LIMPA (Lavanderia ➔ Hotel)' : 'DEVOLUÇÃO DE PENDÊNCIAS (REC. PEND)';
-        doc.text(`Tipo de Operação: ${tipoLabel} | Amb: ${ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}`, 14, 23);
-        doc.text(`Romaneio Nº: ${numeroRomaneio} | Data: ${dataFormatada}`, 14, 30);
+        const tipoLabel = tipo === 'ENVIO' ? 'ENVIO DE ROUPA SUJA (Hotel ➔ Lavanderia)' : tipo === 'RETORNO' ? 'RETORNO DE ROUPA LIMPA (Lavanderia ➔ Hotel)' : 'RESOLUÇÃO DE PENDÊNCIAS / ACORDO DE SALDO';
+        doc.text(`Operação: ${tipoLabel} | Amb: ${ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}`, 14, 23);
+        doc.text(`Reg. Nº: ${numeroRomaneio} | Data: ${dataFormatada}`, 14, 30);
 
         // Info box
         doc.setTextColor(15, 23, 42);
         doc.setFontSize(9);
-        doc.text(`Responsável Hotel: ${responsavel} | Motorista/Entregador: ${motorista || '–'}`, 14, 43);
-        if (observacao) {
+        doc.text(`Operador / Responsável: ${responsavel} | Motorista / Entrega: ${motorista || '–'}`, 14, 43);
+        if (tipo === 'REC_PEND' && motivoResolucao) {
+          doc.text(`Razão da Resolução: ${motivoResolucao}`, 14, 49);
+        } else if (observacao) {
           doc.text(`Observações: ${observacao}`, 14, 49);
         }
 
         const rows = [];
         let tot = 0;
-        (itensLista || []).forEach((itName, idx) => {
+        (itensLista || []).forEach((itName) => {
           const raw = quantidades[itName];
           if (raw !== undefined && raw !== '') {
             const q = evaluateMathExpression(raw);
@@ -1470,12 +1570,12 @@
         });
 
         doc.autoTable({
-          startY: observacao ? 54 : 48,
-          head: [['#', 'Descrição do Artigo de Enxoval', 'Quantidade (Peças)', 'Conferência Física']],
+          startY: (tipo === 'REC_PEND' || observacao) ? 55 : 48,
+          head: [['#', 'Artigo de Enxoval', 'Qtd Movimentada (Peças)', 'Conferência Física']],
           body: rows,
-          foot: [['', 'TOTAL DE PEÇAS MOVIMENTADAS:', tot.toString(), '']],
+          foot: [['', 'TOTAL DE PEÇAS:', tot.toString(), '']],
           theme: 'grid',
-          headStyles: { fillColor: tipo === 'ENVIO' ? [147, 51, 234] : [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold' },
+          headStyles: { fillColor: tipo === 'ENVIO' ? [147, 51, 234] : tipo === 'RETORNO' ? [16, 185, 129] : [217, 119, 6], textColor: [255, 255, 255], fontStyle: 'bold' },
           footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
           styles: { fontSize: 9 }
         });
@@ -1485,151 +1585,305 @@
         doc.line(20, finalY, 90, finalY);
         doc.line(120, finalY, 190, finalY);
         doc.setFontSize(8);
-        doc.text('Assinatura da Governança (Hotel)', 25, finalY + 5);
-        doc.text('Assinatura do Motorista / Lavanderia', 125, finalY + 5);
+        doc.text('Assinatura do Responsável (Hotel)', 25, finalY + 5);
+        doc.text('Assinatura do Operador / Lavanderia', 125, finalY + 5);
 
-        doc.save(`Romaneio_${numeroRomaneio}_${dataRomaneio}.pdf`);
+        doc.save(`Movimentacao_Lavanderia_${numeroRomaneio}_${dataRomaneio}.pdf`);
       };
 
+      const getThemeColor = () => {
+        if (tipo === 'ENVIO') return { bg: 'bg-purple-600', text: 'text-purple-400', border: 'border-purple-500', lightBg: 'bg-purple-950/40', badge: 'bg-purple-900/60 text-purple-200 border-purple-700' };
+        if (tipo === 'RETORNO') return { bg: 'bg-emerald-600', text: 'text-emerald-400', border: 'border-emerald-500', lightBg: 'bg-emerald-950/40', badge: 'bg-emerald-900/60 text-emerald-200 border-emerald-700' };
+        return { bg: 'bg-amber-600', text: 'text-amber-400', border: 'border-amber-500', lightBg: 'bg-amber-950/40', badge: 'bg-amber-900/60 text-amber-200 border-amber-700' };
+      };
+
+      const theme = getThemeColor();
+
       return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-sombra-900 border border-sombra-700 w-full max-w-2xl max-h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl max-h-[96vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
             
             {/* HEADER */}
-            <div className="p-5 border-b border-sombra-800 bg-sombra-950 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl shadow-md text-white ${tipo === 'ENVIO' ? 'bg-purple-600' : tipo === 'RETORNO' ? 'bg-emerald-600' : 'bg-amber-600'}`}>
+                <div className={`p-3 rounded-xl shadow-lg text-white ${theme.bg}`}>
                   <Icons.Truck />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                    <span>Novo Romaneio de Lavanderia</span>
-                    <span className="px-2.5 py-0.5 bg-sombra-800 text-sombra-300 rounded-full text-xs font-mono">{numeroRomaneio}</span>
+                  <h3 className="text-base sm:text-lg font-extrabold text-white flex items-center gap-2 flex-wrap">
+                    <span>
+                      {tipo === 'ENVIO' && '📤 Envio de Roupa Suja'}
+                      {tipo === 'RETORNO' && '📥 Retorno de Roupa Limpa'}
+                      {tipo === 'REC_PEND' && '⚖️ Resolução de Pendências'}
+                    </span>
+                    <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md text-[11px] font-mono border border-slate-700">{numeroRomaneio}</span>
                   </h3>
-                  <p className="text-xs text-sombra-400 mt-0.5">
-                    Registre as peças enviadas para lavar ou recebidas limpas da lavanderia externa.
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {tipo === 'ENVIO' && 'Hotel ➔ Lavanderia | Registra a saída de peças para higienização.'}
+                    {tipo === 'RETORNO' && 'Lavanderia ➔ Hotel | Pré-preenchido com o último envio para conferência ágil.'}
+                    {tipo === 'REC_PEND' && 'Baixa definitiva de pendências / perdas com justificativa obrigatória.'}
                   </p>
                 </div>
               </div>
-              <button onClick={onClose} className="text-sombra-400 hover:text-white text-lg font-mono">&times;</button>
+              <button 
+                onClick={onClose} 
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xl font-bold transition cursor-pointer"
+              >
+                &times;
+              </button>
             </div>
 
             {/* FORM BODY */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 text-xs text-slate-200">
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs text-slate-200">
               
-              {/* TIPO DE OPERAÇÃO */}
+              {/* SELETOR RÁPIDO DE OPERAÇÃO */}
               <div>
-                <label className="block text-xs font-bold text-sombra-300 uppercase mb-2">Tipo de Romaneio *</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipo de Movimentação</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setTipo('ENVIO')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2 border cursor-pointer ${
+                    onClick={() => handleSelectTipo('ENVIO')}
+                    className={`py-3 px-2 rounded-xl font-bold text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border cursor-pointer ${
                       tipo === 'ENVIO'
-                        ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-600/20'
-                        : 'bg-sombra-950 text-slate-300 border-sombra-700 hover:bg-sombra-800'
+                        ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-600/30 ring-2 ring-purple-400/40'
+                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
                     }`}
                   >
-                    <span>🧺 Envio (Hotel ➔ Lav.)</span>
+                    <span>📤 Envio Sujo</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTipo('RETORNO')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2 border cursor-pointer ${
+                    onClick={() => handleSelectTipo('RETORNO')}
+                    className={`py-3 px-2 rounded-xl font-bold text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border cursor-pointer ${
                       tipo === 'RETORNO'
-                        ? 'bg-emerald-600 text-white border-emerald-400 shadow-lg shadow-emerald-600/20'
-                        : 'bg-sombra-950 text-slate-300 border-sombra-700 hover:bg-sombra-800'
+                        ? 'bg-emerald-600 text-white border-emerald-400 shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400/40'
+                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
                     }`}
                   >
-                    <span>✨ Retorno (Lav. ➔ Hotel)</span>
+                    <span>📥 Retorno Limpo</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTipo('REC_PEND')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2 border cursor-pointer ${
+                    onClick={() => handleSelectTipo('REC_PEND')}
+                    className={`py-3 px-2 rounded-xl font-bold text-xs transition flex flex-col sm:flex-row items-center justify-center gap-1.5 border cursor-pointer ${
                       tipo === 'REC_PEND'
-                        ? 'bg-amber-600 text-white border-amber-400 shadow-lg shadow-amber-600/20'
-                        : 'bg-sombra-950 text-slate-300 border-sombra-700 hover:bg-sombra-800'
+                        ? 'bg-amber-600 text-white border-amber-400 shadow-lg shadow-amber-600/30 ring-2 ring-amber-400/40'
+                        : 'bg-slate-950 text-slate-300 border-slate-800 hover:bg-slate-800'
                     }`}
                   >
-                    <span>🔄 Resolução Pendência</span>
+                    <span>⚖️ Pendências</span>
                   </button>
                 </div>
               </div>
 
-              {/* CAMPOS METADATA */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-sombra-950 p-4 rounded-xl border border-sombra-800">
+              {/* BANNER INFORMATIVO PARA RETORNO (LAST SHIPMENT PREFILL) */}
+              {tipo === 'RETORNO' && lastShipmentInfo && (
+                <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-xl flex items-center justify-between gap-3 text-emerald-200 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💡</span>
+                    <span>
+                      Quantidades pré-carregadas do último envio de <strong>{lastShipmentInfo.data}</strong> ({lastShipmentInfo.totalPecas} peças). Ajuste se houver diferenças!
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRestaurarUltimoEnvio}
+                    className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold whitespace-nowrap cursor-pointer"
+                  >
+                    🔄 Recarregar
+                  </button>
+                </div>
+              )}
+
+              {/* BANNER & MOTIVO PARA RESOLUÇÃO DE PENDÊNCIAS */}
+              {tipo === 'REC_PEND' && (
+                <div className="p-3.5 bg-amber-950/60 border border-amber-800/80 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-amber-200 text-xs font-bold">
+                    <span className="text-base">⚖️</span>
+                    <span>Razão / Motivo da Resolução da Pendência (Obrigatório)</span>
+                  </div>
+                  
+                  {/* Chips rápidos de motivos */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      'Pagamento de Peças Extraviadas',
+                      'Restituição Tardia de Peças',
+                      'Descarte / Avaria Aprovada',
+                      'Acordo Comercial de Saldos',
+                      'Outro Motivo Específico'
+                    ].map(motivo => (
+                      <button
+                        key={motivo}
+                        type="button"
+                        onClick={() => setMotivoResolucao(motivo)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
+                          motivoResolucao === motivo
+                            ? 'bg-amber-600 text-white border-amber-400 shadow'
+                            : 'bg-slate-900 text-amber-300 border-amber-800/60 hover:bg-slate-800'
+                        }`}
+                      >
+                        {motivo}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={motivoResolucao}
+                    onChange={(e) => setMotivoResolucao(e.target.value)}
+                    placeholder="Especifique a razão (ex: Acordo ref. perda de agosto, NF 4587...)"
+                    className="w-full px-3 py-2 bg-slate-900 border border-amber-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              )}
+
+              {/* DADOS GERAIS: DATA, RESPONSÁVEL E MOTORISTA */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">Data da Operação *</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Data do Movimento *</label>
                   <input
                     type="date"
+                    required
                     value={dataRomaneio}
                     onChange={(e) => setDataRomaneio(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 bg-sombra-900 border border-sombra-700 rounded-lg text-xs text-white"
+                    className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-bold text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">Motorista / Transportador</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Operador / Responsável *</label>
+                  <input
+                    type="text"
+                    required
+                    value={responsavel}
+                    onChange={(e) => setResponsavel(e.target.value)}
+                    placeholder="Nome do operador"
+                    className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Motorista / Transporte</label>
                   <input
                     type="text"
                     value={motorista}
                     onChange={(e) => setMotorista(e.target.value)}
-                    placeholder="Nome do entregador"
-                    className="w-full px-3 py-2 bg-sombra-900 border border-sombra-700 rounded-lg text-xs text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-300 uppercase mb-1">Responsável / Governança</label>
-                  <input
-                    type="text"
-                    value={responsavel}
-                    onChange={(e) => setResponsavel(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 bg-sombra-900 border border-sombra-700 rounded-lg text-xs text-white"
+                    placeholder="Nome ou empresa"
+                    className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
-              {/* LISTA DE ITENS */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-sombra-300 uppercase tracking-wider">
-                    Quantidade de Peças por Item ({tipo === 'ENVIO' ? 'Roupa Suja' : 'Roupa Limpa'})
+              {/* LISTA DE ITENS COM BUSCA E STEPPERS TOUCH */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Artigos e Quantidades</span>
+                    <span className="px-2 py-0.5 bg-blue-950 text-blue-300 rounded-full text-[10px] font-mono font-bold">
+                      {totalPecasCalculado} peças no total
+                    </span>
                   </label>
-                  <span className="text-[11px] text-brand-400 font-mono">
-                    Total: {Object.values(quantidades).reduce((acc, v) => acc + (evaluateMathExpression(v) || 0), 0)} peças
-                  </span>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleZerarTudo}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer"
+                    >
+                      🧹 Zerar Tudo
+                    </button>
+                  </div>
                 </div>
 
-                <div className="max-h-64 overflow-y-auto divide-y divide-sombra-800/80 border border-sombra-800 rounded-xl bg-sombra-950">
-                  {(itensLista || []).map((itName, idx) => {
+                {/* CAMPO DE BUSCA RÁPIDA */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="🔍 Digite para filtrar itens (ex: banho, lençol, rosto, fronha)..."
+                    className="w-full pl-3 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-medium"
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-2.5 top-2 text-slate-400 hover:text-white font-bold"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+
+                {/* GRID DE ITENS TOUCH */}
+                <div className="max-h-64 sm:max-h-72 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-800/60">
+                  {filteredItens.map((itName) => {
                     const currentVal = quantidades[itName] || '';
+                    const numVal = parseInt(currentVal || 0, 10);
+
                     return (
-                      <div key={idx} className="p-2.5 flex items-center justify-between gap-3 hover:bg-sombra-900/60 transition">
-                        <div className="font-bold text-xs text-white flex-1 truncate">{itName}</div>
-                        <div className="flex items-center gap-1.5">
+                      <div
+                        key={itName}
+                        className={`pt-1.5 pb-1 px-2 rounded-xl flex items-center justify-between gap-2 transition ${
+                          numVal > 0 ? 'bg-slate-800/80 border border-slate-700' : 'hover:bg-slate-950/40'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs text-white truncate" title={itName}>
+                            {itName}
+                          </p>
+                          {numVal > 0 && (
+                            <span className="text-[10px] font-bold font-mono text-emerald-400">
+                              {numVal} {numVal === 1 ? 'peça' : 'peças'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* STEPPERS TOUCH (+/-) */}
+                        <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => handleQuickAdd(itName, 5)}
-                            className="px-2 py-1 bg-sombra-800 hover:bg-sombra-700 text-sombra-300 hover:text-white rounded text-[10px] font-mono cursor-pointer"
+                            onClick={() => handleQuickAdd(itName, -10)}
+                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white rounded-lg font-mono font-bold text-[10px] flex items-center justify-center cursor-pointer active:scale-95"
+                            title="-10 peças"
                           >
-                            +5
+                            -10
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickAdd(itName, -1)}
+                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white rounded-lg font-mono font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95"
+                            title="-1 peça"
+                          >
+                            -1
+                          </button>
+
+                          <input
+                            type="number"
+                            min="0"
+                            inputMode="numeric"
+                            value={currentVal}
+                            onChange={(e) => handleQtdChange(itName, e.target.value)}
+                            placeholder="0"
+                            className={`w-14 sm:w-16 h-8 text-center bg-slate-900 border rounded-lg font-mono font-black text-xs text-white focus:outline-none ${
+                              numVal > 0 ? 'border-emerald-500 bg-emerald-950/30 text-emerald-300' : 'border-slate-700 focus:border-blue-500'
+                            }`}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => handleQuickAdd(itName, 1)}
+                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-emerald-400 hover:text-emerald-300 rounded-lg font-mono font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95"
+                            title="+1 peça"
+                          >
+                            +1
                           </button>
                           <button
                             type="button"
                             onClick={() => handleQuickAdd(itName, 10)}
-                            className="px-2 py-1 bg-sombra-800 hover:bg-sombra-700 text-sombra-300 hover:text-white rounded text-[10px] font-mono cursor-pointer"
+                            className="w-7 h-8 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-emerald-400 hover:text-emerald-300 rounded-lg font-mono font-bold text-[10px] flex items-center justify-center cursor-pointer active:scale-95"
+                            title="+10 peças"
                           >
                             +10
                           </button>
-                          <input
-                            type="text"
-                            value={currentVal}
-                            placeholder="0"
-                            onChange={(e) => handleQtdChange(itName, e.target.value)}
-                            className="w-16 px-2.5 py-1 text-center bg-sombra-900 border border-sombra-700 rounded-lg text-xs font-mono font-bold text-brand-400 focus:outline-none focus:border-brand-500"
-                          />
                         </div>
                       </div>
                     );
@@ -1637,49 +1891,48 @@
                 </div>
               </div>
 
-              {/* OBSERVAÇÕES */}
+              {/* OBSERVAÇÕES ADICIONAIS */}
               <div>
-                <label className="block text-xs font-bold text-sombra-300 uppercase mb-1">Observações Adicionais</label>
-                <textarea
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Observações Adicionais (Opcional)</label>
+                <input
+                  type="text"
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
-                  placeholder="Ex: Peças conferidas na presença do motorista; sacos lacrados..."
-                  rows="2"
-                  className="w-full px-3 py-2 bg-sombra-950 border border-sombra-800 rounded-xl text-xs text-white resize-none"
-                ></textarea>
+                  placeholder="Ex: Sacos lacrados nº 45 e 46, entrega com atraso..."
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                />
               </div>
 
-              {/* FOOTER ACTIONS */}
-              <div className="pt-3 border-t border-sombra-800 flex items-center justify-between gap-3">
+              {/* FOOTER / AÇÕES PRINCIPAIS */}
+              <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={handleImprimirRomaneioPDF}
-                  className="px-4 py-2.5 bg-blue-900/60 hover:bg-blue-800 text-blue-300 border border-blue-700 rounded-xl font-bold text-xs transition flex items-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Icons.Printer />
-                  <span>Imprimir Guia (PDF)</span>
+                  <span>Gerar Romaneio PDF (A4)</span>
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2.5 bg-sombra-800 hover:bg-sombra-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer"
+                    className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer"
                   >
                     Cancelar
                   </button>
+
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-slate-950 font-black rounded-xl text-xs transition shadow-lg shadow-brand-600/30 flex items-center gap-2 cursor-pointer"
+                    className={`flex-1 sm:flex-none px-6 py-2.5 text-white font-black rounded-xl text-xs transition shadow-xl cursor-pointer flex items-center justify-center gap-1.5 ${theme.bg}`}
                   >
                     <Icons.Check />
-                    <span>Salvar Romaneio</span>
+                    <span>Confirmar {tipo === 'ENVIO' ? 'Envio Sujo' : tipo === 'RETORNO' ? 'Retorno Limpo' : 'Resolução'} ({totalPecasCalculado} pçs)</span>
                   </button>
                 </div>
               </div>
-
             </form>
-
           </div>
         </div>
       );
@@ -1868,7 +2121,7 @@
         showToast(`Saldos iniciais sincronizados com sucesso a partir de "${prevQuinzena.nome}"!`);
       };
 
-      // HANDLER: REGISTRAR NOVO ROMANEIO E INSERIR NA QUINZENA
+      // HANDLER: REGISTRAR NOVO ROMANEIO / MOVIMENTAÇÃO DIÁRIA E INSERIR NA TABELA
       const handleSaveRomaneio = (romaneio) => {
         if (!activeQuinzena) return;
         const targetData = romaneio.data; // formato dd/mm/aaaa
@@ -1936,10 +2189,25 @@
             };
           });
 
+          // Registro de notas de resolução de pendências
+          const notasAtualizadas = [...(q.notasPendencias || [])];
+          if (romaneio.tipo === 'REC_PEND' && romaneio.motivoResolucao) {
+            notasAtualizadas.push({
+              id: 'nota_' + Date.now(),
+              data: targetData,
+              operador: romaneio.responsavel,
+              motivo: romaneio.motivoResolucao,
+              observacao: romaneio.observacao,
+              totalPecas: romaneio.totalPecas,
+              itens: romaneio.itens
+            });
+          }
+
           return {
             ...q,
             dias: diasList,
-            itens: updatedItens
+            itens: updatedItens,
+            notasPendencias: notasAtualizadas
           };
         });
 
@@ -1953,7 +2221,8 @@
         }
 
         setShowRomaneioModal(false);
-        showToast(`Romaneio ${romaneio.numero} registrado com sucesso!`);
+        const tipoDesc = romaneio.tipo === 'ENVIO' ? 'Envio Sujo' : romaneio.tipo === 'RETORNO' ? 'Retorno Limpo' : 'Resolução de Pendência';
+        showToast(`${tipoDesc} (${romaneio.totalPecas} pçs) registrado com sucesso na data ${targetData}!`);
       };
 
       // HANDLER: CRIAR NOVA QUINZENA (HERDA SALDOS DA ANTERIOR)
@@ -2182,6 +2451,105 @@
                 <span>Nova Quinzena</span>
               </button>
             </div>
+          </div>
+
+          {/* PAINEL MOBILE-FIRST DO OPERADOR: 3 AÇÕES PRINCIPAIS DE FLUXO PONTUAL */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* CARD 1: ENVIO ROUPA SUJA */}
+            <button
+              type="button"
+              onClick={() => {
+                setRomaneioDefaultTipo('ENVIO');
+                setShowRomaneioModal(true);
+              }}
+              className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-900/70 via-purple-950/80 to-slate-900 border-2 border-purple-600/60 hover:border-purple-400 text-left transition-all duration-200 shadow-xl hover:shadow-purple-600/25 active:scale-[0.99] cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-purple-600 text-white flex items-center justify-center shadow-lg shadow-purple-600/40 group-hover:scale-105 transition flex-shrink-0">
+                  <Icons.Upload />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-black text-white group-hover:text-purple-300 transition">
+                      📤 1. Envio Roupa Suja
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-900/90 text-purple-200 border border-purple-700">
+                      Saída Hotel
+                    </span>
+                  </div>
+                  <p className="text-xs text-purple-200/80 mt-0.5 font-medium">
+                    Hotel ➔ Lavanderia externa (soma ao saldo retido)
+                  </p>
+                </div>
+              </div>
+              <div className="hidden lg:flex text-purple-400 font-black text-xl group-hover:translate-x-1.5 transition">
+                ➔
+              </div>
+            </button>
+
+            {/* CARD 2: RETORNO ROUPA LIMPA */}
+            <button
+              type="button"
+              onClick={() => {
+                setRomaneioDefaultTipo('RETORNO');
+                setShowRomaneioModal(true);
+              }}
+              className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-900/70 via-emerald-950/80 to-slate-900 border-2 border-emerald-600/60 hover:border-emerald-400 text-left transition-all duration-200 shadow-xl hover:shadow-emerald-600/25 active:scale-[0.99] cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/40 group-hover:scale-105 transition flex-shrink-0">
+                  <Icons.Check />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-black text-white group-hover:text-emerald-300 transition">
+                      📥 2. Retorno Roupa Limpa
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900/90 text-emerald-200 border border-emerald-700">
+                      Pré-preenchido
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-200/80 mt-0.5 font-medium">
+                    Lavanderia ➔ Hotel (carrega último envio p/ conferência)
+                  </p>
+                </div>
+              </div>
+              <div className="hidden lg:flex text-emerald-400 font-black text-xl group-hover:translate-x-1.5 transition">
+                ➔
+              </div>
+            </button>
+
+            {/* CARD 3: RESOLUÇÃO DE PENDÊNCIAS */}
+            <button
+              type="button"
+              onClick={() => {
+                setRomaneioDefaultTipo('REC_PEND');
+                setShowRomaneioModal(true);
+              }}
+              className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-900/70 via-amber-950/80 to-slate-900 border-2 border-amber-600/60 hover:border-amber-400 text-left transition-all duration-200 shadow-xl hover:shadow-amber-600/25 active:scale-[0.99] cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-600 text-white flex items-center justify-center shadow-lg shadow-amber-600/40 group-hover:scale-105 transition flex-shrink-0">
+                  <Icons.Shield />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-black text-white group-hover:text-amber-300 transition">
+                      ⚖️ 3. Resolução de Pendências
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-900/90 text-amber-200 border border-amber-700">
+                      Acordos / Baixas
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-200/80 mt-0.5 font-medium">
+                    Baixa de faltas com justificativa (pagamento, reposição)
+                  </p>
+                </div>
+              </div>
+              <div className="hidden lg:flex text-amber-400 font-black text-xl group-hover:translate-x-1.5 transition">
+                ➔
+              </div>
+            </button>
           </div>
 
           {/* QUINZENA SELECTOR & KPI CARDS */}
@@ -2683,6 +3051,10 @@
             setAmbiente(userFound.ambientes[0]);
             localStorage.setItem('sombra_enxoval_ambiente', userFound.ambientes[0]);
           }
+        }
+        if (userFound.id === 'user_lavanderia' || (userFound.cargo && userFound.cargo.toLowerCase().includes('lavanderia'))) {
+          setActiveTab('lavanderia');
+          localStorage.setItem('sombra_enxoval_active_tab', 'lavanderia');
         }
         return { success: true };
       };
