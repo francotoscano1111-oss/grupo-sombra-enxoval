@@ -1021,16 +1021,30 @@
         }
       },
       {
-        id: 'user_lavanderia',
-        nome: 'Operador de Lavanderia',
-        cargo: 'Lavanderia & Rouparia Geral',
-        username: 'lavanderia',
-        password: 'lav123',
+        id: 'user_lavanderia_hotel',
+        nome: 'Operador de Lavanderia (Hotel)',
+        cargo: 'Operador de Lavanderia (Hotel & Resort)',
+        username: 'lavanderia_hotel',
+        password: 'hotel123',
         isAdmin: false,
-        ambientes: ['hotel', 'spa'],
+        ambientes: ['hotel'],
         operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'RESOLUCAO_PENDENCIA', 'ABASTECIMENTO'],
         locaisPermitidos: {
           hotel: ['rouparia', 'suja', 'lavanderia', 'chegouEnsacada'],
+          spa: []
+        }
+      },
+      {
+        id: 'user_lavanderia_spa',
+        nome: 'Operador de Lavanderia (Floresta & SPA)',
+        cargo: 'Operador de Lavanderia (Floresta, SPA & Yeu)',
+        username: 'lavanderia_spa',
+        password: 'spa123',
+        isAdmin: false,
+        ambientes: ['spa'],
+        operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'RESOLUCAO_PENDENCIA', 'ABASTECIMENTO'],
+        locaisPermitidos: {
+          hotel: [],
           spa: ['rouparia', 'suja', 'lavanderia']
         }
       }
@@ -3052,7 +3066,13 @@
             localStorage.setItem('sombra_enxoval_ambiente', userFound.ambientes[0]);
           }
         }
-        if (userFound.id === 'user_lavanderia' || (userFound.cargo && userFound.cargo.toLowerCase().includes('lavanderia'))) {
+        const isLavanderia = 
+          (userFound.id && userFound.id.toLowerCase().includes('lavanderia')) ||
+          (userFound.cargo && userFound.cargo.toLowerCase().includes('lavanderia')) ||
+          (userFound.nome && userFound.nome.toLowerCase().includes('lavanderia')) ||
+          (userFound.username && userFound.username.toLowerCase().includes('lavanderia'));
+
+        if (isLavanderia) {
           setActiveTab('lavanderia');
           localStorage.setItem('sombra_enxoval_active_tab', 'lavanderia');
         }
