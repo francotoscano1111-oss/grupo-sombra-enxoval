@@ -4,6 +4,22 @@
 
 ---
 
+## [2026-09-11] — Visibilità Elevata Colonne Saldo Lavanderia & Sincronizzazione Saldi Precedenti
+
+**Status AS IS:** Riprogettata la visualizzazione grafica della matrice del modulo *Controle de Lavanderia* garantendo contrasto visivo assoluto (in particolare in Light Mode) per le colonne `SALDO`, `Saldo Quinz. Ant.` e `Saldo Final`. Introdotta la modifica in linea del saldo iniziale e un pulsante per sincronizzare automaticamente i saldi iniziali ereditandoli dalla quindicina precedente.
+
+### ✅ Fatto
+- **Design High-Contrast per i Saldos (Light & Dark Mode):**
+  - Saldo > 0: evidenziato con badge ambra/giallo brillante ad alto contrasto.
+  - Saldo < 0: evidenziato in rosso chiaro/bordeaux ben marcato.
+  - Saldo = 0: grigio antracite definito con sfondo pulito.
+  - Saldo Final: colonna di chiusura con badge scuro ad alto impatto visivo.
+- **Input REC / ENV / PEND ad Alta Leggibilità:** In modalità chiara i campi di digitazione ora hanno sfondi chiari con testi viola, smeraldo e arancio scuro ad alta leggibilità.
+- **Modifica Diretta di `Saldo Quinz. Ant.` (✏️):** L'operatore può ora cliccare e modificare direttamente il saldo iniziale di qualsiasi articolo; il sistema ricalcola all'istante tutti i saldi giornalieri a cascata e il saldo finale.
+- **Pulsante `🔗 Sincronizar Saldos da Quinz. Anterior`:** Permette con un solo clic di sovrascrivere i saldi iniziali della quindicina selezionata con i saldi finali esatti della quindicina precedente.
+
+---
+
 ## [2026-09-11] — Ottimizzazione Spaziatura & Allargamento Barra Navigazione Menu (1650px)
 
 **Status AS IS:** La barra di navigazione e i contenitori principali dell'applicazione sono stati estesi a `1650px` (invece del limite standard di 1280px), distribuendo uniformemente tutti i 7 pulsanti di navigazione su un'unica riga senza tagli del primo (`Matriz de Estoque`) o dell'ultimo menu (`Relatórios & Histórico`).
