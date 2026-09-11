@@ -591,6 +591,142 @@
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+    
+    /* LAUNDRY MATRIX HIGH CONTRAST STYLES */
+    .laundry-saldo-pos {
+      color: #fde047 !important;
+      font-weight: 800 !important;
+      background: rgba(234, 179, 8, 0.22) !important;
+    }
+    .laundry-saldo-neg {
+      color: #f87171 !important;
+      font-weight: 800 !important;
+      background: rgba(239, 68, 68, 0.25) !important;
+    }
+    .laundry-saldo-zero {
+      color: #94a3b8 !important;
+      font-weight: 700 !important;
+      background: rgba(15, 23, 42, 0.5) !important;
+    }
+    .laundry-saldo-final-pos {
+      color: #fef08a !important;
+      font-weight: 900 !important;
+      background: #312e81 !important;
+      border-left: 2px solid #818cf8 !important;
+    }
+    .laundry-saldo-final-neg {
+      color: #fca5a5 !important;
+      font-weight: 900 !important;
+      background: #7f1d1d !important;
+      border-left: 2px solid #f87171 !important;
+    }
+    .laundry-saldo-final-zero {
+      color: #93c5fd !important;
+      font-weight: 800 !important;
+      background: #1e293b !important;
+      border-left: 2px solid #3b82f6 !important;
+    }
+
+    /* LIGHT MODE LAUNDRY MATRIX HIGH CONTRAST OVERRIDES */
+    body.light .laundry-table-card {
+      background: #ffffff !important;
+      border: 1.5px solid #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+    body.light .laundry-th-main {
+      background: #0f172a !important;
+      color: #ffffff !important;
+    }
+    body.light .laundry-th-date {
+      background: #1e293b !important;
+      color: #e2e8f0 !important;
+    }
+    body.light .laundry-th-tot {
+      background: #312e81 !important;
+      color: #ffffff !important;
+    }
+    body.light .laundry-item-name {
+      background: #f8fafc !important;
+      color: #0f172a !important;
+      font-weight: 800 !important;
+    }
+    body.light .laundry-saldo-ant-input {
+      background: #e0f2fe !important;
+      color: #0369a1 !important;
+      font-weight: 900 !important;
+      border: 1.5px solid #0284c7 !important;
+    }
+    body.light .laundry-input-rec {
+      background: #faf5ff !important;
+      color: #581c87 !important;
+      font-weight: 800 !important;
+      border: 1.5px solid #c084fc !important;
+    }
+    body.light .laundry-input-env {
+      background: #f0fdf4 !important;
+      color: #14532d !important;
+      font-weight: 800 !important;
+      border: 1.5px solid #4ade80 !important;
+    }
+    body.light .laundry-input-pend {
+      background: #fffbeb !important;
+      color: #78350f !important;
+      font-weight: 800 !important;
+      border: 1.5px solid #fcd34d !important;
+    }
+    body.light .laundry-saldo-pos {
+      color: #713f12 !important;
+      font-weight: 900 !important;
+      background: #fef08a !important;
+      border-right: 1px solid #cbd5e1 !important;
+    }
+    body.light .laundry-saldo-neg {
+      color: #7f1d1d !important;
+      font-weight: 900 !important;
+      background: #fee2e2 !important;
+      border-right: 1px solid #cbd5e1 !important;
+    }
+    body.light .laundry-saldo-zero {
+      color: #334155 !important;
+      font-weight: 800 !important;
+      background: #f1f5f9 !important;
+      border-right: 1px solid #cbd5e1 !important;
+    }
+    body.light .laundry-tot-rec {
+      background: #f3e8ff !important;
+      color: #581c87 !important;
+      font-weight: 900 !important;
+    }
+    body.light .laundry-tot-env {
+      background: #dcfce7 !important;
+      color: #14532d !important;
+      font-weight: 900 !important;
+    }
+    body.light .laundry-tot-pend {
+      background: #fef3c7 !important;
+      color: #78350f !important;
+      font-weight: 900 !important;
+    }
+    body.light .laundry-saldo-final-pos {
+      color: #713f12 !important;
+      font-weight: 900 !important;
+      background: #fde047 !important;
+      border: 2px solid #ca8a04 !important;
+      box-shadow: inset 0 0 0 1px #a16207 !important;
+    }
+    body.light .laundry-saldo-final-neg {
+      color: #ffffff !important;
+      font-weight: 900 !important;
+      background: #dc2626 !important;
+      border: 2px solid #991b1b !important;
+    }
+    body.light .laundry-saldo-final-zero {
+      color: #0f172a !important;
+      font-weight: 900 !important;
+      background: #bfdbfe !important;
+      border: 2px solid #3b82f6 !important;
+    }
+
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
@@ -1320,12 +1456,49 @@
         return { saldoPendenteTotal, totalRecebido, totalEnviado, totalRecPend, itensComPendencia };
       }, [activeQuinzena]);
 
+      // HANDLER: EDICAO DIRETA DO SALDO ANTERIOR
+      const handleSaldoAntEdit = (itemIdx, val) => {
+        if (!activeQuinzena) return;
+        const numVal = evaluateMathExpression(val);
+
+        const updatedQuinzenas = quinzenaList.map((q) => {
+          if (q.id !== activeQuinzena.id) return q;
+
+          const updatedItens = q.itens.map((it, iIdx) => {
+            if (iIdx !== itemIdx) return it;
+
+            let running = numVal;
+            const updatedDias = (it.dias || []).map((d) => {
+              const rec = d.recebido || 0;
+              const env = d.enviado || 0;
+              const pend = d.recPend || 0;
+              running = running + rec - env - pend;
+              return { ...d, saldo: running };
+            });
+
+            return {
+              ...it,
+              saldoAnt: numVal,
+              dias: updatedDias,
+              saldoFinal: running
+            };
+          });
+
+          return { ...q, itens: updatedItens };
+        });
+
+        onUpdateLavanderiaData({
+          ...lavanderiaData,
+          [ambiente]: updatedQuinzenas
+        });
+      };
+
       // HANDLER: EDICAO DIRETA DE CELULA NA MATRIZ QUINZENAL
       const handleCellEdit = (itemIdx, diaIdx, field, val) => {
         if (!activeQuinzena) return;
         const numVal = evaluateMathExpression(val);
         
-        const updatedQuinzenas = quinzenaList.map((q, qIdx) => {
+        const updatedQuinzenas = quinzenaList.map((q) => {
           if (q.id !== activeQuinzena.id) return q;
 
           const updatedItens = q.itens.map((it, iIdx) => {
@@ -1360,6 +1533,58 @@
           ...lavanderiaData,
           [ambiente]: updatedQuinzenas
         });
+      };
+
+      // HANDLER: SINCRONIZAR SALDO INICIAL A PARTIR DA QUINZENA ANTERIOR
+      const handleSyncSaldoFromPrevious = () => {
+        if (activeIndex <= 0) {
+          alert('Esta é a primeira quinzena do histórico. Não há quinzena anterior para sincronizar.');
+          return;
+        }
+        const prevQuinzena = quinzenaList[activeIndex - 1];
+        if (!prevQuinzena || !prevQuinzena.itens) return;
+
+        if (!confirm(`Deseja sincronizar todos os "Saldo Quinz. Ant." desta quinzena com o Saldo Final exato de "${prevQuinzena.nome}"?`)) {
+          return;
+        }
+
+        const prevSaldos = {};
+        prevQuinzena.itens.forEach(it => {
+          prevSaldos[it.item.toUpperCase().trim()] = it.saldoFinal !== undefined ? it.saldoFinal : (it.saldoAnt || 0);
+        });
+
+        const updatedQuinzenas = quinzenaList.map(q => {
+          if (q.id !== activeQuinzena.id) return q;
+
+          const updatedItens = q.itens.map(it => {
+            const key = it.item.toUpperCase().trim();
+            const newSaldoAnt = prevSaldos[key] !== undefined ? prevSaldos[key] : (it.saldoAnt || 0);
+
+            let running = newSaldoAnt;
+            const updatedDias = (it.dias || []).map(d => {
+              const rec = d.recebido || 0;
+              const env = d.enviado || 0;
+              const pend = d.recPend || 0;
+              running = running + rec - env - pend;
+              return { ...d, saldo: running };
+            });
+
+            return {
+              ...it,
+              saldoAnt: newSaldoAnt,
+              dias: updatedDias,
+              saldoFinal: running
+            };
+          });
+
+          return { ...q, itens: updatedItens };
+        });
+
+        onUpdateLavanderiaData({
+          ...lavanderiaData,
+          [ambiente]: updatedQuinzenas
+        });
+        showToast(`Saldos iniciais sincronizados com sucesso a partir de "${prevQuinzena.nome}"!`);
       };
 
       // HANDLER: REGISTRAR NOVO ROMANEIO E INSERIR NA QUINZENA
@@ -1442,9 +1667,8 @@
           [ambiente]: updatedQuinzenas
         });
 
-        // Sincroniza com o estoque do app
-        if (onApplyToStock && Object.keys(deltasForStock).length > 0) {
-          onApplyToStock(deltasForStock);
+        if (romaneio.atualizarEstoque && onApplyToStock) {
+          onApplyToStock(deltasForStock, romaneio.numero);
         }
 
         setShowRomaneioModal(false);
@@ -1599,74 +1823,76 @@
             
             const importedQuinzenas = [];
 
-            wb.SheetNames.forEach(sname => {
-              const ws = wb.Sheets[sname];
+            wb.SheetNames.forEach(sheetName => {
+              const ws = wb.Sheets[sheetName];
               const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z50');
               
-              const dateBlocks = [];
-              let c = 2; // Column C (0-indexed = 2)
-              while (c <= range.e.c) {
-                const h1Cell = ws[XLSX.utils.encode_cell({ r: 1, c })];
-                const h1 = h1Cell ? h1Cell.v : '';
-                if (h1 === 'RECEBIDO') {
-                  const d1Cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
-                  const d1Val = d1Cell ? d1Cell.w || d1Cell.v : `Dia ${dateBlocks.length + 1}`;
-                  dateBlocks.append({
-                    col_start: c,
-                    data: d1Val
-                  });
-                  c += 4;
-                } else {
-                  c += 1;
+              const row1 = [];
+              const row2 = [];
+              for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cell1 = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+                const cell2 = ws[XLSX.utils.encode_cell({ r: 1, c: C })];
+                row1.push(cell1 ? cell1.v : null);
+                row2.push(cell2 ? cell2.v : null);
+              }
+
+              const diasArr = [];
+              for (let c = 2; c < row1.length; c += 4) {
+                const val = row1[c];
+                if (val && !diasArr.includes(String(val))) {
+                  diasArr.push(String(val));
                 }
               }
 
-              const itensData = [];
-              for (let r = 2; r <= range.e.r; r++) {
-                const itNameCell = ws[XLSX.utils.encode_cell({ r, c: 0 })];
-                if (!itNameCell || !itNameCell.v || String(itNameCell.v).toUpperCase().startsWith('SALDO QUINZ')) break;
-                
-                const itName = String(itNameCell.v).trim();
-                const saldoAntCell = ws[XLSX.utils.encode_cell({ r, c: 1 })];
+              const itensArr = [];
+              for (let R = 2; R <= range.e.r; ++R) {
+                const itemCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+                if (!itemCell || !itemCell.v) continue;
+                const itemName = String(itemCell.v).trim();
+                if (itemName.toUpperCase() === 'DATA' || itemName.toUpperCase().startsWith('TOTAL')) continue;
+
+                const saldoAntCell = ws[XLSX.utils.encode_cell({ r: R, c: 1 })];
                 const saldoAnt = saldoAntCell ? Number(saldoAntCell.v) || 0 : 0;
 
+                const diasItem = [];
                 let running = saldoAnt;
-                const diasArr = [];
 
-                dateBlocks.forEach(blk => {
-                  const recCell = ws[XLSX.utils.encode_cell({ r, c: blk.col_start })];
-                  const envCell = ws[XLSX.utils.encode_cell({ r, c: blk.col_start + 1 })];
-                  const pendCell = ws[XLSX.utils.encode_cell({ r, c: blk.col_start + 2 })];
+                for (let d = 0; d < diasArr.length; d++) {
+                  const baseC = 2 + (d * 4);
+                  const recCell = ws[XLSX.utils.encode_cell({ r: R, c: baseC })];
+                  const envCell = ws[XLSX.utils.encode_cell({ r: R, c: baseC + 1 })];
+                  const pendCell = ws[XLSX.utils.encode_cell({ r: R, c: baseC + 2 })];
 
                   const rec = recCell ? Number(recCell.v) || 0 : 0;
                   const env = envCell ? Number(envCell.v) || 0 : 0;
                   const pend = pendCell ? Number(pendCell.v) || 0 : 0;
 
                   running = running + rec - env - pend;
-                  diasArr.push({
-                    data: blk.data,
+
+                  diasItem.push({
+                    data: diasArr[d],
                     recebido: rec,
                     enviado: env,
                     recPend: pend,
                     saldo: running
                   });
-                });
+                }
 
-                itensData.push({
-                  item: itName,
+                itensArr.push({
+                  item: itemName,
                   saldoAnt,
-                  dias: diasArr,
+                  dias: diasItem,
                   saldoFinal: running
                 });
               }
 
-              if (itensData.length > 0) {
+              if (itensArr.length > 0) {
                 importedQuinzenas.push({
-                  id: sname.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
-                  nome: sname,
+                  id: sheetName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now(),
+                  nome: sheetName,
                   ambiente,
-                  dias: dateBlocks.map(b => b.data),
-                  itens: itensData
+                  dias: diasArr,
+                  itens: itensArr
                 });
               }
             });
@@ -1698,20 +1924,20 @@
         <div className="space-y-6 animate-fade-in">
           
           {/* HEADER TOOLBAR */}
-          <div className="bg-sombra-900 border border-sombra-800 p-5 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-4">
+          <div className="laundry-table-card bg-sombra-900 border border-sombra-800 p-5 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md">
                   <Icons.Truck />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-white flex items-center gap-2">
-                    <span>Controle de Lavanderia & Romaneios (In / Out)</span>
+                  <h2 className="text-lg font-black flex items-center gap-2">
+                    <span className="text-slate-900 dark:text-white">Controle de Lavanderia & Romaneios (In / Out)</span>
                     <span className="px-2.5 py-0.5 bg-blue-950/80 border border-blue-800 text-blue-300 rounded-full text-xs font-mono font-bold">
                       {ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}
                     </span>
                   </h2>
-                  <p className="text-xs text-sombra-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-sombra-400 mt-0.5 font-medium">
                     Rastreamento diário de remessas sujas, devoluções limpas e saldo acumulado retido na lavanderia.
                   </p>
                 </div>
@@ -1790,13 +2016,13 @@
           <div className="space-y-4">
             
             {/* Seletor de Quinzena Bar */}
-            <div className="bg-sombra-900 border border-sombra-800 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-sombra-400 uppercase tracking-wider">Quinzena / Período:</span>
+            <div className="laundry-table-card bg-sombra-900 border border-sombra-800 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-slate-600 dark:text-sombra-400 uppercase tracking-wider">Quinzena / Período:</span>
                 <select
                   value={selectedQuinzenaId}
                   onChange={(e) => setSelectedQuinzenaId(e.target.value)}
-                  className="px-3 py-1.5 bg-sombra-950 border border-sombra-700 focus:border-indigo-500 rounded-xl text-xs font-bold text-white"
+                  className="px-3 py-1.5 bg-slate-100 dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 focus:border-indigo-500 rounded-xl text-xs font-black text-slate-900 dark:text-white"
                 >
                   {quinzenaList.map((q, idx) => (
                     <option key={q.id} value={q.id}>
@@ -1804,6 +2030,16 @@
                     </option>
                   ))}
                 </select>
+
+                {activeIndex > 0 && (
+                  <button
+                    onClick={handleSyncSaldoFromPrevious}
+                    title="Recalcular e sincronizar o Saldo Inicial desta quinzena com o Saldo Final da quinzena anterior"
+                    className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>🔗 Sincronizar Saldos da Quinz. Anterior</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -1812,11 +2048,11 @@
                   onClick={() => {
                     if (activeIndex > 0) setSelectedQuinzenaId(quinzenaList[activeIndex - 1].id);
                   }}
-                  className="px-3 py-1 bg-sombra-800 hover:bg-sombra-700 disabled:opacity-30 text-xs font-bold rounded-lg transition"
+                  className="px-3 py-1 bg-slate-200 dark:bg-sombra-800 hover:bg-slate-300 dark:hover:bg-sombra-700 disabled:opacity-30 text-xs font-bold rounded-lg transition text-slate-800 dark:text-white cursor-pointer"
                 >
                   ← Quinzena Anterior
                 </button>
-                <span className="text-xs font-mono text-sombra-400">
+                <span className="text-xs font-mono font-bold text-slate-600 dark:text-sombra-400">
                   {activeIndex + 1} de {quinzenaList.length}
                 </span>
                 <button
@@ -1824,58 +2060,81 @@
                   onClick={() => {
                     if (activeIndex < quinzenaList.length - 1) setSelectedQuinzenaId(quinzenaList[activeIndex + 1].id);
                   }}
-                  className="px-3 py-1 bg-sombra-800 hover:bg-sombra-700 disabled:opacity-30 text-xs font-bold rounded-lg transition"
+                  className="px-3 py-1 bg-slate-200 dark:bg-sombra-800 hover:bg-slate-300 dark:hover:bg-sombra-700 disabled:opacity-30 text-xs font-bold rounded-lg transition text-slate-800 dark:text-white cursor-pointer"
                 >
                   Próxima Quinzena →
                 </button>
               </div>
             </div>
 
-            {/* KPI STAT CARDS */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
-              <div className="bg-sombra-900 border border-amber-500/30 p-4 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">Saldo Atual na Lavanderia</div>
-                <div className="text-2xl font-black text-amber-300 mt-1 font-mono">{stats.saldoPendenteTotal}</div>
-                <div className="text-[10px] text-sombra-400 mt-0.5">{stats.itensComPendencia} artigos com peças retidas</div>
-                <div className="absolute right-3 bottom-3 text-amber-500/10 text-4xl font-black">🧺</div>
+              <div className="laundry-table-card bg-sombra-900 border border-sombra-800 p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-sombra-400">Saldo Atual na Lavanderia</div>
+                  <div className={`text-2xl font-black mt-1 font-mono ${stats.saldoPendenteTotal > 0 ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                    {stats.saldoPendenteTotal}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-sombra-500 font-medium">{stats.itensComPendencia} artigos com peças retidas</div>
+                </div>
+                <div className="p-3 bg-amber-500/10 text-amber-500 dark:text-amber-400 rounded-xl">
+                  <Icons.Box />
+                </div>
               </div>
 
-              <div className="bg-sombra-900 border border-purple-500/30 p-4 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Total Enviado (Hotel ➔ Lav.)</div>
-                <div className="text-2xl font-black text-purple-300 mt-1 font-mono">{stats.totalRecebido}</div>
-                <div className="text-[10px] text-sombra-400 mt-0.5">Peças de roupa suja remetidas</div>
-                <div className="absolute right-3 bottom-3 text-purple-500/10 text-4xl font-black">🚚</div>
+              <div className="laundry-table-card bg-sombra-900 border border-sombra-800 p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-sombra-400">Total Enviado (Hotel → Lav.)</div>
+                  <div className="text-2xl font-black mt-1 text-purple-600 dark:text-purple-400 font-mono">
+                    {stats.totalRecebido}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-sombra-500 font-medium">Peças de roupa suja remetidas</div>
+                </div>
+                <div className="p-3 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl">
+                  <Icons.Truck />
+                </div>
               </div>
 
-              <div className="bg-sombra-900 border border-emerald-500/30 p-4 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Total Retornado (Lav. ➔ Hotel)</div>
-                <div className="text-2xl font-black text-emerald-300 mt-1 font-mono">{stats.totalEnviado}</div>
-                <div className="text-[10px] text-sombra-400 mt-0.5">Peças limpas recebidas de volta</div>
-                <div className="absolute right-3 bottom-3 text-emerald-500/10 text-4xl font-black">✨</div>
+              <div className="laundry-table-card bg-sombra-900 border border-sombra-800 p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-sombra-400">Total Retornado (Lav. → Hotel)</div>
+                  <div className="text-2xl font-black mt-1 text-emerald-600 dark:text-emerald-400 font-mono">
+                    {stats.totalEnviado}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-sombra-500 font-medium">Peças limpas recebidas de volta</div>
+                </div>
+                <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <Icons.Sparkles />
+                </div>
               </div>
 
-              <div className="bg-sombra-900 border border-blue-500/30 p-4 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Recuperações / Resoluções</div>
-                <div className="text-2xl font-black text-blue-300 mt-1 font-mono">{stats.totalRecPend}</div>
-                <div className="text-[10px] text-sombra-400 mt-0.5">Peças devolvidas de pendências</div>
-                <div className="absolute right-3 bottom-3 text-blue-500/10 text-4xl font-black">🔄</div>
+              <div className="laundry-table-card bg-sombra-900 border border-sombra-800 p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-sombra-400">Recuperações / Resoluções</div>
+                  <div className="text-2xl font-black mt-1 text-blue-600 dark:text-blue-400 font-mono">
+                    {stats.totalRecPend}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-sombra-500 font-medium">Peças devolvidas de pendências</div>
+                </div>
+                <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
+                  <Icons.RefreshCw />
+                </div>
               </div>
 
             </div>
-
           </div>
 
-          {/* MATRIZ QUINZENAL DIÁRIA INTERATIVA */}
-          <div className="bg-sombra-900 border border-sombra-800 rounded-2xl overflow-hidden shadow-2xl space-y-4 p-5">
+          {/* TABELA MATRIZ QUINZENAL DIÁRIA */}
+          <div className="laundry-table-card bg-sombra-900 border border-sombra-800 rounded-2xl overflow-hidden shadow-2xl">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sombra-800 pb-4">
+            <div className="p-4 border-b border-slate-200 dark:border-sombra-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-sombra-950/60">
               <div>
-                <h3 className="font-extrabold text-base text-white flex items-center gap-2">
-                  <span>Matriz de Fluxo Quindicinale ({activeQuinzena?.nome || 'Quinzena'})</span>
+                <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Matriz de Fluxo Quindicinale ({activeQuinzena?.nome || 'Selecione uma quinzena'})</span>
                 </h3>
-                <p className="text-xs text-sombra-400">
-                  Valores diários: <strong>REC</strong> = Enviado pelo Hotel | <strong>ENV</strong> = Devolvido pela Lavanderia | <strong>PEND</strong> = Rec. Pendente | <strong>SALDO</strong> = Retido na Lavanderia.
+                <p className="text-[11px] text-slate-500 dark:text-sombra-400 mt-0.5">
+                  Valores diários: <strong className="text-purple-700 dark:text-purple-300 font-bold">REC</strong> = Enviado pelo Hotel | <strong className="text-emerald-700 dark:text-emerald-300 font-bold">ENV</strong> = Devolvido pela Lavanderia | <strong className="text-amber-700 dark:text-amber-300 font-bold">PEND</strong> = Rec. Pendente | <strong className="text-blue-700 dark:text-blue-300 font-bold">SALDO</strong> = Retido na Lavanderia.
                 </p>
               </div>
 
@@ -1885,36 +2144,36 @@
                   value={searchItem}
                   onChange={(e) => setSearchItem(e.target.value)}
                   placeholder="Filtrar por artigo..."
-                  className="w-full pl-9 pr-3 py-1.5 bg-sombra-950 border border-sombra-700 rounded-xl text-xs text-white placeholder-sombra-500 focus:outline-none focus:border-brand-500"
+                  className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-sombra-500 focus:outline-none focus:border-brand-500"
                 />
-                <div className="absolute left-3 top-2 text-sombra-500 pointer-events-none">
+                <div className="absolute left-3 top-2 text-slate-400 dark:text-sombra-500 pointer-events-none">
                   <Icons.Search />
                 </div>
               </div>
             </div>
 
             <div className="overflow-x-auto max-h-[640px] table-fixed-header">
-              <table className="w-full text-left text-xs text-slate-200 border-collapse">
+              <table className="w-full text-left text-xs border-collapse">
                 
                 {/* THEAD MULTI-NÍVEL */}
-                <thead className="bg-sombra-950 text-sombra-300 font-bold uppercase tracking-wider text-[10px] border-b border-sombra-800">
+                <thead className="laundry-th-main bg-sombra-950 text-sombra-300 font-bold uppercase tracking-wider text-[10px] border-b border-sombra-800">
                   
                   {/* Linha 1: Datas dos Blocos */}
                   <tr className="border-b border-sombra-800/80">
-                    <th rowSpan="2" className="py-3 px-4 sticky-col-first bg-sombra-950 min-w-[200px] border-r border-sombra-800">
+                    <th rowSpan="2" className="py-3 px-4 sticky-col-first bg-sombra-950 min-w-[200px] border-r border-sombra-800 text-white font-black">
                       Artigo / Peça de Enxoval
                     </th>
-                    <th rowSpan="2" className="py-3 px-3 text-center bg-sombra-950 border-r border-sombra-800 min-w-[90px]">
-                      Saldo Quinz. Ant.
+                    <th rowSpan="2" className="py-3 px-3 text-center bg-sombra-950 border-r border-sombra-800 min-w-[95px] text-sky-300 font-black" title="Saldo Inicial desta quinzena (Editável)">
+                      Saldo Quinz. Ant. ✏️
                     </th>
 
                     {(activeQuinzena?.dias || []).map((dia, dIdx) => (
-                      <th key={dIdx} colSpan="4" className="py-2 px-2 text-center border-r border-sombra-800 bg-slate-900/90 text-indigo-300 font-mono text-[11px]">
+                      <th key={dIdx} colSpan="4" className="laundry-th-date py-2 px-2 text-center border-r border-sombra-800 bg-slate-900/90 text-indigo-300 font-mono text-[11px]">
                         📅 {dia}
                       </th>
                     ))}
 
-                    <th colSpan="4" className="py-2 px-3 text-center bg-indigo-950/80 text-indigo-200 font-black">
+                    <th colSpan="4" className="laundry-th-tot py-2 px-3 text-center bg-indigo-950/80 text-indigo-200 font-black">
                       TOTAIS DA QUINZENA
                     </th>
                   </tr>
@@ -1933,29 +2192,38 @@
                     <th className="py-1.5 px-2 text-center bg-purple-950/60 text-purple-300 min-w-[65px]">Tot. Rec</th>
                     <th className="py-1.5 px-2 text-center bg-emerald-950/60 text-emerald-300 min-w-[65px]">Tot. Env</th>
                     <th className="py-1.5 px-2 text-center bg-amber-950/60 text-amber-300 min-w-[65px]">Tot. Pend</th>
-                    <th className="py-1.5 px-2 text-center bg-indigo-950 text-indigo-300 font-black min-w-[75px]">Saldo Final</th>
+                    <th className="py-1.5 px-2 text-center bg-indigo-950 text-indigo-300 font-black min-w-[80px]">Saldo Final</th>
                   </tr>
 
                 </thead>
 
                 {/* TBODY */}
-                <tbody className="divide-y divide-sombra-800/60 font-mono text-xs">
+                <tbody className="divide-y divide-slate-200 dark:divide-sombra-800/60 font-mono text-xs">
                   {filteredItens.map((it, itemIdx) => {
                     let totRec = 0;
                     let totEnv = 0;
                     let totPend = 0;
 
+                    const finalSaldoVal = it.saldoFinal !== undefined ? it.saldoFinal : (it.saldoAnt || 0);
+
                     return (
-                      <tr key={itemIdx} className="hover:bg-sombra-850/60 transition group">
+                      <tr key={itemIdx} className="hover:bg-slate-50 dark:hover:bg-sombra-850/60 transition group">
                         
                         {/* Nome do Item */}
-                        <td className="py-2.5 px-4 font-sans font-bold text-white sticky-col-first bg-sombra-900 group-hover:bg-sombra-850 border-r border-sombra-800">
+                        <td className="laundry-item-name py-2.5 px-4 font-sans font-bold text-slate-900 dark:text-white sticky-col-first bg-white dark:bg-sombra-900 group-hover:bg-slate-50 dark:group-hover:bg-sombra-850 border-r border-slate-200 dark:border-sombra-800">
                           {it.item}
                         </td>
 
-                        {/* Saldo Anterior */}
-                        <td className="py-2.5 px-3 text-center text-sombra-400 border-r border-sombra-800 bg-sombra-950/40 font-bold">
-                          {it.saldoAnt || 0}
+                        {/* Saldo Anterior (DIRETAMENTE EDITÁVEL COM INPUT EM ALTO CONTRASTE) */}
+                        <td className="py-2 px-2 text-center border-r border-slate-200 dark:border-sombra-800 bg-sky-50 dark:bg-sky-950/30">
+                          <input
+                            type="text"
+                            value={it.saldoAnt !== undefined ? it.saldoAnt : ''}
+                            placeholder="0"
+                            onChange={(e) => handleSaldoAntEdit(itemIdx, e.target.value)}
+                            className="laundry-saldo-ant-input w-14 text-center py-1 rounded text-xs font-mono font-black focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm cursor-text"
+                            title="Clique para editar o Saldo Inicial desta quinzena"
+                          />
                         </td>
 
                         {/* Colunas Diárias */}
@@ -1974,41 +2242,41 @@
                             <React.Fragment key={diaIdx}>
                               
                               {/* REC (Recebido Lavanderia / Envio Hotel) */}
-                              <td className="py-1 px-1 text-center bg-purple-950/10">
+                              <td className="py-1 px-1 text-center bg-purple-50 dark:bg-purple-950/10">
                                 <input
                                   type="text"
                                   value={rec > 0 ? rec : ''}
                                   placeholder="–"
                                   onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'recebido', e.target.value)}
-                                  className="w-11 text-center py-0.5 bg-sombra-950 border border-purple-500/30 rounded text-[11px] font-mono font-semibold text-purple-300 focus:outline-none focus:border-purple-400"
+                                  className="laundry-input-rec w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-purple-300 dark:border-purple-500/30 rounded text-[11px] font-mono font-bold text-purple-900 dark:text-purple-300 focus:outline-none focus:border-purple-500"
                                 />
                               </td>
 
                               {/* ENV (Enviado Lavanderia / Retorno Hotel) */}
-                              <td className="py-1 px-1 text-center bg-emerald-950/10">
+                              <td className="py-1 px-1 text-center bg-emerald-50 dark:bg-emerald-950/10">
                                 <input
                                   type="text"
                                   value={env > 0 ? env : ''}
                                   placeholder="–"
                                   onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'enviado', e.target.value)}
-                                  className="w-11 text-center py-0.5 bg-sombra-950 border border-emerald-500/30 rounded text-[11px] font-mono font-semibold text-emerald-300 focus:outline-none focus:border-emerald-400"
+                                  className="laundry-input-env w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-emerald-300 dark:border-emerald-500/30 rounded text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-300 focus:outline-none focus:border-emerald-500"
                                 />
                               </td>
 
                               {/* PEND (Rec. Pendente) */}
-                              <td className="py-1 px-1 text-center bg-amber-950/10">
+                              <td className="py-1 px-1 text-center bg-amber-50 dark:bg-amber-950/10">
                                 <input
                                   type="text"
                                   value={pend > 0 ? pend : ''}
                                   placeholder="–"
                                   onChange={(e) => handleCellEdit(itemIdx, diaIdx, 'recPend', e.target.value)}
-                                  className="w-11 text-center py-0.5 bg-sombra-950 border border-amber-500/30 rounded text-[11px] font-mono font-semibold text-amber-300 focus:outline-none focus:border-amber-400"
+                                  className="laundry-input-pend w-11 text-center py-1 bg-white dark:bg-sombra-950 border border-amber-300 dark:border-amber-500/30 rounded text-[11px] font-mono font-bold text-amber-900 dark:text-amber-300 focus:outline-none focus:border-amber-500"
                                 />
                               </td>
 
-                              {/* SALDO ACUMULADO */}
-                              <td className={`py-1.5 px-1.5 text-center font-bold border-r border-sombra-800 ${
-                                s > 0 ? 'text-amber-300 bg-amber-950/20' : s < 0 ? 'text-rose-400 bg-rose-950/20' : 'text-sombra-600'
+                              {/* SALDO ACUMULADO DIÁRIO (MÁXIMO CONTRASTE) */}
+                              <td className={`py-1 px-1 text-center font-black text-xs border-r border-slate-200 dark:border-sombra-800 ${
+                                s > 0 ? 'laundry-saldo-pos' : s < 0 ? 'laundry-saldo-neg' : 'laundry-saldo-zero'
                               }`}>
                                 {s}
                               </td>
@@ -2018,19 +2286,19 @@
                         })}
 
                         {/* TOTAIS DA QUINZENA */}
-                        <td className="py-2 px-2 text-center bg-purple-950/30 text-purple-300 font-bold border-l border-sombra-800">
+                        <td className="laundry-tot-rec py-2 px-2 text-center bg-purple-100 dark:bg-purple-950/40 text-purple-900 dark:text-purple-300 font-black border-l border-slate-200 dark:border-sombra-800">
                           {totRec}
                         </td>
-                        <td className="py-2 px-2 text-center bg-emerald-950/30 text-emerald-300 font-bold">
+                        <td className="laundry-tot-env py-2 px-2 text-center bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-black">
                           {totEnv}
                         </td>
-                        <td className="py-2 px-2 text-center bg-amber-950/30 text-amber-300 font-bold">
+                        <td className="laundry-tot-pend py-2 px-2 text-center bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-black">
                           {totPend}
                         </td>
-                        <td className={`py-2 px-2 text-center font-black text-sm bg-indigo-950/60 ${
-                          (it.saldoFinal || 0) > 0 ? 'text-amber-300' : (it.saldoFinal || 0) < 0 ? 'text-rose-400' : 'text-slate-400'
+                        <td className={`py-2 px-2 text-center font-black text-xs ${
+                          finalSaldoVal > 0 ? 'laundry-saldo-final-pos' : finalSaldoVal < 0 ? 'laundry-saldo-final-neg' : 'laundry-saldo-final-zero'
                         }`}>
-                          {it.saldoFinal !== undefined ? it.saldoFinal : (it.saldoAnt || 0)}
+                          {finalSaldoVal}
                         </td>
 
                       </tr>
@@ -2041,14 +2309,33 @@
               </table>
             </div>
 
+            {/* TABELA FOOTER LEGENDA */}
+            <div className="p-3 bg-slate-100 dark:bg-sombra-950 border-t border-slate-200 dark:border-sombra-800 text-[11px] text-slate-600 dark:text-sombra-400 flex flex-wrap items-center justify-between gap-4 font-semibold">
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
+                  <span><strong>Saldo &gt; 0</strong>: Capi ancora trattenuti in lavanderia</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                  <span><strong>Saldo &lt; 0</strong>: Capi restituiti in eccesso / credito</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>
+                  <span><strong>Saldo = 0</strong>: Pareggio perfetto</span>
+                </span>
+              </div>
+              <div>
+                💡 <em>Dica: Cliccando su "Saldo Quinz. Ant." o sulle celle REC/ENV/PEND puoi modificare qualsiasi valore con ricalcolo immediato.</em>
+              </div>
+            </div>
+
           </div>
 
-          {/* MODAL: NOVO ROMANEIO */}
+          {/* ROMANEIO MODAL */}
           {showRomaneioModal && (
             <RomaneioModal
-              ambiente={ambiente}
-              itensLista={itensNomes}
-              defaultTipo={romaneioDefaultTipo}
+              isOpen={showRomaneioModal}
               onClose={() => setShowRomaneioModal(false)}
               onSaveRomaneio={handleSaveRomaneio}
               currentUser={currentUser}
