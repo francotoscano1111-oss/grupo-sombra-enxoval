@@ -4,6 +4,17 @@
 
 ---
 
+## [2026-09-11] — Ottimizzazione Spaziatura & Allargamento Barra Navigazione Menu (1650px)
+
+**Status AS IS:** La barra di navigazione e i contenitori principali dell'applicazione sono stati estesi a `1650px` (invece del limite standard di 1280px), distribuendo uniformemente tutti i 7 pulsanti di navigazione su un'unica riga senza tagli del primo (`Matriz de Estoque`) o dell'ultimo menu (`Relatórios & Histórico`).
+
+### ✅ Fatto
+- **Ampliamento Layout Container:** Esteso il layout principale (`header`, `nav`, `main`) a `max-w-[1650px]` per sfruttare appieno la larghezza degli schermi laptop e desktop moderni.
+- **Distribuzione Dinamica Pulsanti (`flex-1`):** I 7 pulsanti della barra dei menu si adattano equamente nello spazio orizzontale.
+- **Eliminazione Taglio Bordi:** Sostituito `scale-105` con `ring-2 ring-brand-400` ed evidenziazione ad alto contrasto per evitare che l'effetto zoom tagli i bordi esterni del primo o dell'ultimo pulsante.
+
+---
+
 ## [2026-09-11] — Implementazione Modulo "Controle de Lavanderia" con Storico 25 Quindicine da Excel
 
 **Status AS IS:** Aggiunto il modulo completo e specializzato **«Controle de Lavanderia»** accessibile tramite la nuova tab principale della navigazione. Il modulo digitalizza fedelmente il modello operativo della lavanderia convenzionata del GRUPO SOMBRA (Floresta & SPA e Resort), precaricando l'intero storico di **25 quindicine** dal file Excel `NOVA PLANILHA SOMBRA.xlsx` (Settembre 2025 – Settembre 2026) e fornendo strumenti interattivi per la gestione dei flussi futuri.
