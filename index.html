@@ -3207,7 +3207,7 @@
         });
 
         if (!userFound) {
-          return { success: false, message: 'Usuário não encontrado. Toque em um dos botões de Acesso Rápido abaixo.' };
+          return { success: false, message: 'Usuário não encontrado. Verifique seu login ou contate o administrador.' };
         }
 
         // Senhas aceitas (senha do usuário + senhas padrão de apoio)
@@ -3224,7 +3224,7 @@
         ].filter(Boolean);
 
         if (!validPasswords.includes(loginPass)) {
-          return { success: false, message: 'Senha incorreta. A senha padrão é: spa123 (ou utilize o Acesso Rápido abaixo).' };
+          return { success: false, message: 'Senha incorreta. Verifique os dados digitados.' };
         }
 
         setCurrentUserId(userFound.id);
@@ -8063,12 +8063,6 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
         }, 150);
       };
 
-      const handleQuickFill = (u) => {
-        setLoginUser(u.username || '');
-        setLoginPass(u.password || '');
-        setErrorMessage('');
-      };
-
       return (
         <div className="login-container flex items-center justify-center p-4 font-sans selection:bg-brand-500 selection:text-slate-950">
           <div className="w-full max-w-md space-y-6 animate-fade-in">
@@ -8167,30 +8161,6 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                   <span>{isLoading ? 'Autenticando...' : 'Entrar no Sistema'}</span>
                 </button>
               </form>
-
-              {/* QUICK DEMO USERS CHIPS */}
-              <div className="pt-4 border-t border-slate-700/80 space-y-2.5">
-                <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                  <span>Acesso Rápido para Demonstração:</span>
-                  <span className="text-[10px] text-amber-400/90 font-mono font-normal">Ambiente de Testes</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {users.map(u => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => handleQuickFill(u)}
-                      className="login-chip p-2.5 rounded-xl text-left transition flex items-center gap-2 group cursor-pointer"
-                    >
-                      <span className="text-base">{u.isAdmin ? '👑' : '👤'}</span>
-                      <div className="truncate flex-1">
-                        <div className="login-chip-name font-bold text-[11px] group-hover:text-brand-300 truncate">{u.nome}</div>
-                        <div className="login-chip-user text-[10px] font-mono truncate">@{u.username}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
             </div>
 
