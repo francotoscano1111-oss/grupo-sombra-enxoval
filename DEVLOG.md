@@ -4,6 +4,18 @@
 
 ---
 
+## [2026-09-12] — Sincronizzazione Utenti e Credenziali Realtime Multi-Dispositivo con Supabase
+
+**Status AS IS:** Integrato il database cloud Supabase (`sombra_enxoval_users`) per la gestione centralizzata in tempo reale di utenti, password e permessi RBAC tra PC Admin, smartphone delle camareiras, tablet e qualsiasi dispositivo operativo.
+
+### ✅ Fatto
+- **Collegamento Supabase Cloud:** Integrato il client `@supabase/supabase-js` per sincronizzazione immediata dei profili utente.
+- **Aggiornamento Credenziali Centralizzato:** Ogni modifica apportata dall'Admin o dai singoli utenti nel menu *Gerenciar Usuários e Senhas* o *Alterar Senha* viene salvata e propagata istantaneamente a tutti i dispositivi connessi.
+- **Nuove Credenziali Operatore SPA:** Aggiornato l'utente della lavanderia SPA a `lavspa` (password: `lavspa123`), con supporto flessibile per alias di digitazione rapida.
+- **Fallback Offline Robusto:** Mantenuto il caching locale su `localStorage` per garantire caricamento istantaneo anche in caso di rete instabile.
+
+---
+
 ## [2026-09-11] — Riprogettazione Modale Movimenti Lavanderia: Sfondo Bianco Puro & Massima Leggibilità
 
 **Status AS IS:** Riprogettata la finestra modale (`RomaneioModal`) che si apre al tocco delle 3 card di movimento, sostituendo lo sfondo scuro con un layout 100% bianco brillante ad altissimo contrasto per garantire perfetta visibilità e facilità di digitazione su smartphone e tablet.
