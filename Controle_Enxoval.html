@@ -22,6 +22,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   
+  <!-- Supabase JS Client for Realtime Multi-Device Sync -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1038,8 +1041,8 @@
         id: 'user_lavanderia_spa',
         nome: 'Operador de Lavanderia (Floresta & SPA)',
         cargo: 'Operador de Lavanderia (Floresta, SPA & Yeu)',
-        username: 'lavanderia_spa',
-        password: 'spa123',
+        username: 'lavspa',
+        password: 'lavspa123',
         isAdmin: false,
         ambientes: ['spa'],
         operacoesPermitidas: ['ENVIO_LAVANDERIA', 'RETORNO_LAVANDERIA', 'RESOLUCAO_PENDENCIA', 'ABASTECIMENTO'],
@@ -1049,6 +1052,74 @@
         }
       }
     ];
+
+    // =========================================================================
+    // SUPABASE CLOUD DATABASE SYNC (Realtime multi-device sync)
+    // =========================================================================
+    const SUPABASE_URL = 'https://elkjvfwodkhrqqvzvnkq.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_YdoQvc4q7A8b82O_71fVlA_DZJjkE_2';
+    const supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    const fetchSupabaseUsers = async () => {
+      if (!supabaseClient) return null;
+      try {
+        const { data, error } = await supabaseClient.from('sombra_enxoval_users').select('*');
+        if (error) {
+          console.warn('Erro ao consultar Supabase:', error);
+          return null;
+        }
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map(u => ({
+            id: u.id,
+            nome: u.nome,
+            cargo: u.cargo,
+            username: u.username,
+            password: u.password,
+            isAdmin: Boolean(u.isAdmin),
+            ambientes: Array.isArray(u.ambientes) ? u.ambientes : (typeof u.ambientes === 'string' ? JSON.parse(u.ambientes) : []),
+            operacoesPermitidas: Array.isArray(u.operacoesPermitidas) ? u.operacoesPermitidas : (typeof u.operacoesPermitidas === 'string' ? JSON.parse(u.operacoesPermitidas) : []),
+            locaisPermitidos: u.locaisPermitidos && typeof u.locaisPermitidos === 'object' ? u.locaisPermitidos : {}
+          }));
+        }
+      } catch (err) {
+        console.warn('Falha de conexão Supabase:', err);
+      }
+      return null;
+    };
+
+    const syncUsersToSupabase = async (updatedUsers) => {
+      if (!supabaseClient || !Array.isArray(updatedUsers)) return;
+      try {
+        const rows = updatedUsers.map(u => ({
+          id: u.id,
+          nome: u.nome,
+          cargo: u.cargo,
+          username: u.username,
+          password: u.password,
+          isAdmin: Boolean(u.isAdmin),
+          ambientes: u.ambientes || [],
+          operacoesPermitidas: u.operacoesPermitidas || [],
+          locaisPermitidos: u.locaisPermitidos || {},
+          updated_at: new Date().toISOString()
+        }));
+        const { error } = await supabaseClient.from('sombra_enxoval_users').upsert(rows);
+        if (error) console.error('Erro ao sincronizar usuários no Supabase:', error);
+      } catch (err) {
+        console.error('Falha ao sincronizar usuários:', err);
+      }
+    };
+
+    const deleteUserFromSupabase = async (userId) => {
+      if (!supabaseClient || !userId) return;
+      try {
+        const { error } = await supabaseClient.from('sombra_enxoval_users').delete().eq('id', userId);
+        if (error) console.error('Erro ao excluir usuário no Supabase:', error);
+      } catch (err) {
+        console.error('Falha ao excluir no Supabase:', err);
+      }
+    };
 
     // SVG Icons
     const Icons = {
@@ -3038,7 +3109,6 @@
           if (saved) {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              // Ensure default usernames/passwords exist if missing
               return parsed.map(u => ({
                 ...u,
                 username: u.username || (u.id === 'user_admin' ? 'admin' : u.id),
@@ -3050,6 +3120,16 @@
         return DEFAULT_USERS;
       });
 
+      // Sincronização inicial em tempo real de usuários via Supabase Cloud
+      useEffect(() => {
+        fetchSupabaseUsers().then(cloudUsers => {
+          if (cloudUsers && cloudUsers.length > 0) {
+            setUsers(cloudUsers);
+            localStorage.setItem(DB_KEY_USERS, JSON.stringify(cloudUsers));
+          }
+        });
+      }, []);
+
       const [currentUserId, setCurrentUserId] = useState(() => {
         return localStorage.getItem(DB_KEY_CURRENT_USER) || 'user_admin';
       });
@@ -3058,11 +3138,13 @@
         return localStorage.getItem(DB_KEY_AUTH) === 'true';
       });
 
-            const currentUser = users.find(u => u.id === currentUserId) || users[0] || DEFAULT_USERS[0];
+      const currentUser = users.find(u => u.id === currentUserId) || users[0] || DEFAULT_USERS[0];
       const isLaundryOperator = 
         (currentUser?.id && currentUser.id.toLowerCase().includes('lavanderia')) ||
+        (currentUser?.id && currentUser.id.toLowerCase().includes('lavspa')) ||
         (currentUser?.cargo && currentUser.cargo.toLowerCase().includes('lavanderia')) ||
-        (currentUser?.username && currentUser.username.toLowerCase().includes('lavanderia'));
+        (currentUser?.username && currentUser.username.toLowerCase().includes('lavanderia')) ||
+        (currentUser?.username && currentUser.username.toLowerCase().includes('lavspa'));
 
       // Persistência de aba ativa e bloqueio estrito para Operador de Lavanderia
       useEffect(() => {
@@ -3098,11 +3180,11 @@
       }, [users]);
 
       // HANDLER: LOGIN DE USUÁRIO
-            const handleLogin = (loginUser, loginPass) => {
+      const handleLogin = (loginUser, loginPass) => {
         const rawUser = (loginUser || '').trim().toLowerCase();
         const cleanTyped = rawUser.replace(/[^a-z0-9]/g, '');
 
-        // Busca flexível por username, id ou aliases (ex: lavanderiaspa, lavanderia_spa, spa, etc.)
+        // Busca flexível por username, id ou aliases (ex: lavspa, lavanderiaspa, lavanderia_spa, spa, etc.)
         const userFound = users.find(u => {
           const uName = (u.username || '').toLowerCase();
           const cleanUName = uName.replace(/[^a-z0-9]/g, '');
@@ -3113,12 +3195,12 @@
           if (uId === rawUser || cleanUId === cleanTyped) return true;
           
           // Suporte para variações de lavanderia spa / floresta
-          if (cleanTyped === 'lavanderiaspa' || cleanTyped === 'lavanderiafloresta' || cleanTyped === 'lavfloresta') {
-            return cleanUName === 'lavanderiaspa' || cleanUId.includes('lavanderia_spa');
+          if (cleanTyped === 'lavspa' || cleanTyped === 'lavanderiaspa' || cleanTyped === 'lavanderiafloresta' || cleanTyped === 'lavfloresta') {
+            return cleanUName === 'lavspa' || cleanUName === 'lavanderiaspa' || cleanUId.includes('lavanderia_spa') || cleanUId.includes('lavspa');
           }
           // Suporte para variações de lavanderia hotel
-          if (cleanTyped === 'lavanderiahotel' || cleanTyped === 'lavhotel') {
-            return cleanUName === 'lavanderiahotel' || cleanUId.includes('lavanderia_hotel');
+          if (cleanTyped === 'lavhotel' || cleanTyped === 'lavanderiahotel') {
+            return cleanUName === 'lavhotel' || cleanUName === 'lavanderiahotel' || cleanUId.includes('lavanderia_hotel') || cleanUId.includes('lavhotel');
           }
 
           return false;
@@ -3133,7 +3215,9 @@
           userFound.password,
           'sombra2026',
           'spa123',
+          'lavspa123',
           'hotel123',
+          'lavhotel123',
           'lav123',
           'lavFloresta123',
           'lavHotel123'
@@ -3156,9 +3240,11 @@
         }
         const isLavanderia = 
           (userFound.id && userFound.id.toLowerCase().includes('lavanderia')) ||
+          (userFound.id && userFound.id.toLowerCase().includes('lavspa')) ||
           (userFound.cargo && userFound.cargo.toLowerCase().includes('lavanderia')) ||
           (userFound.nome && userFound.nome.toLowerCase().includes('lavanderia')) ||
-          (userFound.username && userFound.username.toLowerCase().includes('lavanderia'));
+          (userFound.username && userFound.username.toLowerCase().includes('lavanderia')) ||
+          (userFound.username && userFound.username.toLowerCase().includes('lavspa'));
 
         if (isLavanderia) {
           setActiveTab('lavanderia');
@@ -7387,8 +7473,9 @@
               onSavePassword={(newPassword) => {
                 const updated = users.map(u => u.id === currentUser.id ? { ...u, password: newPassword } : u);
                 setUsers(updated);
+                syncUsersToSupabase(updated);
                 setShowChangePasswordModal(false);
-                showToast('Sua senha foi alterada com sucesso!');
+                showToast('Sua nova senha foi salva e sincronizada na nuvem!');
               }}
             />
           )}
@@ -7401,7 +7488,8 @@
               onClose={() => setShowUserModal(false)}
               onSaveUsers={(updatedUsers) => {
                 setUsers(updatedUsers);
-                showToast('Usuários e permissões salvos com sucesso!');
+                syncUsersToSupabase(updatedUsers);
+                showToast('Usuários e permissões sincronizados na nuvem com sucesso!');
               }}
             />
           )}
@@ -8321,6 +8409,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
         if (confirm('Tem certeza que deseja excluir este perfil de usuário?')) {
           const updated = userList.filter(u => u.id !== userId);
           setUserList(updated);
+          deleteUserFromSupabase(userId);
           onSaveUsers(updated);
         }
       };
