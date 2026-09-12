@@ -8318,9 +8318,10 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs transition shadow-lg shadow-emerald-500/30 cursor-pointer transform active:scale-95"
                 >
-                  Salvar Nova Senha
+                  <Icons.Check />
+                  <span>Salvar Nova Senha</span>
                 </button>
               </div>
             </form>
@@ -8537,21 +8538,22 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
                                 setShowFormPassword(false);
                                 setActiveEditingUser(u);
                               }}
-                              className="p-1.5 text-slate-500 hover:text-indigo-600 dark:text-sombra-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-sombra-800 rounded-lg transition cursor-pointer"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:hover:bg-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold transition cursor-pointer shadow-sm"
                               title="Editar Permissões e Senha do Usuário"
                             >
                               <Icons.Edit />
+                              <span>Editar</span>
                             </button>
                             {u.id !== 'user_admin' && (
                               <button
                                 onClick={() => handleDeleteUser(u.id)}
-                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer border border-transparent hover:border-rose-300"
                                 title="Excluir Usuário"
                               >
                                 <Icons.Trash />
@@ -8822,19 +8824,20 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
                   )}
 
                   {/* FORM ACTIONS */}
-                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-sombra-800">
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-sombra-800">
                     <button
                       type="button"
                       onClick={() => setActiveEditingUser(null)}
-                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+                      className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-md cursor-pointer"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black rounded-xl text-sm transition shadow-lg shadow-emerald-500/30 cursor-pointer transform active:scale-95"
                     >
-                      Salvar Usuário & Permissões
+                      <Icons.Check />
+                      <span>Salvar Usuário & Permissões</span>
                     </button>
                   </div>
                 </form>
