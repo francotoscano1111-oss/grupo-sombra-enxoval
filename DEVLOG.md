@@ -13,6 +13,7 @@
 - **Aggiornamento Credenziali Centralizzato:** Ogni modifica apportata dall'Admin o dai singoli utenti nel menu *Gerenciar Usuários e Senhas* o *Alterar Senha* viene salvata e propagata istantaneamente a tutti i dispositivi connessi.
 - **Nuove Credenziali Operatore SPA:** Aggiornato l'utente della lavanderia SPA a `lavspa` (password: `lavspa123`), con supporto flessibile per alias di digitazione rapida.
 - **Restyling Bottoni Salvataggio & Modifica Utenti:** Riprogettato il pulsante *“Salvar Usuário & Permissões”* con gradiente smeraldo ad altissimo contrasto e icona spunta (`✓`), e trasformato il tasto *“Editar”* sulle card utente in un pulsante pill chiaro e visibile.
+- **Pulizia Schermata di Login di Produzione:** Rimossa la sezione *"Acesso Rápido para Demonstração / Ambiente de Testes"*, lasciando una schermata di login pulita, professionale e sicura.
 - **Fallback Offline Robusto:** Mantenuto il caching locale su `localStorage` per garantire caricamento istantaneo anche in caso di rete instabile.
 
 ---
