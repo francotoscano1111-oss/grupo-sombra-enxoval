@@ -4329,13 +4329,15 @@
           doc.text('Sistema Integrado de Gestão, Movimentação e Auditoria de Enxoval', 25, 82);
           doc.text('Módulos: Hotel & Resort | Floresta & SPA', 25, 88);
 
+          const isAdminUser = Boolean(currentUser?.isAdmin);
+
           doc.setFillColor(30, 41, 59);
-          doc.roundedRect(25, 105, 160, 130, 4, 4, 'F');
+          doc.roundedRect(25, 105, 160, isAdminUser ? 140 : 130, 4, 4, 'F');
 
           doc.setFontSize(12);
           doc.setTextColor(255, 255, 255);
           doc.setFont(undefined, 'bold');
-          doc.text('ÍNDICE DO MANUAL (6 CAPÍTULOS):', 35, 120);
+          doc.text(isAdminUser ? 'ÍNDICE DO MANUAL (7 CAPÍTULOS • ADMIN):' : 'ÍNDICE DO MANUAL (6 CAPÍTULOS):', 35, 118);
 
           const chaptersCover = [
             'Capítulo 1: Matriz de Estoque & Par Stock',
@@ -4343,14 +4345,15 @@
             'Capítulo 3: Unidades & Locais',
             'Capítulo 4: Catálogo de Itens de Enxoval',
             'Capítulo 5: Inventário & Contagem Física',
-            'Capítulo 6: Relatórios, Histórico & Backup'
+            'Capítulo 6: Relatórios, Histórico & Backup',
+            ...(isAdminUser ? ['Capítulo 7: Gestão de Usuários, Senhas & RBAC (Admin)'] : [])
           ];
 
-          doc.setFontSize(10);
+          doc.setFontSize(9.5);
           doc.setFont(undefined, 'normal');
           doc.setTextColor(203, 213, 225);
           chaptersCover.forEach((ch, idx) => {
-            doc.text(`• ${ch}`, 35, 135 + (idx * 15));
+            doc.text(`• ${ch}`, 35, 131 + (idx * (isAdminUser ? 14 : 15)));
           });
 
           doc.setFontSize(9);
@@ -4510,6 +4513,51 @@
             '• Botão "Sair (Backup)" na barra superior: Gera o arquivo JSON completo de segurança e notifica o usuário antes do fechamento.'
           ];
           doc.text(cap6Text, 14, 148, { maxWidth: 182 });
+
+          // --- PÁGINA 5: CAPÍTULO 7 (EXCLUSIVO ADMINISTRADOR) ---
+          if (isAdminUser) {
+            doc.addPage();
+            addHeaderFooter('CAPÍTULO 7 — GESTÃO DE USUÁRIOS & RBAC');
+
+            doc.setFontSize(15);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont(undefined, 'bold');
+            doc.text('Capítulo 7: Gestão de Usuários, Senhas & Permissões (Admin)', 14, 22);
+
+            doc.setFontSize(8.5);
+            doc.setTextColor(180, 83, 9); // Amber
+            doc.setFont(undefined, 'bold');
+            doc.text('👑 SEÇÃO DE ACESSO RESTRITO — GOVERNANTA GERAL / DIRETORIA', 14, 28);
+
+            doc.setFontSize(9.5);
+            doc.setTextColor(51, 65, 85);
+            doc.setFont(undefined, 'normal');
+            const cap7Text = [
+              'O módulo de Gerenciamento de Usuários e Perfis de Acesso (RBAC) permite à Governanta Geral e Diretoria controlar com total segurança as credenciais e permissões operacionais de cada membro da equipe.',
+              '',
+              '1. Acesso ao Painel de Usuários (RBAC):',
+              '• Acessível através do menu superior de usuário (clicando no nome do usuário > "Gerenciar Usuários e Senhas"). Visível exclusivamente para perfis Administrador Geral.',
+              '',
+              '2. Cadastro e Edição de Colaboradores:',
+              '• Permite criar novos operadores ou editar cadastros existentes (Nome Completo, Cargo/Função, Login de Acesso @username e Senha de Acesso).',
+              '• Cada colaborador possui login e senha próprios para acesso individualizado no seu smartphone ou computador.',
+              '',
+              '3. Controle Granular de Ambientes e Locais Autorizados:',
+              '• Definição se o operador atua no Hotel & Resort, na Floresta & SPA, ou em ambos os ambientes.',
+              '• Seleção seletiva dos setores, quartos e rouparias que cada operador está autorizado a visualizar e movimentar.',
+              '',
+              '4. Permissões Seletivas por Tipo de Operação:',
+              '• É possível habilitar ou restringir individualmente: Compras/Entradas, Abastecimentos, Envio para Lavanderia, Retorno de Lavanderia, Descartes por Avaria e Perdas.',
+              '',
+              '5. Sincronização em Nuvem em Tempo Real (Supabase Cloud):',
+              '• Todas as alterações de usuários, senhas ou permissões salvas pelo Administrador são sincronizadas instantaneamente com o banco de dados em nuvem Supabase.',
+              '• O novo login e senha passam a valer imediatamente em todos os smartphones, tablets e computadores de toda a equipe sem necessidade de configuração manual em cada aparelho.',
+              '',
+              '6. Troca de Senha Individual:',
+              '• Qualquer operador pode alterar sua própria senha através do menu "Alterar Minha Senha". A nova senha é salva e sincronizada automaticamente na nuvem.'
+            ];
+            doc.text(cap7Text, 14, 35, { maxWidth: 182 });
+          }
 
           const filename = `Manual_do_Usuario_Sombra_Enxoval_PRO_${new Date().toISOString().split('T')[0]}.pdf`;
           doc.save(filename);
@@ -6932,7 +6980,7 @@
                       <h3 className="manual-title text-base font-extrabold text-white flex items-center gap-2">
                         <span>Manual do Usuário — SOMBRA ENXOVAL PRO</span>
                         <span className="manual-badge px-2.5 py-0.5 rounded-full text-[11px] font-bold">
-                          6 Capítulos • Versão 3.0
+                          {currentUser?.isAdmin ? '7 Capítulos • Edição Administrador' : '6 Capítulos • Versão 3.0'}
                         </span>
                       </h3>
                       <p className="manual-sub text-xs mt-0.5 font-medium">
@@ -6960,7 +7008,7 @@
                   </div>
                 </div>
 
-                {/* MODAL BODY (6 CHAPTERS) */}
+                {/* MODAL BODY (6 CHAPTERS + CONDITIONAL ADMIN CHAPTER 7) */}
                 <div className="p-6 overflow-y-auto flex-1 space-y-6 text-xs text-slate-700 dark:text-slate-200 font-sans leading-relaxed bg-slate-50 dark:bg-sombra-900">
                   
                   {/* CAPÍTULO 1 */}
@@ -7082,12 +7130,39 @@
                     </ul>
                   </div>
 
+                  {/* CAPÍTULO 7 (EXCLUSIVO ADMINISTRADOR - RBAC & SUPABASE) */}
+                  {currentUser?.isAdmin && (
+                    <div className="bg-amber-50/70 dark:bg-amber-950/30 p-5 rounded-2xl border border-amber-300 dark:border-amber-700/60 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-sm">
+                          <div className="p-1.5 bg-amber-200 dark:bg-amber-900/60 rounded-lg text-amber-800 dark:text-amber-300 border border-amber-400 dark:border-amber-700">
+                            <Icons.Shield />
+                          </div>
+                          <h4>Capítulo 7: Gestão de Usuários, Senhas & Permissões (RBAC Cloud)</h4>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-200 text-amber-900 dark:bg-amber-900/70 dark:text-amber-200 border border-amber-400/60">
+                          👑 Exclusivo Admin
+                        </span>
+                      </div>
+                      <p className="text-slate-700 dark:text-slate-300">
+                        O módulo de <strong>Gestão de Usuários</strong> (aba "Usuários & Acessos") permite ao Administrador gerenciar credenciais, senhas e níveis de permissão com sincronização em nuvem via Supabase em tempo real.
+                      </p>
+                      <ul className="list-disc list-inside space-y-1.5 text-slate-700 dark:text-slate-300 ml-2">
+                        <li><strong>Sincronização em Nuvem (Supabase):</strong> Qualquer alteração de usuário, senha ou permissão é replicada instantaneamente para todos os dispositivos (smartphones, tablets e computadores) da equipe.</li>
+                        <li><strong>Edição de Senhas e Logins:</strong> Na tabela de usuários, clique no botão azul <em>Editar</em> para alterar o nome de exibição, username de login ou redefinir a senha do operador.</li>
+                        <li><strong>Perfis de Acesso (RBAC):</strong> Defina o perfil adequado para cada operador (Administrador Geral, Camareira / Andares, SPA & Terapias, Lavanderia Hotel).</li>
+                        <li><strong>Permissões Granulares:</strong> Controle individualmente o acesso aos módulos (Matriz, Movimentações, Quartos, Catálogo, Inventário, Relatórios e Usuários), além de permissão de gravação/edição.</li>
+                        <li><strong>Gravação Rápida:</strong> Ao concluir a edição, clique no botão verde <em>Salvar Usuário & Permissões</em>. O sistema atualizará os dados na nuvem com feedback visual imediato.</li>
+                      </ul>
+                    </div>
+                  )}
+
                 </div>
 
                 {/* MODAL FOOTER */}
                 <div className="p-4 border-t border-slate-200 dark:border-sombra-800 bg-slate-100 dark:bg-sombra-950 flex items-center justify-between">
                   <span className="text-xs text-slate-500 dark:text-sombra-400 font-medium">
-                    GRUPO SOMBRA • Manual do Usuário • Versão 3.0 (PT-BR)
+                    GRUPO SOMBRA • Manual do Usuário • {currentUser?.isAdmin ? 'Versão 3.0 (Edição Administrador)' : 'Versão 3.0 (Operação)'}
                   </span>
                   <div className="flex items-center gap-2">
                     <button

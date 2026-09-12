@@ -4,6 +4,17 @@
 
 ---
 
+## [2026-09-12] — Manuale Utente Dinamico e PDF con Capitolo 7 Esclusivo per Amministratore (RBAC & Cloud)
+
+**Status AS IS:** Il manuale dell'utente (sia nella modale interattiva dell'app che nel documento PDF A4 esportabile) include ora il **Capitolo 7: Gestione Utenti, Password & Permessi (RBAC Cloud)** visibile esclusivamente quando loggati con account Amministratore.
+
+### ✅ Fatto
+- **Capitolo 7 Esclusivo Admin nel Manuale Interattivo:** Integrata una sezione dedicata con badge oro *👑 Exclusivo Admin*, spiegando la sincronizzazione Realtime Supabase, la modifica credenziali multi-dispositivo, i ruoli e la gestione granulare dei permessi.
+- **Export PDF Condizionale Dinamico (jsPDF):** La funzione `handleDownloadManualPDF` calcola dinamicamente l'indice (6 capitoli per operatori, 7 capitoli per Admin) e genera la Pagina 5 con il Capitolo 7 solo se l'utente corrente è un Amministratore.
+- **Badge e Intestazioni Dinamiche:** Il contatore capitoli e il footer mostrano automaticamente *"7 Capítulos • Edizione Amministratore"* o *"6 Capítulos • Versione Standard"* in base al profilo di login.
+
+---
+
 ## [2026-09-12] — Sincronizzazione Utenti e Credenziali Realtime Multi-Dispositivo con Supabase
 
 **Status AS IS:** Integrato il database cloud Supabase (`sombra_enxoval_users`) per la gestione centralizzata in tempo reale di utenti, password e permessi RBAC tra PC Admin, smartphone delle camareiras, tablet e qualsiasi dispositivo operativo.
