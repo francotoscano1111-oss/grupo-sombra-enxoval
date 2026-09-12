@@ -101,55 +101,79 @@
         /* =========================================================
        INSTITUTIONAL LOGIN SCREEN - FIXED HIGH CONTRAST & LEGIBILITY
        ========================================================= */
-    .login-container {
+    .login-container,
+    body.light .login-container {
       background: radial-gradient(circle at 50% 20%, #1e293b 0%, #080d1a 100%) !important;
       color: #f8fafc !important;
       min-height: 100vh;
     }
-    .login-title {
+    .login-title,
+    .login-title *,
+    body.light .login-title,
+    body.light .login-title * {
       color: #ffffff !important;
     }
-    .login-subtitle {
+    .login-subtitle,
+    .login-subtitle *,
+    body.light .login-subtitle,
+    body.light .login-subtitle * {
       color: #cbd5e1 !important;
     }
-    .login-card {
-      background-color: rgba(15, 23, 42, 0.95) !important;
+    .login-card,
+    body.light .login-card {
+      background-color: rgba(15, 23, 42, 0.96) !important;
       border: 1px solid #334155 !important;
       color: #ffffff !important;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
     }
-    .login-card label {
+    .login-card-title,
+    .login-card-title *,
+    .login-card h2,
+    .login-card h2 *,
+    body.light .login-card-title,
+    body.light .login-card-title *,
+    body.light .login-card h2,
+    body.light .login-card h2 * {
+      color: #ffffff !important;
+    }
+    .login-card-subtitle,
+    .login-card-subtitle *,
+    .login-card p,
+    .login-card p *,
+    body.light .login-card-subtitle,
+    body.light .login-card-subtitle *,
+    body.light .login-card p,
+    body.light .login-card p * {
+      color: #cbd5e1 !important;
+    }
+    .login-card label,
+    .login-card label *,
+    body.light .login-card label,
+    body.light .login-card label * {
       color: #e2e8f0 !important;
     }
-    .login-card input {
-      background-color: #020617 !important;
-      color: #ffffff !important;
-      border: 1px solid #334155 !important;
+    .login-card input,
+    body.light .login-card input {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border: 1.5px solid #cbd5e1 !important;
+      font-weight: 700 !important;
     }
-    .login-card input::placeholder {
+    .login-card input::placeholder,
+    body.light .login-card input::placeholder {
       color: #64748b !important;
+      font-weight: 500 !important;
     }
-    .login-card input:focus {
+    .login-card input:focus,
+    body.light .login-card input:focus {
       border-color: #10b981 !important;
       outline: none !important;
-      box-shadow: 0 0 0 1px #10b981 !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
     }
-    .login-chip {
-      background-color: #020617 !important;
-      border: 1px solid #334155 !important;
-      color: #f8fafc !important;
-    }
-    .login-chip:hover {
-      background-color: #1e293b !important;
-      border-color: #10b981 !important;
-    }
-    .login-chip-name {
-      color: #ffffff !important;
-    }
-    .login-chip-user {
-      color: #34d399 !important;
-    }
-    .login-footer {
+    .login-footer,
+    .login-footer *,
+    body.light .login-footer,
+    body.light .login-footer * {
       color: #94a3b8 !important;
     }
 
@@ -8161,11 +8185,11 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
             {/* LOGIN CARD */}
             <div className="login-card backdrop-blur-xl rounded-3xl p-7 space-y-5">
               <div className="border-b border-slate-700/80 pb-3">
-                <h2 className="text-base font-extrabold text-white flex items-center gap-2">
-                  <span className="text-brand-400"><Icons.Shield /></span>
-                  <span>Acesso Autorizado</span>
+                <h2 className="login-card-title text-base font-extrabold flex items-center gap-2" style={{ color: '#ffffff' }}>
+                  <span className="text-emerald-400" style={{ color: '#34d399' }}><Icons.Shield /></span>
+                  <span style={{ color: '#ffffff' }}>Acesso Autorizado</span>
                 </h2>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="login-card-subtitle text-xs mt-1 font-medium" style={{ color: '#cbd5e1' }}>
                   Digite seu usuário e senha para iniciar sua sessão de trabalho.
                 </p>
               </div>
