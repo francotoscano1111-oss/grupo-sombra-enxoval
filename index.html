@@ -292,6 +292,16 @@
     }
 
     /* Primary Text */
+    body.light .btn-modal-close,
+    body.light .btn-modal-close *,
+    body.light button.btn-modal-close {
+      color: #ffffff !important;
+      background-color: #0f172a !important;
+    }
+    body.light .btn-modal-close:hover {
+      background-color: #1e293b !important;
+      color: #ffffff !important;
+    }
     body.light .text-white {
       color: #0f172a !important;
     }
@@ -1451,7 +1461,8 @@
               </div>
               <button
                 onClick={onClose}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+                className="btn-modal-close px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98] border border-slate-700/60"
+                style={{ color: '#ffffff' }}
               >
                 Fechar
               </button>
@@ -6957,7 +6968,8 @@
                     </div>
                     <button
                       onClick={() => setViewingInventario(null)}
-                      className="px-4 py-2 bg-sombra-800 hover:bg-sombra-700 text-white rounded-xl font-medium transition"
+                      className="btn-modal-close px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98] border border-slate-700/60"
+                      style={{ color: '#ffffff' }}
                     >
                       Fechar Visualização
                     </button>
@@ -7489,7 +7501,8 @@
                     </div>
                     <button
                       onClick={() => setActiveKpiModal(null)}
-                      className="px-5 py-2 bg-sombra-800 hover:bg-sombra-700 text-white rounded-xl font-medium transition"
+                      className="btn-modal-close px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98] border border-slate-700/60"
+                      style={{ color: '#ffffff' }}
                     >
                       Fechar
                     </button>

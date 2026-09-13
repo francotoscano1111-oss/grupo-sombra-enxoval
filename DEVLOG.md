@@ -4,6 +4,16 @@
 
 ---
 
+## [2026-09-13] — Risoluzione Contrasto e Massima Visibilità Pulsante "Fechar" nei Modali
+
+**Status AS IS:** Il pulsante "Fechar" (chiudi) nelle finestre modali (inclusa la modale di *Auditoria & Conciliação de Saldos*, *Visualizzazione Inventario* e *Dettaglio KPI*) presenta ora un testo bianco brillante puro (`#ffffff`) in grassetto marcato, garantendo perfetta leggibilità e contrasto sia in Dark Mode che in Light Mode.
+
+### ✅ Fatto
+- **Risoluzione Sovrascrittura Light Mode:** Eliminato il conflitto CSS in modalità chiara (`body.light .text-white`) che scuriva il testo del pulsante su sfondo scuro.
+- **Classe `.btn-modal-close` ad Alto Contrasto:** Introdotta la classe CSS dedicata con proprietà forzate (`color: #ffffff !important`, sfondo `bg-slate-900` / `hover:bg-slate-800`) e inline style di sicurezza per garantire massima nitidezza visiva su tutti i dispositivi.
+
+---
+
 ## [2026-09-13] — Visualizzazione Esclusiva delle 6 KPI Card nel Tab "Matriz de Estoque"
 
 **Status AS IS:** Le 6 KPI Card riassuntive del patrimonio enxoval (*Total em Estoque*, *Total em Uso*, *Almoxarifado*, *Meta Par Stock*, *Descarte Total*, *Alertas / Faltas*) vengono ora renderizzate esclusivamente nella scheda **Matriz de Estoque**, lasciando gli altri menu (*Movimentações Rápidas*, *Controle de Lavanderia*, *Unidades & Locais*, *Catálogo de Itens*, *Inventário & Contagem*, *Relatórios & Histórico*) puliti e focalizzati sulle rispettive schermate operative.
