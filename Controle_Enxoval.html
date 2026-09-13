@@ -1566,6 +1566,148 @@
         doc.save('Relatorio_Auditoria_Discrepancias_Lavanderia.pdf');
       };
 
+      const handleExportarPDFConciliacao = () => {
+        try {
+          const jsPDFClass = window.jspdf ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+          if (!jsPDFClass) {
+            alert('Biblioteca jsPDF não carregada no navegador.');
+            return;
+          }
+
+          const doc = new jsPDFClass('p', 'mm', 'a4');
+          const ambNome = modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA';
+          const agora = new Date().toLocaleString('pt-BR');
+
+          // Header Banner Topo
+          doc.setFillColor(15, 23, 42); // slate-900
+          doc.rect(0, 0, 210, 28, 'F');
+
+          // Faixa de destaque verde
+          doc.setFillColor(16, 185, 129); // emerald-500
+          doc.rect(0, 28, 210, 2.5, 'F');
+
+          // Título Principal
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(13);
+          doc.setTextColor(255, 255, 255);
+          doc.text('GRUPO SOMBRA — AUDITORIA DE CONCILIAÇÃO DE LAVANDERIA', 14, 12);
+
+          // Subtítulo
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8.5);
+          doc.setTextColor(203, 213, 225); // slate-300
+          doc.text('Relatório Pré-Aprovação: Comparativo de Saldos e Posição de Pendências (Antes vs Depois)', 14, 18);
+          doc.text(`Unidade: ${ambNome} | Quinzenas Auditadas: ${activeQuinzenas.length} | Emitido em: ${agora}`, 14, 24);
+
+          // Caixa de Resumo dos KPIs Operacionais
+          doc.setFillColor(248, 250, 252); // slate-50
+          doc.setDrawColor(203, 213, 225); // slate-300
+          doc.roundedRect(10, 34, 190, 23, 2, 2, 'FD');
+
+          doc.setFontSize(7.5);
+          doc.setFont('helvetica', 'bold');
+
+          // KPI 1: Retidos Lavanderia
+          doc.setTextColor(225, 29, 72); // rose-600
+          doc.text('[1] PENDÊNCIAS RETIDAS NA LAVANDERIA:', 13, 40.5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(15, 23, 42);
+          doc.text(`${conciliacaoResult.statsConciliacao.totalPendenteLavanderia} peças (${conciliacaoResult.statsConciliacao.itensComPendencia} artigos a devolver ao hotel)`, 72, 40.5);
+
+          // KPI 2: Créditos Hotel
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(37, 99, 235); // blue-600
+          doc.text('[2] CRÉDITOS A FAVOR DO HOTEL:', 13, 46);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(15, 23, 42);
+          doc.text(`${conciliacaoResult.statsConciliacao.totalCreditoHotel} peças (${conciliacaoResult.statsConciliacao.itensComCredito} artigos com entregas excedentes)`, 64, 46);
+
+          // KPI 3: Zerados / Ajustados
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(5, 150, 105); // emerald-600
+          doc.text('[3] ARTIGOS ZERADOS / TOTAL AJUSTADO:', 13, 51.5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(15, 23, 42);
+          doc.text(`${conciliacaoResult.statsConciliacao.itensZerados} artigos zerados | Correções aplicadas em ${conciliacaoResult.statsConciliacao.alterados} de ${conciliacaoResult.statsConciliacao.totalItens} artigos`, 74, 51.5);
+
+          // Preparação das linhas da tabela
+          const rows = (conciliacaoResult.itemComparison || []).map((it, i) => {
+            let statusDesc = '';
+            if (it.tipoPendencia === 'PENDENTE_LAVANDERIA') {
+              statusDesc = `[RETIDO] ${it.saldoConciliado} pçs retidas (a devolver)`;
+            } else if (it.tipoPendencia === 'CREDITO_HOTEL') {
+              statusDesc = `[CRÉDITO] ${Math.abs(it.saldoConciliado)} pçs a favor do hotel`;
+            } else {
+              statusDesc = `[ZERADO] Sem pendência (regularizado)`;
+            }
+
+            const ajusteStr = it.diferenca === 0 ? '0' : (it.diferenca > 0 ? `+${it.diferenca}` : `${it.diferenca}`);
+
+            return [
+              (i + 1).toString(),
+              it.item,
+              it.saldoAtual.toString(),
+              it.saldoConciliado.toString(),
+              ajusteStr,
+              statusDesc
+            ];
+          });
+
+          doc.autoTable({
+            startY: 61,
+            head: [['#', 'Artigo de Enxoval', 'Saldo Antes (Planilha)', 'Saldo Depois (Conciliado)', 'Ajuste', 'Posição da Pendência Resultante']],
+            body: rows,
+            theme: 'grid',
+            headStyles: {
+              fillColor: [30, 41, 59], // slate-800
+              textColor: [255, 255, 255],
+              fontSize: 7.5,
+              fontStyle: 'bold',
+              halign: 'center'
+            },
+            columnStyles: {
+              0: { cellWidth: 9, halign: 'center' },
+              1: { cellWidth: 50, fontStyle: 'bold' },
+              2: { cellWidth: 26, halign: 'center' },
+              3: { cellWidth: 26, halign: 'center', fontStyle: 'bold' },
+              4: { cellWidth: 17, halign: 'center', fontStyle: 'bold' },
+              5: { cellWidth: 62 }
+            },
+            styles: {
+              fontSize: 7.5,
+              cellPadding: 1.8,
+              valign: 'middle'
+            },
+            alternateRowStyles: {
+              fillColor: [248, 250, 252] // slate-50
+            },
+            didDrawPage: (data) => {
+              const pageCount = doc.internal.getNumberOfPages();
+              doc.setFontSize(7);
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(148, 163, 184); // slate-400
+              doc.text(
+                `SOMBRA ENXOVAL PRO — Relatório de Auditoria Pré-Aprovação de Lavanderia | Página ${data.pageNumber} de ${pageCount}`,
+                10,
+                290
+              );
+            },
+            margin: { left: 10, right: 10, bottom: 12 }
+          });
+
+          const safeAmb = modalAmbiente === 'hotel' ? 'Hotel' : 'SPA';
+          const fileName = `Auditoria_Pre_Conciliacao_Lavanderia_${safeAmb}_${new Date().toISOString().slice(0, 10)}.pdf`;
+          doc.save(fileName);
+
+          if (typeof showToast === 'function') {
+            showToast('📄 Relatório PDF gerado com sucesso para conferência!');
+          }
+        } catch (err) {
+          console.error('Erro ao gerar PDF de conciliação:', err);
+          alert('Erro ao gerar PDF: ' + err.message);
+        }
+      };
+
       return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white dark:bg-sombra-900 border border-slate-300 dark:border-sombra-700 w-full max-w-5xl max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white">
@@ -2026,7 +2168,16 @@
                     ⬅️ Voltar ao Histórico
                   </button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={handleExportarPDFConciliacao}
+                      className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                      title="Baixar relatório em PDF com a lista de itens e saldos antes e depois para conferência prévia"
+                    >
+                      <Icons.Printer />
+                      <span>📄 Baixar PDF de Conferência</span>
+                    </button>
+
                     <button
                       disabled={activeQuinzenas.length === 0}
                       onClick={() => setViewMode('CONFIRM_CONCILIACAO')}
@@ -2174,10 +2325,19 @@
                     <span>Snapshot de backup salvo automaticamente. Reversível a qualquer momento com <em>"Desfazer"</em>.</span>
                   </div>
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap">
+                    <button
+                      onClick={handleExportarPDFConciliacao}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                      title="Baixar relatório em PDF com o comparativo de saldos antes e depois para conferência prévia"
+                    >
+                      <Icons.Printer />
+                      <span>📄 Baixar PDF de Conferência</span>
+                    </button>
+
                     <button
                       onClick={() => setViewMode('PREVIEW_CONCILIACAO')}
-                      className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
                     >
                       ⬅️ Voltar à Revisão
                     </button>
