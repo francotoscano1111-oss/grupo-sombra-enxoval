@@ -4,6 +4,20 @@
 
 ---
 
+## [2026-09-13] — Conciliazione Matematica dei Saldi di Lavanderia con Anteprima, Doppia Conferma e Rollback
+
+**Status AS IS:** Nel modulo *Auditoria & Conciliação de Saldos* di Lavanderia è disponibile il nuovo strumento di conciliazione matematica continua: permette di calcolare i saldi esatti a catena eliminando le discrepanze storiche manuali dei fogli Excel, mostrando un'anteprima comparativa dettagliata prima/dopo per ogni articolo, applicando le modifiche solo previa doppia conferma di sicurezza e garantendo la reversibilità totale dell'operazione tramite snapshot di backup e pulsante di ripristino ("Desfazer").
+
+### ✅ Fatto
+- **Algoritmo di Chaining Matematico Continuo:** Ricalcola sequenzialmente tutte le 25 quindicine, propagando il `saldoFinal` esatto come `saldoAnt` della quindicina successiva ed eliminando i salti manuali.
+- **Flusso a 3 Fasi con Doppia Conferma:**
+  - *Fase 1 (Storico Discrepanze):* Accesso al report storico e avvio del calcolo tramite pulsante `✨ Aplicar Correções Matemáticas`.
+  - *Fase 2 (Anteprima Totali per Articolo):* Tabella comparativa ad alto contrasto con saldo attuale, nuovo saldo matematico, delta (+ / - pezzi), badge di impatto e KPI globali di variazione.
+  - *Fase 3 (Conferma di Sicurezza):* Schermata riassuntiva con avviso di salvataggio automatico del backup e pulsante di autorizzazione definitiva.
+- **Sistema di Backup e Rollback Istantaneo:** Salvataggio automatico dello snapshot dei dati di lavanderia in `localStorage` prima dell'applicazione e pulsante `↩️ Desfazer Conciliação` per ripristinare i dati originali in qualsiasi momento.
+
+---
+
 ## [2026-09-13] — Risoluzione Contrasto e Massima Visibilità Pulsante "Fechar" nei Modali
 
 **Status AS IS:** Il pulsante "Fechar" (chiudi) nelle finestre modali (inclusa la modale di *Auditoria & Conciliação de Saldos*, *Visualizzazione Inventario* e *Dettaglio KPI*) presenta ora un testo bianco brillante puro (`#ffffff`) in grassetto marcato, garantendo perfetta leggibilità e contrasto sia in Dark Mode che in Light Mode.
