@@ -4,16 +4,20 @@
 
 ---
 
-## [2026-09-13] — Conciliazione Matematica dei Saldi di Lavanderia con Anteprima, Doppia Conferma e Rollback
+## [2026-09-13] — Conciliazione Matematica Lavanderia con Pendenza per Singolo Item, Selettore Ambiente, Anteprima, Doppia Conferma e Rollback
 
-**Status AS IS:** Nel modulo *Auditoria & Conciliação de Saldos* di Lavanderia è disponibile il nuovo strumento di conciliazione matematica continua: permette di calcolare i saldi esatti a catena eliminando le discrepanze storiche manuali dei fogli Excel, mostrando un'anteprima comparativa dettagliata prima/dopo per ogni articolo, applicando le modifiche solo previa doppia conferma di sicurezza e garantendo la reversibilità totale dell'operazione tramite snapshot di backup e pulsante di ripristino ("Desfazer").
+**Status AS IS:** Nel modulo *Auditoria & Conciliação de Saldos* di Lavanderia è disponibile il nuovo strumento avanzato di conciliazione matematica: calcola i saldi esatti continui eliminando le discrepanze storiche manuali dei fogli Excel, fornisce il dettaglio operativo della **posizione delle pendenze per ciascun item** (🔴 Pezzi trattenuti in lavanderia da restituire, 🔵 Credito a favore dell'hotel, 🟢 Senza pendenze / regolarizzati) sia in fase di revisione che nella tabella di conferma finale, include un selettore di ambiente intelligente (Floresta & SPA / Hotel & Resort con auto-rilevamento dati), applica le modifiche solo previa doppia conferma di sicurezza e garantisce la reversibilità totale tramite snapshot di backup e pulsante di ripristino ("Desfazer").
 
 ### ✅ Fatto
-- **Algoritmo di Chaining Matematico Continuo:** Ricalcola sequenzialmente tutte le 25 quindicine, propagando il `saldoFinal` esatto come `saldoAnt` della quindicina successiva ed eliminando i salti manuali.
-- **Flusso a 3 Fasi con Doppia Conferma:**
+- **Algoritmo di Chaining Matematico & Analisi Operativa Pendenze:** Ricalcola sequenzialmente tutte le 25 quindicine, propagando il `saldoFinal` esatto come `saldoAnt` della quindicina successiva ed eliminando i salti manuali. Classifica ogni articolo secondo il significato operativo effettivo del saldo:
+  - `🔴 PENDENTE NA LAVANDERIA` (saldo > 0: pezzi inviati e non ancora riconsegnati dalla lavanderia, debito della lavanderia verso l'hotel).
+  - `🔵 CRÉDITO A FAVOR DO HOTEL` (saldo < 0: eccedenza di resi/restituzioni a credito dell'hotel).
+  - `🟢 SEM PENDÊNCIA / ZERADO` (saldo = 0: posizione perfettamente bilanciata e regolarizzata).
+- **Selettore Intelligente dell'Ambiente nel Modale:** Tab switch dedicato nell'header del modale tra `🌿 Floresta & SPA` e `🏨 Hotel & Resort` con conteggio quindicine in tempo reale e auto-rilevamento dell'ambiente con dati storici per evitare visualizzazioni vuote accidentali.
+- **Flusso a 3 Fasi con Dettaglio Pendenze e Doppia Conferma:**
   - *Fase 1 (Storico Discrepanze):* Accesso al report storico e avvio del calcolo tramite pulsante `✨ Aplicar Correções Matemáticas`.
-  - *Fase 2 (Anteprima Totali per Articolo):* Tabella comparativa ad alto contrasto con saldo attuale, nuovo saldo matematico, delta (+ / - pezzi), badge di impatto e KPI globali di variazione.
-  - *Fase 3 (Conferma di Sicurezza):* Schermata riassuntiva con avviso di salvataggio automatico del backup e pulsante di autorizzazione definitiva.
+  - *Fase 2 (Anteprima Dettagliata per Singolo Item):* 4 KPI card operative (🔴 Retidos, 🔵 Créditos, 🟢 Regularizados, ⚖️ Ajustados), filtri rapidi a pillola (`Todos`, `Retidos Lavanderia`, `Crédito Hotel`, `Sem Pendência`), barra di ricerca item e tabella analitica con saldo attuale, nuovo saldo e stato operativo esplicito della pendenza.
+  - *Fase 3 (Conferma di Sicurezza con Tabella di Registrazione):* Schermata riassuntiva con 3 card operative, avviso di backup automatico e **tabella scorrevole articolo per articolo** che mostra esattamente la posizione finale della pendenza che verrà salvata nel database per ciascun item prima del click finale.
 - **Sistema di Backup e Rollback Istantaneo:** Salvataggio automatico dello snapshot dei dati di lavanderia in `localStorage` prima dell'applicazione e pulsante `↩️ Desfazer Conciliação` per ripristinare i dati originali in qualsiasi momento.
 
 ---

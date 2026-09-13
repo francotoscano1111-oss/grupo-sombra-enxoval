@@ -1208,7 +1208,18 @@
         return { 
           updatedQuinzenas: [], 
           itemComparison: [], 
-          statsConciliacao: { totalItens: 0, alterados: 0, saldoAtualTotal: 0, saldoConciliadoTotal: 0, diferencaLiquida: 0 } 
+          statsConciliacao: { 
+            totalItens: 0, 
+            alterados: 0, 
+            saldoAtualTotal: 0, 
+            saldoConciliadoTotal: 0, 
+            diferencaLiquida: 0,
+            totalPendenteLavanderia: 0,
+            itensComPendencia: 0,
+            totalCreditoHotel: 0,
+            itensComCredito: 0,
+            itensZerados: 0
+          } 
         };
       }
 
@@ -1262,16 +1273,40 @@
       let alterados = 0;
       let saldoAtualTotal = 0;
       let saldoConciliadoTotal = 0;
+      let totalPendenteLavanderia = 0;
+      let itensComPendencia = 0;
+      let totalCreditoHotel = 0;
+      let itensComCredito = 0;
+      let itensZerados = 0;
 
       const itemComparison = Array.from(itemMap.values()).map(entry => {
         const delta = entry.saldoConciliado - entry.saldoAtual;
         if (delta !== 0) alterados++;
         saldoAtualTotal += entry.saldoAtual;
         saldoConciliadoTotal += entry.saldoConciliado;
+
+        let tipoPendencia = 'ZERADO';
+        let textoPosicao = 'Sem pendência (0 peças)';
+        if (entry.saldoConciliado > 0) {
+          tipoPendencia = 'PENDENTE_LAVANDERIA';
+          textoPosicao = `${entry.saldoConciliado} pçs retidas na lavanderia (a devolver)`;
+          totalPendenteLavanderia += entry.saldoConciliado;
+          itensComPendencia++;
+        } else if (entry.saldoConciliado < 0) {
+          tipoPendencia = 'CREDITO_HOTEL';
+          textoPosicao = `Crédito de ${Math.abs(entry.saldoConciliado)} pçs a favor do hotel`;
+          totalCreditoHotel += Math.abs(entry.saldoConciliado);
+          itensComCredito++;
+        } else {
+          itensZerados++;
+        }
+
         return {
           ...entry,
           diferenca: delta,
-          status: delta === 0 ? 'IGUAL' : (delta > 0 ? 'AUMENTO' : 'REDUÇÃO')
+          status: delta === 0 ? 'IGUAL' : (delta > 0 ? 'AUMENTO' : 'REDUÇÃO'),
+          tipoPendencia,
+          textoPosicao
         };
       });
 
@@ -1283,7 +1318,12 @@
           alterados,
           saldoAtualTotal,
           saldoConciliadoTotal,
-          diferencaLiquida: saldoConciliadoTotal - saldoAtualTotal
+          diferencaLiquida: saldoConciliadoTotal - saldoAtualTotal,
+          totalPendenteLavanderia,
+          itensComPendencia,
+          totalCreditoHotel,
+          itensComCredito,
+          itensZerados
         }
       };
     }
@@ -1317,6 +1357,7 @@
       const [filtroPeriodo, setFiltroPeriodo] = useState('TODOS');
       const [filtroItem, setFiltroItem] = useState('');
       const [filtroItemPreview, setFiltroItemPreview] = useState('');
+      const [filtroTipoPendencia, setFiltroTipoPendencia] = useState('TODOS'); // 'TODOS' | 'PENDENTE' | 'CREDITO' | 'ZERADO'
 
       const backupStorageKey = `sombra_enxoval_lav_backup_${modalAmbiente}`;
       const [hasBackup, setHasBackup] = useState(() => {
@@ -1377,11 +1418,15 @@
 
       // Filtra itens na tabela de preview da conciliação
       const filteredItemComparison = useMemo(() => {
-        if (!filtroItemPreview) return conciliacaoResult.itemComparison;
-        return (conciliacaoResult.itemComparison || []).filter(it =>
-          (it.item || '').toLowerCase().includes(filtroItemPreview.toLowerCase())
-        );
-      }, [conciliacaoResult, filtroItemPreview]);
+        return (conciliacaoResult.itemComparison || []).filter(it => {
+          const matchText = !filtroItemPreview || (it.item || '').toLowerCase().includes(filtroItemPreview.toLowerCase());
+          let matchTipo = true;
+          if (filtroTipoPendencia === 'PENDENTE') matchTipo = it.tipoPendencia === 'PENDENTE_LAVANDERIA';
+          else if (filtroTipoPendencia === 'CREDITO') matchTipo = it.tipoPendencia === 'CREDITO_HOTEL';
+          else if (filtroTipoPendencia === 'ZERADO') matchTipo = it.tipoPendencia === 'ZERADO';
+          return matchText && matchTipo;
+        });
+      }, [conciliacaoResult, filtroItemPreview, filtroTipoPendencia]);
 
       // Aplicação definitiva com criação de backup (Etapa 2)
       const handleExecutarConciliacao = () => {
@@ -1462,7 +1507,7 @@
       const handleExportarExcel = () => {
         const wsData = [
           ['AUDITORIA DE SALDOS — GRUPO SOMBRA VS LAVANDERIA'],
-          ['Emissão:', new Date().toLocaleDateString('pt-BR'), 'Ambiente:', ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'],
+          ['Emissão:', new Date().toLocaleDateString('pt-BR'), 'Ambiente:', modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'],
           [],
           ['De Quinzena (Mês Anterior)', 'Para Quinzena (Novo Mês)', 'Artigo de Enxoval', 'Saldo Final Matematico', 'Saldo Inicial Planilha Lavanderia', 'Diferenca (Ajuste)', 'Observação / Motivo Provável']
         ];
@@ -1535,19 +1580,19 @@
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-base font-black text-slate-900 dark:text-white">
                       {viewMode === 'DISCREPANCIAS' && 'Auditoria & Conciliação de Saldos (Planilha vs Cálculo Matemático)'}
-                      {viewMode === 'PREVIEW_CONCILIACAO' && 'Etapa 1 de 2: Pré-visualização dos Novos Saldos por Artigo'}
-                      {viewMode === 'CONFIRM_CONCILIACAO' && 'Etapa 2 de 2: Confirmação de Segurança da Conciliação'}
+                      {viewMode === 'PREVIEW_CONCILIACAO' && 'Etapa 1 de 2: Pré-visualização das Pendências por Artigo'}
+                      {viewMode === 'CONFIRM_CONCILIACAO' && 'Etapa 2 de 2: Confirmação e Posição Final de Pendências'}
                     </h3>
                     {viewMode !== 'DISCREPANCIAS' && (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
-                        {viewMode === 'PREVIEW_CONCILIACAO' ? 'Passo 1/2' : 'Passo 2/2'}
+                        {viewMode === 'PREVIEW_CONCILIACAO' ? 'Passo 1/2: Revisão' : 'Passo 2/2: Confirmação'}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-sombra-400 mt-0.5">
                     {viewMode === 'DISCREPANCIAS' && 'Lista completa de diferenças onde a lavanderia fez ajustes manuais, acordos de pagamento ou zerou saldos negativos.'}
-                    {viewMode === 'PREVIEW_CONCILIACAO' && `Verifique os saldos resultantes para cada artigo do ${modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'} após o encadeamento contínuo sem saltos manuais.`}
-                    {viewMode === 'CONFIRM_CONCILIACAO' && `Confirme a aplicação definitiva das correções em todas as ${activeQuinzenas.length} quinzenas do histórico com backup reversível.`}
+                    {viewMode === 'PREVIEW_CONCILIACAO' && `Posição exata das pendências para cada artigo do ${modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'} após conciliação contínua.`}
+                    {viewMode === 'CONFIRM_CONCILIACAO' && `Revise a posição final das pendências e confirme a aplicação definitiva das correções em todas as ${activeQuinzenas.length} quinzenas.`}
                   </p>
                 </div>
               </div>
@@ -1763,50 +1808,116 @@
               </>
             )}
 
-            {/* VISTA 2: PRÉ-VISUALIZAÇÃO DOS TOTAIS POR ARTIGO APÓS CONCILIAÇÃO (ETAPA 1/2) */}
+            {/* VISTA 2: PRÉ-VISUALIZAÇÃO DETALHADA DAS PENDÊNCIAS POR ARTIGO (ETAPA 1/2) */}
             {viewMode === 'PREVIEW_CONCILIACAO' && (
               <>
-                {/* KPI COMPARATIVO */}
+                {/* KPI CARDS OPERACIONAIS DE PENDÊNCIAS */}
                 <div className="p-4 bg-slate-100 dark:bg-sombra-950/80 border-b border-slate-200 dark:border-sombra-800 grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Total de Artigos Analisados</div>
-                    <div className="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">{conciliacaoResult.statsConciliacao.totalItens} artigos</div>
+                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                      <span>🔴 Retido na Lavanderia</span>
+                    </div>
+                    <div className="text-xl font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">
+                      {conciliacaoResult.statsConciliacao.totalPendenteLavanderia} peças
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-500 dark:text-sombra-400 mt-0.5">
+                      em {conciliacaoResult.statsConciliacao.itensComPendencia} artigos a receber
+                    </div>
                   </div>
-                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Artigos com Ajuste / Diferença</div>
-                    <div className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono mt-0.5">{conciliacaoResult.statsConciliacao.alterados} artigos</div>
+
+                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-blue-200 dark:border-blue-900/60 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                      <span>🔵 Crédito a Favor Hotel</span>
+                    </div>
+                    <div className="text-xl font-black text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+                      {conciliacaoResult.statsConciliacao.totalCreditoHotel} peças
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-500 dark:text-sombra-400 mt-0.5">
+                      em {conciliacaoResult.statsConciliacao.itensComCredito} artigos (devoluções a mais)
+                    </div>
                   </div>
-                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Saldo Total Atual (Planilha)</div>
-                    <div className="text-xl font-black text-slate-800 dark:text-slate-200 font-mono mt-0.5">{conciliacaoResult.statsConciliacao.saldoAtualTotal} peças</div>
-                  </div>
-                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Novo Saldo Total Matemático</div>
+
+                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span>🟢 Sem Pendência (Conta Zerada)</span>
+                    </div>
                     <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
-                      {conciliacaoResult.statsConciliacao.saldoConciliadoTotal} peças
-                      <span className="text-xs ml-1 font-bold text-slate-400">
-                        ({conciliacaoResult.statsConciliacao.diferencaLiquida > 0 ? `+${conciliacaoResult.statsConciliacao.diferencaLiquida}` : conciliacaoResult.statsConciliacao.diferencaLiquida})
-                      </span>
+                      {conciliacaoResult.statsConciliacao.itensZerados} artigos
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-500 dark:text-sombra-400 mt-0.5">
+                      saldo 0 (totalmente regularizados)
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-sombra-900 p-3 rounded-xl border border-slate-200 dark:border-sombra-800 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-sombra-400">Artigos com Ajuste Aplicado</div>
+                    <div className="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">
+                      {conciliacaoResult.statsConciliacao.alterados} de {conciliacaoResult.statsConciliacao.totalItens}
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-500 dark:text-sombra-400 mt-0.5">
+                      artigos tiveram correções
                     </div>
                   </div>
                 </div>
 
-                {/* SEARCH & BANNER BAR */}
+                {/* FILTROS DE CATEGORIA E BUSCA */}
                 <div className="p-4 border-b border-slate-200 dark:border-sombra-800 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-sombra-900">
-                  <div className="relative w-72">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* FILTROS RÁPIDOS POR TIPO DE PENDÊNCIA */}
+                    <button
+                      onClick={() => setFiltroTipoPendencia('TODOS')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        filtroTipoPendencia === 'TODOS'
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                          : 'bg-slate-100 text-slate-600 dark:bg-sombra-950 dark:text-sombra-400 hover:bg-slate-200'
+                      }`}
+                    >
+                      Todos ({conciliacaoResult.statsConciliacao.totalItens})
+                    </button>
+                    <button
+                      onClick={() => setFiltroTipoPendencia('PENDENTE')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        filtroTipoPendencia === 'PENDENTE'
+                          ? 'bg-rose-600 text-white shadow-sm'
+                          : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 hover:bg-rose-100'
+                      }`}
+                    >
+                      <span>🔴 Retidos Lavanderia</span>
+                      <span className="font-mono font-black">({conciliacaoResult.statsConciliacao.itensComPendencia})</span>
+                    </button>
+                    <button
+                      onClick={() => setFiltroTipoPendencia('CREDITO')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        filtroTipoPendencia === 'CREDITO'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 hover:bg-blue-100'
+                      }`}
+                    >
+                      <span>🔵 Crédito Hotel</span>
+                      <span className="font-mono font-black">({conciliacaoResult.statsConciliacao.itensComCredito})</span>
+                    </button>
+                    <button
+                      onClick={() => setFiltroTipoPendencia('ZERADO')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        filtroTipoPendencia === 'ZERADO'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 hover:bg-emerald-100'
+                      }`}
+                    >
+                      <span>🟢 Sem Pendência</span>
+                      <span className="font-mono font-black">({conciliacaoResult.statsConciliacao.itensZerados})</span>
+                    </button>
+                  </div>
+
+                  <div className="relative w-64">
                     <input
                       type="text"
                       value={filtroItemPreview}
                       onChange={(e) => setFiltroItemPreview(e.target.value)}
-                      placeholder="Filtrar artigos..."
+                      placeholder="Buscar por artigo..."
                       className="w-full pl-8 pr-3 py-1.5 bg-slate-100 dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
                     />
                     <span className="absolute left-2.5 top-2 text-slate-400">🔍</span>
-                  </div>
-
-                  <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center gap-1.5">
-                    <Icons.Shield />
-                    <span>Nenhuma alteração foi salva ainda. Revise os totais antes de prosseguir.</span>
                   </div>
                 </div>
 
@@ -1828,17 +1939,17 @@
                   </div>
                 )}
 
-                {/* TABELA DE COMPARAÇÃO ANTES VS DEPOIS POR ARTIGO */}
+                {/* TABELA DE COMPARAÇÃO COM POSIÇÃO CLARA DE PENDÊNCIAS POR ITEM */}
                 <div className="flex-1 overflow-y-auto max-h-[50vh] p-4">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead className="bg-slate-100 dark:bg-sombra-950 text-slate-700 dark:text-sombra-300 uppercase font-black tracking-wider text-[10px] sticky top-0 z-10 border-b border-slate-300 dark:border-sombra-800">
                       <tr>
                         <th className="py-2.5 px-3">#</th>
                         <th className="py-2.5 px-3">Artigo de Enxoval</th>
-                        <th className="py-2.5 px-3 text-center">Saldo Atual (Planilha/Manual)</th>
-                        <th className="py-2.5 px-3 text-center">Novo Saldo Matemático (Conciliado)</th>
-                        <th className="py-2.5 px-3 text-center">Diferença / Ajuste Líquido</th>
-                        <th className="py-2.5 px-4 text-center">Status / Impacto</th>
+                        <th className="py-2.5 px-3 text-center">Saldo Atual (Planilha)</th>
+                        <th className="py-2.5 px-3 text-center">Novo Saldo Conciliado</th>
+                        <th className="py-2.5 px-3 text-center">Diferença / Ajuste</th>
+                        <th className="py-2.5 px-4 text-left">Posição da Pendência Resultante</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-sombra-800/60 font-mono text-xs">
@@ -1853,9 +1964,11 @@
                           </td>
                           <td className="py-2.5 px-3 text-center font-bold">
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-black ${
-                              it.saldoConciliado < 0 
-                                ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-700' 
-                                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                              it.saldoConciliado > 0 
+                                ? 'bg-rose-100 text-rose-900 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-700'
+                                : it.saldoConciliado < 0
+                                  ? 'bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-700'
+                                  : 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
                             }`}>
                               {it.saldoConciliado}
                             </span>
@@ -1871,19 +1984,24 @@
                               {it.diferenca > 0 ? `+${it.diferenca}` : it.diferenca}
                             </span>
                           </td>
-                          <td className="py-2.5 px-4 text-center font-sans">
-                            {it.diferenca === 0 ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-sombra-800 dark:text-sombra-400">
-                                Inalterado
-                              </span>
-                            ) : it.diferenca > 0 ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
-                                ↗ Saldo Maior (+{it.diferenca})
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300">
-                                ↘ Saldo Menor ({it.diferenca})
-                              </span>
+                          <td className="py-2.5 px-4 font-sans">
+                            {it.tipoPendencia === 'PENDENTE_LAVANDERIA' && (
+                              <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300 font-bold">
+                                <span>🔴</span>
+                                <span>{it.saldoConciliado} pçs retidas na lavanderia <em className="text-[11px] font-normal text-rose-600 dark:text-rose-400">(deve devolver)</em></span>
+                              </div>
+                            )}
+                            {it.tipoPendencia === 'CREDITO_HOTEL' && (
+                              <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 font-bold">
+                                <span>🔵</span>
+                                <span>Crédito de {Math.abs(it.saldoConciliado)} pçs a favor do hotel <em className="text-[11px] font-normal text-blue-600 dark:text-blue-400">(entregas a mais)</em></span>
+                              </div>
+                            )}
+                            {it.tipoPendencia === 'ZERADO' && (
+                              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-bold">
+                                <span>🟢</span>
+                                <span>Sem pendência <em className="text-[11px] font-normal text-emerald-600 dark:text-emerald-400">(saldo 0 regularizado)</em></span>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -1891,7 +2009,7 @@
                       {filteredItemComparison.length === 0 && (
                         <tr>
                           <td colSpan="6" className="py-8 text-center text-slate-400 dark:text-sombra-500 font-sans font-semibold">
-                            Nenhum artigo encontrado.
+                            Nenhum artigo encontrado para o filtro selecionado.
                           </td>
                         </tr>
                       )}
@@ -1926,62 +2044,157 @@
               </>
             )}
 
-            {/* VISTA 3: CONFIRMAÇÃO DE SEGURANÇA (ETAPA 2/2) */}
+            {/* VISTA 3: CONFIRMAÇÃO DE SEGURANÇA COM LISTA DE PENDÊNCIAS POR ITEM (ETAPA 2/2) */}
             {viewMode === 'CONFIRM_CONCILIACAO' && (
-              <div className="p-8 flex-1 flex flex-col justify-center items-center text-center space-y-6 max-w-2xl mx-auto animate-fade-in">
+              <div className="flex-1 flex flex-col overflow-hidden animate-fade-in">
                 
-                <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border-2 border-amber-500 text-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-amber-500/20">
-                  <Icons.AlertTriangle />
+                {/* TOPO: AVISO E CARDS DE PENDÊNCIAS */}
+                <div className="p-4 bg-slate-100 dark:bg-sombra-950/90 border-b border-slate-200 dark:border-sombra-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                      <Icons.AlertTriangle />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                        Confirmação Final: Posição de Pendências por Artigo ({modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'})
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-sombra-400 mt-0.5">
+                        Confira a lista abaixo com as pendências e créditos exatos de cada artigo que serão gravados no sistema.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 3 CARDS RESUMO OPERACIONAIS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-3">
+                    <div className="bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase text-rose-700 dark:text-rose-300">🔴 Pendências na Lavanderia</div>
+                        <div className="text-sm font-black text-rose-700 dark:text-rose-300 font-mono mt-0.5">
+                          {conciliacaoResult.statsConciliacao.totalPendenteLavanderia} peças retidas
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-rose-200 text-rose-900 dark:bg-rose-900 dark:text-rose-200">
+                        {conciliacaoResult.statsConciliacao.itensComPendencia} itens
+                      </span>
+                    </div>
+
+                    <div className="bg-blue-50 dark:bg-blue-950/40 p-2.5 rounded-xl border border-blue-200 dark:border-blue-900/60 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase text-blue-700 dark:text-blue-300">🔵 Créditos a Favor Hotel</div>
+                        <div className="text-sm font-black text-blue-700 dark:text-blue-300 font-mono mt-0.5">
+                          {conciliacaoResult.statsConciliacao.totalCreditoHotel} peças excedentes
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-200">
+                        {conciliacaoResult.statsConciliacao.itensComCredito} itens
+                      </span>
+                    </div>
+
+                    <div className="bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-300">🟢 Sem Pendência (Conta Zerada)</div>
+                        <div className="text-sm font-black text-emerald-700 dark:text-emerald-300 font-mono mt-0.5">
+                          {conciliacaoResult.statsConciliacao.itensZerados} artigos zerados
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200">
+                        Regularizados
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h4 className="text-xl font-black text-slate-900 dark:text-white">
-                    Confirmação de Aplicação dos Saldos Conciliados
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-sombra-400 mt-2 leading-relaxed">
-                    Você está prestes a aplicar o encadeamento matemático contínuo em todas as <strong>{activeQuinzenas.length} quinzenas</strong> de lavanderia do ambiente <strong>{modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}</strong>.
-                  </p>
+                {/* TABELA SCROLLÁVEL DE CONFIRMAÇÃO COM CADA ITEM */}
+                <div className="flex-1 overflow-y-auto max-h-[38vh] p-4 bg-white dark:bg-sombra-900">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-100 dark:bg-sombra-950 text-slate-700 dark:text-sombra-300 uppercase font-black tracking-wider text-[10px] sticky top-0 z-10 border-b border-slate-300 dark:border-sombra-800">
+                      <tr>
+                        <th className="py-2 px-3">#</th>
+                        <th className="py-2 px-3">Artigo de Enxoval</th>
+                        <th className="py-2 px-3 text-center">Antes ➔ Conciliado</th>
+                        <th className="py-2 px-3 text-center">Ajuste</th>
+                        <th className="py-2 px-4 text-left">Posição da Pendência a Gravar</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-sombra-800/60 font-mono text-xs">
+                      {(conciliacaoResult.itemComparison || []).map((it, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-sombra-850/50 transition">
+                          <td className="py-2 px-3 font-sans font-bold text-slate-400 dark:text-sombra-500">{idx + 1}</td>
+                          <td className="py-2 px-3 font-sans font-bold text-slate-900 dark:text-white">{it.item}</td>
+                          <td className="py-2 px-3 text-center font-bold">
+                            <span className="text-slate-500 dark:text-sombra-400 line-through mr-1.5">{it.saldoAtual}</span>
+                            <span className={`px-2 py-0.5 rounded-lg font-black text-xs ${
+                              it.saldoConciliado > 0 
+                                ? 'bg-rose-100 text-rose-900 dark:bg-rose-950/80 dark:text-rose-300'
+                                : it.saldoConciliado < 0
+                                  ? 'bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300'
+                                  : 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            }`}>
+                              ➔ {it.saldoConciliado}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-center font-black">
+                            <span className={`px-2 py-0.5 rounded-lg text-xs ${
+                              it.diferenca === 0 
+                                ? 'bg-slate-100 text-slate-500 dark:bg-sombra-800 dark:text-sombra-400' 
+                                : it.diferenca > 0 
+                                  ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300'
+                                  : 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/80 dark:text-indigo-300'
+                            }`}>
+                              {it.diferenca > 0 ? `+${it.diferenca}` : it.diferenca}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 font-sans text-xs">
+                            {it.tipoPendencia === 'PENDENTE_LAVANDERIA' && (
+                              <span className="text-rose-700 dark:text-rose-300 font-bold">
+                                🔴 <strong>{it.saldoConciliado} peças</strong> retidas na lavanderia (a devolver)
+                              </span>
+                            )}
+                            {it.tipoPendencia === 'CREDITO_HOTEL' && (
+                              <span className="text-blue-700 dark:text-blue-300 font-bold">
+                                🔵 <strong>Crédito de {Math.abs(it.saldoConciliado)} peças</strong> a favor do hotel
+                              </span>
+                            )}
+                            {it.tipoPendencia === 'ZERADO' && (
+                              <span className="text-emerald-700 dark:text-emerald-300 font-bold">
+                                🟢 Conta zerada (sem pendências)
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="w-full bg-slate-100 dark:bg-sombra-950 p-4 rounded-2xl border border-slate-200 dark:border-sombra-800 text-left space-y-2 text-xs">
-                  <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
-                    <span>Quindicinas Recalculadas:</span>
-                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400">{activeQuinzenas.length} períodos</span>
-                  </div>
-                  <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
-                    <span>Artigos com Diferença Corrigida:</span>
-                    <span className="font-mono font-black text-amber-600 dark:text-amber-400">{conciliacaoResult.statsConciliacao.alterados} artigos</span>
-                  </div>
-                  <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
-                    <span>Saldo Total de Peças Resultante:</span>
-                    <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{conciliacaoResult.statsConciliacao.saldoConciliadoTotal} peças</span>
-                  </div>
-                  <div className="pt-2 border-t border-slate-300 dark:border-sombra-800 text-[11px] text-slate-500 dark:text-sombra-400 flex items-start gap-2">
+                {/* FOOTER: SEGURANÇA E CONFIRMAÇÃO DEFINITIVA */}
+                <div className="p-4 bg-slate-50 dark:bg-sombra-950 border-t border-slate-200 dark:border-sombra-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-[11px] text-slate-500 dark:text-sombra-400 flex items-center gap-1.5">
                     <span>🔒</span>
-                    <span><strong>Segurança Garantida:</strong> Um snapshot de backup será salvo automaticamente antes da alteração. Você poderá reverter esta operação a qualquer momento com o botão <em>"Desfazer Conciliação"</em>.</span>
+                    <span>Snapshot de backup salvo automaticamente. Reversível a qualquer momento com <em>"Desfazer"</em>.</span>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-4 w-full pt-2">
-                  <button
-                    onClick={() => setViewMode('PREVIEW_CONCILIACAO')}
-                    className="flex-1 px-5 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-800 dark:text-slate-200 font-bold rounded-2xl text-xs transition cursor-pointer"
-                  >
-                    ⬅️ Cancelar e Voltar à Revisão
-                  </button>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => setViewMode('PREVIEW_CONCILIACAO')}
+                      className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-sombra-800 dark:hover:bg-sombra-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer"
+                    >
+                      ⬅️ Voltar à Revisão
+                    </button>
 
-                  <button
-                    disabled={activeQuinzenas.length === 0}
-                    onClick={handleExecutarConciliacao}
-                    className={`flex-1 px-6 py-3 font-black rounded-2xl text-xs transition flex items-center justify-center gap-2 ${
-                      activeQuinzenas.length === 0
-                        ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
-                    }`}
-                  >
-                    <Icons.Check />
-                    <span>✅ Sim, Aplicar Correção Definitiva</span>
-                  </button>
+                    <button
+                      disabled={activeQuinzenas.length === 0}
+                      onClick={handleExecutarConciliacao}
+                      className={`flex-1 sm:flex-none px-6 py-2.5 font-black rounded-xl text-xs transition flex items-center justify-center gap-2 ${
+                        activeQuinzenas.length === 0
+                          ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
+                    >
+                      <Icons.Check />
+                      <span>✅ Gravar e Confirmar Conciliação Definitiva</span>
+                    </button>
+                  </div>
                 </div>
 
               </div>
