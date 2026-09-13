@@ -5066,19 +5066,6 @@
         reader.readAsText(file);
       };
 
-      const handleResetToExcelData = () => {
-        if (confirm('ATENÇÃO: Deseja realmente resetar todas as quantidades e históricos para os dados originais da planilha CONTAGEM ENXOVAL.xlsx?')) {
-          setItems({
-            hotel: INITIAL_RAW_DATA.hotel_items || [],
-            spa: INITIAL_RAW_DATA.spa_items || []
-          });
-          setLocations(DEFAULT_LOCATIONS);
-          setMovimentos(INITIAL_RAW_DATA.initial_movimentos || []);
-          setInventarios(INITIAL_RAW_DATA.initial_inventarios || []);
-          showToast('Dados e históricos restaurados com base na planilha Excel original.');
-        }
-      };
-
       if (!isAuthenticated) {
         return (
           <LoginScreen
@@ -5419,14 +5406,6 @@
                       <Icons.Upload />
                       <input type="file" accept=".json" onChange={handleRestoreBackup} className="hidden" />
                     </label>
-
-                    <button
-                      onClick={handleResetToExcelData}
-                      title="Recarregar Dados da Planilha Original"
-                      className="p-2 bg-sombra-800 hover:bg-rose-950 border border-sombra-700 hover:border-rose-800 text-rose-400 rounded-lg text-xs transition"
-                    >
-                      <Icons.RefreshCw />
-                    </button>
                   </>
                 )}
               </div>
@@ -7890,7 +7869,7 @@ Deseja realmente finalizar e salvar esta auditoria no histórico e atualizar os 
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={onTriggerImportExcel}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 rounded-xl text-xs font-bold transition shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-emerald-600/25 border border-emerald-400/40 hover:scale-[1.02] active:scale-[0.98]"
                 title="Importar contagem a partir de planilha Excel (.xlsx)"
               >
                 <Icons.Upload />

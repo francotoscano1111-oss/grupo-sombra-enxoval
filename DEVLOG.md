@@ -4,6 +4,16 @@
 
 ---
 
+## [2026-09-13] — Miglioramento Contrasto Tasto Importar Planilha e Rimozione Reset Planilha Originale
+
+**Status AS IS:** Il pulsante di importazione Excel nella sezione Inventario & Auditoria è ora ad alta visibilità con sfondo verde brillante e testo bianco in grassetto. Il pulsante e la funzione di reset ai dati originali della planilha sono stati rimossi per prevenire sovrascritture accidentali del database.
+
+### ✅ Fatto
+- **Contrasto Elevato per "Importar Planilha Excel (.xlsx)":** Ridisegnato il pulsante con sfondo `bg-emerald-600` (hover `bg-emerald-500`), bordo luminoso e testo bianco puro (`text-white font-bold`) per una leggibilità e visibilità immediata.
+- **Rimozione Funzione e Tasto Reset:** Rimosso il pulsante con icona refresh rossa dall'header dell'applicazione e la relativa funzione `handleResetToExcelData` per evitare reset non intenzionali dei dati di inventario e storico.
+
+---
+
 ## [2026-09-12] — Manuale Utente Dinamico e PDF con Capitolo 7 Esclusivo per Amministratore (RBAC & Cloud)
 
 **Status AS IS:** Il manuale dell'utente (sia nella modale interattiva dell'app che nel documento PDF A4 esportabile) include ora il **Capitolo 7: Gestione Utenti, Password & Permessi (RBAC Cloud)** visibile esclusivamente quando loggati con account Amministratore.
