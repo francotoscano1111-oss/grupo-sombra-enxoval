@@ -1291,12 +1291,34 @@
     function AuditoriaDiscrepanciasModal({ isOpen, onClose, ambiente, currentQuinzenas, lavanderiaData, onUpdateLavanderiaData, showToast }) {
       if (!isOpen) return null;
 
+      // Detecta ambiente com dados de lavanderia (se o ambiente atual não tiver quinzenas, usa spa que tem as 25)
+      const [modalAmbiente, setModalAmbiente] = useState(() => {
+        if (currentQuinzenas && currentQuinzenas.length > 0) return ambiente;
+        if (lavanderiaData && lavanderiaData[ambiente] && lavanderiaData[ambiente].length > 0) return ambiente;
+        if (lavanderiaData && lavanderiaData.spa && lavanderiaData.spa.length > 0) return 'spa';
+        if (lavanderiaData && lavanderiaData.hotel && lavanderiaData.hotel.length > 0) return 'hotel';
+        return ambiente || 'spa';
+      });
+
+      const activeQuinzenas = useMemo(() => {
+        if (lavanderiaData && lavanderiaData[modalAmbiente] && lavanderiaData[modalAmbiente].length > 0) {
+          return lavanderiaData[modalAmbiente];
+        }
+        if (modalAmbiente === ambiente && currentQuinzenas && currentQuinzenas.length > 0) {
+          return currentQuinzenas;
+        }
+        if (lavanderiaData && lavanderiaData.spa && lavanderiaData.spa.length > 0) {
+          return lavanderiaData.spa;
+        }
+        return currentQuinzenas || [];
+      }, [lavanderiaData, modalAmbiente, ambiente, currentQuinzenas]);
+
       const [viewMode, setViewMode] = useState('DISCREPANCIAS'); // 'DISCREPANCIAS' | 'PREVIEW_CONCILIACAO' | 'CONFIRM_CONCILIACAO'
       const [filtroPeriodo, setFiltroPeriodo] = useState('TODOS');
       const [filtroItem, setFiltroItem] = useState('');
       const [filtroItemPreview, setFiltroItemPreview] = useState('');
 
-      const backupStorageKey = `sombra_enxoval_lav_backup_${ambiente}`;
+      const backupStorageKey = `sombra_enxoval_lav_backup_${modalAmbiente}`;
       const [hasBackup, setHasBackup] = useState(() => {
         try {
           return !!localStorage.getItem(backupStorageKey);
@@ -1305,10 +1327,19 @@
         }
       });
 
+      // Recalcula hasBackup quando modalAmbiente muda
+      useEffect(() => {
+        try {
+          setHasBackup(!!localStorage.getItem(backupStorageKey));
+        } catch (e) {
+          setHasBackup(false);
+        }
+      }, [backupStorageKey]);
+
       // Cálculo dinâmico da conciliação matemática contínua
       const conciliacaoResult = useMemo(() => {
-        return calcularConciliacaoMatematicaCompleta(currentQuinzenas || []);
-      }, [currentQuinzenas]);
+        return calcularConciliacaoMatematicaCompleta(activeQuinzenas || []);
+      }, [activeQuinzenas]);
 
       // Extrai lista única de transições para o filtro do histórico
       const periodosList = useMemo(() => {
@@ -1354,12 +1385,16 @@
 
       // Aplicação definitiva com criação de backup (Etapa 2)
       const handleExecutarConciliacao = () => {
+        if (!activeQuinzenas || activeQuinzenas.length === 0) {
+          alert('Não há quinzenas registradas para conciliar neste ambiente.');
+          return;
+        }
         try {
           // 1. Salva snapshot de backup
           const backupPayload = {
             timestamp: new Date().toISOString(),
-            data: currentQuinzenas,
-            ambiente: ambiente
+            data: activeQuinzenas,
+            ambiente: modalAmbiente
           };
           localStorage.setItem(backupStorageKey, JSON.stringify(backupPayload));
           setHasBackup(true);
@@ -1368,14 +1403,16 @@
           if (onUpdateLavanderiaData && lavanderiaData) {
             onUpdateLavanderiaData({
               ...lavanderiaData,
-              [ambiente]: conciliacaoResult.updatedQuinzenas
+              [modalAmbiente]: conciliacaoResult.updatedQuinzenas
             });
           }
 
+          const ambNome = modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA';
+          const msg = `✨ Conciliação matemática aplicada com sucesso em ${conciliacaoResult.updatedQuinzenas.length} quinzenas do ${ambNome}!`;
           if (typeof showToast === 'function') {
-            showToast('✨ Conciliação matemática aplicada com sucesso em todo o histórico!');
+            showToast(msg);
           } else {
-            alert('✨ Conciliação matemática aplicada com sucesso em todo o histórico!');
+            alert(msg);
           }
 
           setViewMode('DISCREPANCIAS');
@@ -1395,15 +1432,16 @@
           }
           const parsed = JSON.parse(raw);
           const dataHora = parsed.timestamp ? new Date(parsed.timestamp).toLocaleString('pt-BR') : '';
+          const ambNome = modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA';
 
-          if (!confirm(`Deseja realmente desfazer a conciliação e restaurar os saldos de lavanderia ao estado original?\n\nBackup gravado em: ${dataHora || 'Data recente'}`)) {
+          if (!confirm(`Deseja realmente desfazer a conciliação e restaurar os saldos de lavanderia ao estado original do ${ambNome}?\n\nBackup gravado em: ${dataHora || 'Data recente'}`)) {
             return;
           }
 
           if (onUpdateLavanderiaData && lavanderiaData && parsed.data) {
             onUpdateLavanderiaData({
               ...lavanderiaData,
-              [ambiente]: parsed.data
+              [modalAmbiente]: parsed.data
             });
           }
 
@@ -1411,9 +1449,9 @@
           setHasBackup(false);
 
           if (typeof showToast === 'function') {
-            showToast('↩️ Saldos originais restaurados com sucesso!');
+            showToast(`↩️ Saldos originais do ${ambNome} restaurados com sucesso!`);
           } else {
-            alert('↩️ Saldos originais restaurados com sucesso!');
+            alert(`↩️ Saldos originais do ${ambNome} restaurados com sucesso!`);
           }
         } catch (err) {
           console.error('Erro ao restaurar backup:', err);
@@ -1488,13 +1526,13 @@
           <div className="bg-white dark:bg-sombra-900 border border-slate-300 dark:border-sombra-700 w-full max-w-5xl max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white">
             
             {/* HEADER */}
-            <div className="p-5 border-b border-slate-200 dark:border-sombra-800 bg-slate-50 dark:bg-sombra-950 flex items-center justify-between">
+            <div className="p-5 border-b border-slate-200 dark:border-sombra-800 bg-slate-50 dark:bg-sombra-950 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-gradient-to-tr from-amber-500 to-indigo-600 text-white rounded-2xl shadow-lg">
                   <Icons.Shield />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-base font-black text-slate-900 dark:text-white">
                       {viewMode === 'DISCREPANCIAS' && 'Auditoria & Conciliação de Saldos (Planilha vs Cálculo Matemático)'}
                       {viewMode === 'PREVIEW_CONCILIACAO' && 'Etapa 1 de 2: Pré-visualização dos Novos Saldos por Artigo'}
@@ -1508,17 +1546,57 @@
                   </div>
                   <p className="text-xs text-slate-500 dark:text-sombra-400 mt-0.5">
                     {viewMode === 'DISCREPANCIAS' && 'Lista completa de diferenças onde a lavanderia fez ajustes manuais, acordos de pagamento ou zerou saldos negativos.'}
-                    {viewMode === 'PREVIEW_CONCILIACAO' && 'Verifique os saldos resultantes para cada artigo após o encadeamento contínuo sem saltos manuais.'}
-                    {viewMode === 'CONFIRM_CONCILIACAO' && 'Confirme a aplicação definitiva das correções em todas as 25 quinzenas do histórico com backup reversível.'}
+                    {viewMode === 'PREVIEW_CONCILIACAO' && `Verifique os saldos resultantes para cada artigo do ${modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'} após o encadeamento contínuo sem saltos manuais.`}
+                    {viewMode === 'CONFIRM_CONCILIACAO' && `Confirme a aplicação definitiva das correções em todas as ${activeQuinzenas.length} quinzenas do histórico com backup reversível.`}
                   </p>
                 </div>
               </div>
-              <button 
-                onClick={onClose} 
-                className="text-slate-400 hover:text-slate-900 dark:hover:text-white text-2xl font-mono px-3 py-1 cursor-pointer"
-              >
-                &times;
-              </button>
+
+              <div className="flex items-center gap-3">
+                {/* SELETOR DE AMBIENTE DENTRO DO MODAL */}
+                <div className="flex items-center gap-1 bg-slate-200 dark:bg-sombra-950 p-1 rounded-xl border border-slate-300 dark:border-sombra-800 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setModalAmbiente('spa')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      modalAmbiente === 'spa'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-sombra-400 dark:hover:text-white'
+                    }`}
+                  >
+                    <span>🌿 Floresta & SPA</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                      modalAmbiente === 'spa' ? 'bg-emerald-800 text-white' : 'bg-slate-300 dark:bg-sombra-900 text-slate-700 dark:text-sombra-300'
+                    }`}>
+                      {(lavanderiaData?.spa || []).length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalAmbiente('hotel')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      modalAmbiente === 'hotel'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-sombra-400 dark:hover:text-white'
+                    }`}
+                  >
+                    <span>🏨 Hotel & Resort</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                      modalAmbiente === 'hotel' ? 'bg-blue-800 text-white' : 'bg-slate-300 dark:bg-sombra-900 text-slate-700 dark:text-sombra-300'
+                    }`}>
+                      {(lavanderiaData?.hotel || []).length}
+                    </span>
+                  </button>
+                </div>
+
+                <button 
+                  onClick={onClose} 
+                  className="text-slate-400 hover:text-slate-900 dark:hover:text-white text-2xl font-mono px-3 py-1 cursor-pointer"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
             {/* VISTA 1: HISTÓRICO DE DISCREPÂNCIAS */}
@@ -1567,8 +1645,7 @@
                         onChange={(e) => setFiltroItem(e.target.value)}
                         placeholder="Filtrar por artigo..."
                         className="w-full pl-8 pr-3 py-1.5 bg-slate-100 dark:bg-sombra-950 border border-slate-300 dark:border-sombra-700 rounded-xl text-xs text-slate-900 dark:text-white"
-                      >
-                      </input>
+                      />
                       <span className="absolute left-2.5 top-2 text-slate-400">🔍</span>
                     </div>
                   </div>
@@ -1733,6 +1810,24 @@
                   </div>
                 </div>
 
+                {/* ALERTA SE O AMBIENTE ATUAL ESTIVER SEM QUINZENAS */}
+                {activeQuinzenas.length === 0 && (
+                  <div className="m-4 p-4 rounded-2xl bg-amber-500/10 border-2 border-amber-500 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Icons.AlertTriangle />
+                      <span>
+                        O ambiente <strong>{modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}</strong> não possui quinzenas cadastradas. Alterne para <strong>Floresta & SPA</strong> para auditar as 25 quinzenas do histórico.
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setModalAmbiente('spa')}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs cursor-pointer shadow-sm"
+                    >
+                      Ver Floresta & SPA (25 quinzenas)
+                    </button>
+                  </div>
+                )}
+
                 {/* TABELA DE COMPARAÇÃO ANTES VS DEPOIS POR ARTIGO */}
                 <div className="flex-1 overflow-y-auto max-h-[50vh] p-4">
                   <table className="w-full text-left text-xs border-collapse">
@@ -1815,8 +1910,13 @@
 
                   <div className="flex items-center gap-2">
                     <button
+                      disabled={activeQuinzenas.length === 0}
                       onClick={() => setViewMode('CONFIRM_CONCILIACAO')}
-                      className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl text-xs transition shadow-lg shadow-emerald-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+                      className={`px-6 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 ${
+                        activeQuinzenas.length === 0
+                          ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
                     >
                       <span>Prosseguir para Confirmação Final (Etapa 2)</span>
                       <span>➔</span>
@@ -1839,14 +1939,14 @@
                     Confirmação de Aplicação dos Saldos Conciliados
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-sombra-400 mt-2 leading-relaxed">
-                    Você está prestes a aplicar o encadeamento matemático contínuo em todas as <strong>{currentQuinzenas.length} quinzenas</strong> de lavanderia do ambiente <strong>{ambiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}</strong>.
+                    Você está prestes a aplicar o encadeamento matemático contínuo em todas as <strong>{activeQuinzenas.length} quinzenas</strong> de lavanderia do ambiente <strong>{modalAmbiente === 'hotel' ? 'Hotel & Resort' : 'Floresta & SPA'}</strong>.
                   </p>
                 </div>
 
                 <div className="w-full bg-slate-100 dark:bg-sombra-950 p-4 rounded-2xl border border-slate-200 dark:border-sombra-800 text-left space-y-2 text-xs">
                   <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
                     <span>Quindicinas Recalculadas:</span>
-                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400">{currentQuinzenas.length} períodos</span>
+                    <span className="font-mono font-black text-indigo-600 dark:text-indigo-400">{activeQuinzenas.length} períodos</span>
                   </div>
                   <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
                     <span>Artigos com Diferença Corrigida:</span>
@@ -1871,8 +1971,13 @@
                   </button>
 
                   <button
+                    disabled={activeQuinzenas.length === 0}
                     onClick={handleExecutarConciliacao}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl text-xs transition shadow-xl shadow-emerald-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                    className={`flex-1 px-6 py-3 font-black rounded-2xl text-xs transition flex items-center justify-center gap-2 ${
+                      activeQuinzenas.length === 0
+                        ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-600/30 cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
                   >
                     <Icons.Check />
                     <span>✅ Sim, Aplicar Correção Definitiva</span>
