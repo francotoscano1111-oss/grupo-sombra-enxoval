@@ -4,6 +4,16 @@
 
 ---
 
+## [2026-09-13] — Visualizzazione Esclusiva delle 6 KPI Card nel Tab "Matriz de Estoque"
+
+**Status AS IS:** Le 6 KPI Card riassuntive del patrimonio enxoval (*Total em Estoque*, *Total em Uso*, *Almoxarifado*, *Meta Par Stock*, *Descarte Total*, *Alertas / Faltas*) vengono ora renderizzate esclusivamente nella scheda **Matriz de Estoque**, lasciando gli altri menu (*Movimentações Rápidas*, *Controle de Lavanderia*, *Unidades & Locais*, *Catálogo de Itens*, *Inventário & Contagem*, *Relatórios & Histórico*) puliti e focalizzati sulle rispettive schermate operative.
+
+### ✅ Fatto
+- **Visibilità Condizionale Scheda `estoque`:** Aggiunta la condizione `activeTab === 'estoque'` nel contenitore superiore delle 6 KPI Card.
+- **Interfaccia Pulita per gli Altri Moduli:** Negli altri 6 sottomenu dell'applicazione, la barra dei KPI superiori non viene renderizzata, massimizzando lo spazio visivo utile.
+
+---
+
 ## [2026-09-13] — Miglioramento Contrasto Tasto Importar Planilha e Rimozione Reset Planilha Originale
 
 **Status AS IS:** Il pulsante di importazione Excel nella sezione Inventario & Auditoria è ora ad alta visibilità con sfondo verde brillante e testo bianco in grassetto. Il pulsante e la funzione di reset ai dati originali della planilha sono stati rimossi per prevenire sovrascritture accidentali del database.

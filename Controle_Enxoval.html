@@ -5450,8 +5450,8 @@
           {/* Main Content Area */}
           <main className="flex-1 max-w-[1650px] w-full mx-auto p-4 sm:px-6 lg:p-8 space-y-6">
             
-            {/* KPI Summary Cards - Exibidos apenas para Governanta / Diretoria (ocultos para operador de lavanderia) */}
-            {!isLaundryOperator && (
+            {/* KPI Summary Cards - Exibidos apenas na Matriz de Estoque para Governanta / Diretoria */}
+            {!isLaundryOperator && activeTab === 'estoque' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
               
               {/* CARD 1: TOTAL EM ESTOQUE */}
