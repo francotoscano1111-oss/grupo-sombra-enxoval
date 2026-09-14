@@ -4,6 +4,17 @@
 
 ---
 
+## [2026-09-14] — Massima Visibilità & Contrasto Elevato Pulsante "Aplicar Correções Matemáticas"
+
+**Status AS IS:** Nel modulo *Auditoria & Conciliação de Saldos* di Lavanderia, il pulsante principale `✨ Aplicar Correções Matemáticas` è ora ultra-visibile, con testo bianco puro in grassetto marcato (`font-black`, `#ffffff !important`), gradiente ad alto contrasto indaco-viola vibrante, bordo luminoso e ombreggiatura potenziata, garantendo perfetta leggibilità sia in Dark Mode che in Light Mode.
+
+### ✅ Fatto
+- **Risoluzione Sovrascrittura Colore in Light Mode:** Introdotta la classe utilitaria `.btn-force-white` che neutralizza la regola globale `body.light .text-white` sui pulsanti ad alto contrasto.
+- **Restyling Pulsante "Aplicar Correções Matemáticas":** Gradiente `bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700`, testo bianco puro `style={{ color: '#ffffff' }}`, icona sparkles e font extrabold ad alta leggibilità.
+- **Protezione Contrasto Globale nel Modale:** Applicata la classe `.btn-force-white` a tutti i pulsanti operativi del modale (*Exportar Excel*, *Imprimir PDF*, *Baixar PDF de Conferência*, *Prosseguir*, *Gravar e Confirmar Conciliação* e tab attivi).
+
+---
+
 ## [2026-09-13] — Esportazione PDF di Verifica Prima/Dopo & Conciliazione Matematica Lavanderia
 
 **Status AS IS:** Nel modulo *Auditoria & Conciliação de Saldos* di Lavanderia è ora possibile scaricare un **documento PDF ufficiale A4 di verifica preventiva** (`📄 Baixar PDF de Conferência`) con la lista completa degli articoli, i saldi prima e dopo le correzioni, l'adeguamento (+/-) e la posizione analitica delle pendenze, disponibile sia nella schermata di anteprima (Etapa 1) che nella schermata di conferma finale (Etapa 2) prima di salvare le modifiche.
